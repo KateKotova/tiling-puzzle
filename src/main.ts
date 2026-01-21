@@ -1,5 +1,5 @@
 //import { Application, Assets, Sprite } from "pixi.js";
-import { Application, Assets, Container, Graphics } from "pixi.js";
+import { Application, Assets, Container, GraphicsContext, Graphics } from "pixi.js";
 
 async function main(): Promise<void> {
   try {
@@ -17,12 +17,15 @@ async function main(): Promise<void> {
     const textureHeight = texture.height;
     const textureWidthToHeightRatio = textureWidth / textureHeight;
 
-    //const textureMinSide = Math.min(textureWidth, textureHeight);
-    //const textureMinSideSquareCount = 4;
-    //const textureSquareSide = textureMinSide / textureMinSideSquareCount;
+    const textureMinSide = Math.min(textureWidth, textureHeight);
+    const textureMinSideSquareCount = 5;
+    const textureSquareSide = textureMinSide / textureMinSideSquareCount;
 
-    //const textureWidthSquareOffset = (textureWidth - textureMinSide) / 2;
-    //const textureHeightSquareOffset = (textureHeight - textureMinSide) / 2;
+    const textureWidthSquareCount = Math.trunc(textureWidth / textureSquareSide);
+    const textureHeightSquareCount = Math.trunc(textureHeight / textureSquareSide);    
+
+    const textureXSquaresOffset = (textureWidth - textureSquareSide * textureWidthSquareCount) / 2;
+    const textureYSquaresOffset = (textureHeight - textureSquareSide * textureHeightSquareCount) / 2;
 
     const containerWidth = 500;
     const containerHeight = 400;
@@ -35,7 +38,7 @@ async function main(): Promise<void> {
       imageWidth = imageHeight * textureWidthToHeightRatio;
     }
 
-    //let imageSideToTextureSideRatio = imageWidth / textureWidth;
+    const imageSideToTextureSideRatio = imageWidth / textureWidth;
 
     const screenCenterX = app.screen.width / 2;
     const screenCenterY = app.screen.height / 2;
@@ -73,6 +76,42 @@ async function main(): Promise<void> {
       });
     imageContainer.addChild(image);
 
+    const squaresXOffset = textureXSquaresOffset * imageSideToTextureSideRatio;
+    const squaresYOffset = textureYSquaresOffset * imageSideToTextureSideRatio;
+
+    const squaresContainer = new Container({
+      x: squaresXOffset,
+      y: squaresYOffset,
+      width: imageWidth - squaresXOffset * 2,
+      height: imageHeight - squaresYOffset * 2,
+    });
+    imageContainer.addChild(squaresContainer);
+
+    const squareSide = textureSquareSide * imageSideToTextureSideRatio;
+
+    const squareContext = new GraphicsContext()
+      .rect(0, 0, squareSide, squareSide)
+      .stroke({
+        color: "black",
+        width: 2,
+        alpha: 0.7
+      });
+
+    for (let rowIndex = 0, y = 0;
+        rowIndex < textureHeightSquareCount;
+        rowIndex++, y += squareSide) {
+
+      for (let columnIndex = 0, x = 0;
+        columnIndex < textureWidthSquareCount;
+        columnIndex++, x += squareSide) {
+
+        const square = new Graphics(squareContext);
+        square.x = x;
+        square.y = y;
+        squaresContainer.addChild(square);
+      }
+    }    
+    
     /*
     // Bunny
     const texture = await Assets.load("/assets/bunny.png");
