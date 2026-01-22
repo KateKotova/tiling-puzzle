@@ -2,12 +2,12 @@ import {
   Application,
   Assets,
   Container,
-  Graphics,
-  GraphicsContext
+  Graphics
 } from "pixi.js";
 import { TilingTextureModel } from "./TilingTextureModel.ts";
 import { ImageContainerModel } from "./ImageContainerModel.ts";
 import { SquareTilingModel } from "./SquareTilingModel.ts";
+import { SquareTilingView } from "./SquareTilingView.ts";
 
 async function main(): Promise<void> {
   try {
@@ -35,36 +35,6 @@ async function main(): Promise<void> {
     const squareTilingModel = new SquareTilingModel(textureModel, textureMinSideSquareCount,
       imageContainerModel, app.renderer);
     
-    /*const textureWidth = texture.width;
-    const textureHeight = texture.height;
-    const textureWidthToHeightRatio = textureWidth / textureHeight;
-
-    const textureMinSide = Math.min(textureWidth, textureHeight);
-    //const textureMinSideSquareCount = 5;
-    const textureSquareSide = textureMinSide / textureMinSideSquareCount;
-
-    const textureWidthToTextureSquareSideRatio = textureWidth / textureSquareSide;
-    const textureHeightToTextureSquareSideRatio = textureHeight / textureSquareSide;
-
-    const textureWidthSquareCount = Math.trunc(textureWidthToTextureSquareSideRatio);
-    const textureHeightSquareCount = Math.trunc(textureHeightToTextureSquareSideRatio);    
-
-    const textureXSquaresOffset = (textureWidth - textureSquareSide * textureWidthSquareCount) / 2;
-    const textureYSquaresOffset = (textureHeight - textureSquareSide * textureHeightSquareCount) / 2;
-
-    //const containerWidth = 500;
-    //const containerHeight = 400;
-
-    let imageWidth = containerWidth;
-    let imageHeight = imageWidth / textureWidthToHeightRatio;
-
-    if (imageHeight > containerHeight) {
-      imageHeight = containerHeight;
-      imageWidth = imageHeight * textureWidthToHeightRatio;
-    }
-
-    const imageSideToTextureSideRatio = imageWidth / textureWidth;*/
-
     const screenCenterX = app.screen.width / 2;
     const screenCenterY = app.screen.height / 2;
 
@@ -101,67 +71,12 @@ async function main(): Promise<void> {
       });
     imageContainer.addChild(image);
 
-    //const squaresXOffset = textureXSquaresOffset * imageSideToTextureSideRatio;
-    //const squaresYOffset = textureYSquaresOffset * imageSideToTextureSideRatio;
-
-    const squaresContainer = new Container({
-      x: squareTilingModel.squaresContainerRectangle.x,
-      y: squareTilingModel.squaresContainerRectangle.y,
-      width: squareTilingModel.squaresContainerRectangle.width,
-      height: squareTilingModel.squaresContainerRectangle.height
-    });
+    const squareTilingView = new SquareTilingView(squareTilingModel);
+    const squaresContainer = squareTilingView.getTilingContainer();
     imageContainer.addChild(squaresContainer);
 
-    //const squareSide = textureSquareSide * imageSideToTextureSideRatio;
-
-    const squareContext = new GraphicsContext()
-      .rect(0, 0, squareTilingModel.squareSide, squareTilingModel.squareSide)
-      .stroke({
-        color: "black",
-        width: 2,
-        alpha: 0.7
-      });
-
-    for (let rowIndex = 0, y = 0;
-        rowIndex < squareTilingModel.textureHeightSquareCount;
-        rowIndex++, y += squareTilingModel.squareSide) {
-
-      for (let columnIndex = 0, x = 0;
-        columnIndex < squareTilingModel.textureWidthSquareCount;
-        columnIndex++, x += squareTilingModel.squareSide) {
-
-        const square = new Graphics(squareContext.clone())
-        square.position.set(x, y);
-
-        // Протестируем только диагональные элементы
-        if (rowIndex == columnIndex) {
-
-          /*const globalSquare = new Graphics()
-            .rect(
-              columnIndex * textureSquareSide + textureXSquaresOffset,
-              rowIndex * textureSquareSide + textureYSquaresOffset,
-              textureSquareSide,
-              textureSquareSide
-            )
-            .fill({
-              texture,
-              textureSpace: "global"
-            });
-          const squareTexture = app.renderer.generateTexture(globalSquare);*/
-
-          const squareTexture = squareTilingModel.getImageSquareTexture(rowIndex, columnIndex);
-          if (squareTexture) {
-            square.fill({
-              texture: squareTexture,
-              textureSpace: "local"
-            });
-          }
-          //globalSquare.destroy();
-        }
-
-        squaresContainer.addChild(square);
-      }
-    }    
+    const squareContext = squareTilingView.getSquareContext();
+    squareTilingView.setExampleTiling(squaresContainer, squareContext);
     
     /*
     // Bunny
