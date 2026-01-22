@@ -5,11 +5,14 @@ import {
   Graphics,
   GraphicsContext
 } from "pixi.js";
+import { TilingTextureModel } from "./TilingTextureModel.ts";
+import { ImageContainerModel } from "./ImageContainerModel.ts";
+import { SquareTilingModel } from "./SquareTilingModel.ts";
 
 async function main(): Promise<void> {
   try {
     const app = new Application();
-    // @ts-ignore
+    // @ts-expect-error PixiJS DevTools
     globalThis.__PIXI_APP__ = app;
 
     await app.init({ background: "#1099bb", resizeTo: window });
@@ -21,12 +24,23 @@ async function main(): Promise<void> {
     });
 
     const texture = Assets.get("example-image");
-    const textureWidth = texture.width;
+    const textureModel = new TilingTextureModel(texture);
+
+    const containerWidth = 500;
+    const containerHeight = 400;
+    const imageContainerModel = new ImageContainerModel(textureModel,
+      containerWidth, containerHeight);
+
+    const textureMinSideSquareCount = 5;
+    const squareTilingModel = new SquareTilingModel(textureModel, textureMinSideSquareCount,
+      imageContainerModel, app.renderer);
+    
+    /*const textureWidth = texture.width;
     const textureHeight = texture.height;
     const textureWidthToHeightRatio = textureWidth / textureHeight;
 
     const textureMinSide = Math.min(textureWidth, textureHeight);
-    const textureMinSideSquareCount = 5;
+    //const textureMinSideSquareCount = 5;
     const textureSquareSide = textureMinSide / textureMinSideSquareCount;
 
     const textureWidthToTextureSquareSideRatio = textureWidth / textureSquareSide;
@@ -38,8 +52,8 @@ async function main(): Promise<void> {
     const textureXSquaresOffset = (textureWidth - textureSquareSide * textureWidthSquareCount) / 2;
     const textureYSquaresOffset = (textureHeight - textureSquareSide * textureHeightSquareCount) / 2;
 
-    const containerWidth = 500;
-    const containerHeight = 400;
+    //const containerWidth = 500;
+    //const containerHeight = 400;
 
     let imageWidth = containerWidth;
     let imageHeight = imageWidth / textureWidthToHeightRatio;
@@ -49,7 +63,7 @@ async function main(): Promise<void> {
       imageWidth = imageHeight * textureWidthToHeightRatio;
     }
 
-    const imageSideToTextureSideRatio = imageWidth / textureWidth;
+    const imageSideToTextureSideRatio = imageWidth / textureWidth;*/
 
     const screenCenterX = app.screen.width / 2;
     const screenCenterY = app.screen.height / 2;
@@ -71,15 +85,15 @@ async function main(): Promise<void> {
     const containerCenterY = containerHeight / 2;
 
     const imageContainer = new Container({
-      x: containerCenterX - imageWidth / 2,
-      y: containerCenterY - imageHeight / 2,
-      width: imageWidth,
-      height: imageHeight,
+      x: containerCenterX - imageContainerModel.width / 2,
+      y: containerCenterY - imageContainerModel.height / 2,
+      width: imageContainerModel.width,
+      height: imageContainerModel.height,
     });
     container.addChild(imageContainer);
 
     const image = new Graphics()
-      .rect(0, 0, imageWidth, imageHeight)
+      .rect(0, 0, imageContainerModel.width, imageContainerModel.height)
       .fill({
         texture,
         textureSpace: "local",
@@ -87,21 +101,21 @@ async function main(): Promise<void> {
       });
     imageContainer.addChild(image);
 
-    const squaresXOffset = textureXSquaresOffset * imageSideToTextureSideRatio;
-    const squaresYOffset = textureYSquaresOffset * imageSideToTextureSideRatio;
+    //const squaresXOffset = textureXSquaresOffset * imageSideToTextureSideRatio;
+    //const squaresYOffset = textureYSquaresOffset * imageSideToTextureSideRatio;
 
     const squaresContainer = new Container({
-      x: squaresXOffset,
-      y: squaresYOffset,
-      width: imageWidth - squaresXOffset * 2,
-      height: imageHeight - squaresYOffset * 2,
+      x: squareTilingModel.squaresContainerRectangle.x,
+      y: squareTilingModel.squaresContainerRectangle.y,
+      width: squareTilingModel.squaresContainerRectangle.width,
+      height: squareTilingModel.squaresContainerRectangle.height
     });
     imageContainer.addChild(squaresContainer);
 
-    const squareSide = textureSquareSide * imageSideToTextureSideRatio;
+    //const squareSide = textureSquareSide * imageSideToTextureSideRatio;
 
     const squareContext = new GraphicsContext()
-      .rect(0, 0, squareSide, squareSide)
+      .rect(0, 0, squareTilingModel.squareSide, squareTilingModel.squareSide)
       .stroke({
         color: "black",
         width: 2,
@@ -109,12 +123,12 @@ async function main(): Promise<void> {
       });
 
     for (let rowIndex = 0, y = 0;
-        rowIndex < textureHeightSquareCount;
-        rowIndex++, y += squareSide) {
+        rowIndex < squareTilingModel.textureHeightSquareCount;
+        rowIndex++, y += squareTilingModel.squareSide) {
 
       for (let columnIndex = 0, x = 0;
-        columnIndex < textureWidthSquareCount;
-        columnIndex++, x += squareSide) {
+        columnIndex < squareTilingModel.textureWidthSquareCount;
+        columnIndex++, x += squareTilingModel.squareSide) {
 
         const square = new Graphics(squareContext.clone())
         square.position.set(x, y);
@@ -122,7 +136,7 @@ async function main(): Promise<void> {
         // Протестируем только диагональные элементы
         if (rowIndex == columnIndex) {
 
-          const globalSquare = new Graphics()
+          /*const globalSquare = new Graphics()
             .rect(
               columnIndex * textureSquareSide + textureXSquaresOffset,
               rowIndex * textureSquareSide + textureYSquaresOffset,
@@ -133,14 +147,16 @@ async function main(): Promise<void> {
               texture,
               textureSpace: "global"
             });
-          const squareTexture = app.renderer.generateTexture(globalSquare);
+          const squareTexture = app.renderer.generateTexture(globalSquare);*/
 
-          square.fill({
-            texture: squareTexture,
-            textureSpace: "local"
-          });
-
-          globalSquare.destroy();
+          const squareTexture = squareTilingModel.getImageSquareTexture(rowIndex, columnIndex);
+          if (squareTexture) {
+            square.fill({
+              texture: squareTexture,
+              textureSpace: "local"
+            });
+          }
+          //globalSquare.destroy();
         }
 
         squaresContainer.addChild(square);
