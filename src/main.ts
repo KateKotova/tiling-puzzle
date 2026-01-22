@@ -1,21 +1,17 @@
-//import { Application, Assets, Sprite } from "pixi.js";
 import {
   Application,
   Assets,
   Container,
   Graphics,
-  GraphicsContext,
-  Matrix,
-  Rectangle,
-  RenderTexture,
-  Texture,
-  Sprite
+  GraphicsContext
 } from "pixi.js";
 
 async function main(): Promise<void> {
   try {
     const app = new Application();
+    // @ts-ignore
     globalThis.__PIXI_APP__ = app;
+
     await app.init({ background: "#1099bb", resizeTo: window });
     document.getElementById("pixi-container")!.appendChild(app.canvas);
 
@@ -112,20 +108,6 @@ async function main(): Promise<void> {
         alpha: 0.7
       });
 
-
-    const textureWidthToSquareSideRatio = textureWidth / squareSide;
-    const textureHeightToSquareSideRatio = textureHeight / squareSide;
-
-    const squareMatrix = new Matrix()
-      .scale(textureWidthToSquareSideRatio,
-        textureHeightToSquareSideRatio)
-      .translate(textureXSquaresOffset,
-        textureYSquaresOffset);
-
-    console.log(squareMatrix)
-
-    
-
     for (let rowIndex = 0, y = 0;
         rowIndex < textureHeightSquareCount;
         rowIndex++, y += squareSide) {
@@ -134,82 +116,32 @@ async function main(): Promise<void> {
         columnIndex < textureWidthSquareCount;
         columnIndex++, x += squareSide) {
 
-        const square = new Graphics(squareContext.clone());
+        const square = new Graphics(squareContext.clone())
+        square.position.set(x, y);
 
         // Протестируем только диагональные элементы
         if (rowIndex == columnIndex) {
 
-          const matrix = new Matrix()
-          //   textureWidthToSquareSideRatio * imageSideToTextureSideRatio,
-          //   0,
-          //   0,
-          //   textureHeightToSquareSideRatio * imageSideToTextureSideRatio,
-          //   (columnIndex * textureSquareSide + textureXSquaresOffset) * imageSideToTextureSideRatio,
-          //   (rowIndex * textureSquareSide + textureYSquaresOffset) * imageSideToTextureSideRatio
-          // );
-            .scale(
-              textureWidthToSquareSideRatio * imageSideToTextureSideRatio,
-              textureHeightToSquareSideRatio * imageSideToTextureSideRatio
-            )
-            .translate(
-              (columnIndex * textureSquareSide + textureXSquaresOffset) * imageSideToTextureSideRatio,
-              (rowIndex * textureSquareSide + textureYSquaresOffset) * imageSideToTextureSideRatio
-            );
-
           const globalSquare = new Graphics()
             .rect(
-              (columnIndex * textureSquareSide + textureXSquaresOffset),
-              (rowIndex * textureSquareSide + textureYSquaresOffset),
+              columnIndex * textureSquareSide + textureXSquaresOffset,
+              rowIndex * textureSquareSide + textureYSquaresOffset,
               textureSquareSide,
               textureSquareSide
             )
             .fill({
-              //matrix,
               texture,
               textureSpace: "global"
             });
           const squareTexture = app.renderer.generateTexture(globalSquare);
 
-          /*const squareTextureSprite = new Sprite({
-            x: 0,
-            y: 0,
-            width: textureSquareSide,
-            height: textureSquareSide,
-            texture: new Texture({
-              source: texture,
-              orig: new Rectangle(
-                columnIndex * textureSquareSide + textureXSquaresOffset,
-                rowIndex * textureSquareSide + textureYSquaresOffset,
-                textureSquareSide,
-                textureSquareSide
-              )
-            })
-          });
-          //squareTextureSprite.scale = imageSideToTextureSideRatio;
-
-          const squareTexture = app.renderer.generateTexture(squareTextureSprite);*/
-
           square.fill({
-            //matrix: matrix,                
-            // texture: new Texture({
-            //   source: texture,
-            //   trim: new Rectangle(
-            //     columnIndex * textureSquareSide + textureXSquaresOffset,
-            //     rowIndex * textureSquareSide + textureYSquaresOffset,
-            //     textureSquareSide,
-            //     textureSquareSide
-            //   )
-            // }),
             texture: squareTexture,
-            textureSpace: "local",
-            alpha: 0.8
+            textureSpace: "local"
           });
-          globalSquare.destroy();
-          console.log(square.fillStyle.matrix)
-        }
 
-        square.x = x;
-        square.y = y;
+          globalSquare.destroy();
+        }
 
         squaresContainer.addChild(square);
       }
