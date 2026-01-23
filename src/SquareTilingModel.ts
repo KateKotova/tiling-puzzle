@@ -4,93 +4,93 @@ import { ImageContainerModel } from "./ImageContainerModel.ts";
 import { SquareTileModel } from "./SquareTileModel.ts";
 
 export class SquareTilingModel {
-    public textureMinSideSquareCount: number;
-    public static readonly textureMinSideMinSquareCount = 2;
+    public textureMinSideTileCount: number;
+    public static readonly textureMinSideMinTileCount = 2;
 
     public textureModel: TilingTextureModel;
-    private textureSquareSide: number = 0;
-    public textureWidthSquareCount: number = 0;
-    public textureHeightSquareCount: number = 0;
-    private textureXSquaresOffset: number = 0;
-    private textureYSquaresOffset: number = 0;
+    private textureTileSide: number = 0;
+    public textureWidthTileCount: number = 0;
+    public textureHeightTileCount: number = 0;
+    private textureXTilesOffset: number = 0;
+    private textureYTilesOffset: number = 0;
 
     public imageContainerModel: ImageContainerModel;
-    public squaresContainerRectangle: Rectangle = new Rectangle();
-    public squareSide: number = 0;
+    public tilingContainerRectangle: Rectangle = new Rectangle();
+    public tileSide: number = 0;
 
     private renderer: Renderer;
 
     constructor(textureModel: TilingTextureModel,
-        textureMinSideSquareCount: number,
+        textureMinSideTileCount: number,
         imageContainerModel: ImageContainerModel,
         renderer: Renderer) {
 
-        this.textureMinSideSquareCount
-            = textureMinSideSquareCount < SquareTilingModel.textureMinSideMinSquareCount
-                ? SquareTilingModel.textureMinSideMinSquareCount
-                : Math.floor(textureMinSideSquareCount);
+        this.textureMinSideTileCount
+            = textureMinSideTileCount < SquareTilingModel.textureMinSideMinTileCount
+                ? SquareTilingModel.textureMinSideMinTileCount
+                : Math.floor(textureMinSideTileCount);
 
         this.textureModel = textureModel;
         this.imageContainerModel = imageContainerModel;
         this.renderer = renderer;
 
-        this.initialiazeTextureSquareInfo();        
-        this.initialiazeImageSquareInfo();
+        this.initialiazeTextureTileInfo();        
+        this.initialiazeImageTileInfo();
     }
 
-    private initialiazeTextureSquareInfo(): void {
-        this.textureSquareSide = this.textureModel.minSide / this.textureMinSideSquareCount;
+    private initialiazeTextureTileInfo(): void {
+        this.textureTileSide = this.textureModel.minSide / this.textureMinSideTileCount;
 
-        this.textureWidthSquareCount = Math.trunc(this.textureModel.width / this.textureSquareSide);
-        this.textureHeightSquareCount = Math.trunc(this.textureModel.height / this.textureSquareSide);
+        this.textureWidthTileCount = Math.trunc(this.textureModel.width / this.textureTileSide);
+        this.textureHeightTileCount = Math.trunc(this.textureModel.height / this.textureTileSide);
 
-        this.textureXSquaresOffset = (this.textureModel.width
-            - this.textureSquareSide * this.textureWidthSquareCount) / 2;
-        this.textureYSquaresOffset = (this.textureModel.height
-            - this.textureSquareSide * this.textureHeightSquareCount) / 2;
+        this.textureXTilesOffset = (this.textureModel.width
+            - this.textureTileSide * this.textureWidthTileCount) / 2;
+        this.textureYTilesOffset = (this.textureModel.height
+            - this.textureTileSide * this.textureHeightTileCount) / 2;
     }
 
-    private initialiazeImageSquareInfo(): void {
-        const squaresXOffset = this.textureXSquaresOffset
+    private initialiazeImageTileInfo(): void {
+        const tilingContainerXOffset = this.textureXTilesOffset
             * this.imageContainerModel.sideToTextureSideRatio;
-        const squaresYOffset = this.textureYSquaresOffset
+        const tilingContainerYOffset = this.textureYTilesOffset
             * this.imageContainerModel.sideToTextureSideRatio;
     
-        this.squaresContainerRectangle = new Rectangle(
-            squaresXOffset,
-            squaresYOffset,
-            this.imageContainerModel.width - squaresXOffset * 2,
-            this.imageContainerModel.height - squaresYOffset * 2,
+        this.tilingContainerRectangle = new Rectangle(
+            tilingContainerXOffset,
+            tilingContainerYOffset,
+            this.imageContainerModel.width - tilingContainerXOffset * 2,
+            this.imageContainerModel.height - tilingContainerYOffset * 2,
         );
     
-        this.squareSide = this.textureSquareSide * this.imageContainerModel.sideToTextureSideRatio;
+        this.tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
     }
 
-    public getImageSquareTexture(rowIndex: number, columnIndex: number): Texture | undefined {
+    public getImageTileTexture(rowIndex: number, columnIndex: number): Texture | undefined {
         rowIndex = Math.floor(rowIndex);
         columnIndex = Math.floor(columnIndex);
 
         if (rowIndex < 0
-            || rowIndex >= this.textureHeightSquareCount
+            || rowIndex >= this.textureHeightTileCount
             || columnIndex < 0
-            || columnIndex >= this.textureWidthSquareCount) {
+            || columnIndex >= this.textureWidthTileCount) {
             return undefined;
         }
 
-        const globalSquare = new Graphics()
+        const globalTile = new Graphics()
             .rect(
-                columnIndex * this.textureSquareSide + this.textureXSquaresOffset,
-                rowIndex * this.textureSquareSide + this.textureYSquaresOffset,
-                this.textureSquareSide,
-                this.textureSquareSide
+                columnIndex * this.textureTileSide + this.textureXTilesOffset,
+                rowIndex * this.textureTileSide + this.textureYTilesOffset,
+                this.textureTileSide,
+                this.textureTileSide
             )
             .fill({
                 texture: this.textureModel.texture,
                 textureSpace: "global"
             });
 
-        const result = this.renderer.generateTexture(globalSquare);
-        globalSquare.destroy();
+        const result = this.renderer.generateTexture(globalTile);
+        globalTile.destroy();
         return result;
     }
 
@@ -99,16 +99,16 @@ export class SquareTilingModel {
         shouldGetTexture: boolean = true): SquareTileModel {
         
         const result = new SquareTileModel();
-        result.side = this.squareSide;
+        result.side = this.tileSide;
         result.boundingRectangle = new Rectangle(
-            columnIndex * this.squareSide,
-            rowIndex * this.squareSide,
-            this.squareSide,
-            this.squareSide
+            columnIndex * this.tileSide,
+            rowIndex * this.tileSide,
+            this.tileSide,
+            this.tileSide
         );
 
         if (shouldGetTexture) {
-            result.texture = this.getImageSquareTexture(rowIndex, columnIndex);
+            result.texture = this.getImageTileTexture(rowIndex, columnIndex);
         }
 
         return result;

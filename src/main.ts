@@ -31,8 +31,8 @@ async function main(): Promise<void> {
     const imageContainerModel = new ImageContainerModel(textureModel,
       containerWidth, containerHeight);
 
-    const textureMinSideSquareCount = 5;
-    const squareTilingModel = new SquareTilingModel(textureModel, textureMinSideSquareCount,
+    const textureMinSideTileCount = 5;
+    const tilingModel = new SquareTilingModel(textureModel, textureMinSideTileCount,
       imageContainerModel, app.renderer);
     
     const screenCenterX = app.screen.width / 2;
@@ -71,12 +71,12 @@ async function main(): Promise<void> {
       });
     imageContainer.addChild(image);
 
-    const squareTilingView = new SquareTilingView(squareTilingModel);
-    const squaresContainer = squareTilingView.getTilingContainer();
-    imageContainer.addChild(squaresContainer);
+    const tilingView = new SquareTilingView(tilingModel);
+    const tilingContainer = tilingView.getTilingContainer();
+    imageContainer.addChild(tilingContainer);
 
-    const squareContext = squareTilingView.getSquareContext();
-    squareTilingView.setExampleTiling(squaresContainer, squareContext);
+    const tileGraphicContext = tilingView.getTileGraphicContext();
+    tilingView.setExampleTiling(tilingContainer, tileGraphicContext);
     
     /*
     // Bunny

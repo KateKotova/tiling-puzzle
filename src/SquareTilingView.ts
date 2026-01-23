@@ -10,16 +10,16 @@ export class SquareTilingView {
 
     public getTilingContainer(): Container {
         return new Container({
-            x: this.model.squaresContainerRectangle.x,
-            y: this.model.squaresContainerRectangle.y,
-            width: this.model.squaresContainerRectangle.width,
-            height: this.model.squaresContainerRectangle.height
+            x: this.model.tilingContainerRectangle.x,
+            y: this.model.tilingContainerRectangle.y,
+            width: this.model.tilingContainerRectangle.width,
+            height: this.model.tilingContainerRectangle.height
         });
     }
 
-    public getSquareContext(): GraphicsContext {
+    public getTileGraphicContext(): GraphicsContext {
         return new GraphicsContext()
-            .rect(0, 0, this.model.squareSide, this.model.squareSide)
+            .rect(0, 0, this.model.tileSide, this.model.tileSide)
             .stroke({
                 color: "black",
                 width: 2,
@@ -27,26 +27,26 @@ export class SquareTilingView {
             });
     }
 
-    public setExampleTiling(tilingContainer: Container, squareContext: GraphicsContext): void {
-        for (let rowIndex = 0; rowIndex < this.model.textureHeightSquareCount; rowIndex++) {
-            for (let columnIndex = 0; columnIndex < this.model.textureWidthSquareCount;
+    public setExampleTiling(tilingContainer: Container, tileGraphicContext: GraphicsContext): void {
+        for (let rowIndex = 0; rowIndex < this.model.textureHeightTileCount; rowIndex++) {
+            for (let columnIndex = 0; columnIndex < this.model.textureWidthTileCount;
                 columnIndex++) {
 
                 // Покажем только диагональные элементы
-                const tileModel = this.model.getTileModel(rowIndex, columnIndex,
-                    rowIndex == columnIndex);
+                const shouldFillByTexture = rowIndex == columnIndex;
+                const tileModel = this.model.getTileModel(rowIndex, columnIndex, shouldFillByTexture);
 
-                const square = new Graphics(squareContext.clone())
-                square.position.set(tileModel.boundingRectangle.x, tileModel.boundingRectangle.y);
+                const tile = new Graphics(tileGraphicContext.clone())
+                tile.position.set(tileModel.boundingRectangle.x, tileModel.boundingRectangle.y);
 
-                if (tileModel.texture) {
-                    square.fill({
+                if (shouldFillByTexture) {
+                    tile.fill({
                         texture: tileModel.texture,
                         textureSpace: "local"
                     });
                 }
 
-                tilingContainer.addChild(square);
+                tilingContainer.addChild(tile);
             }
         }
     }
