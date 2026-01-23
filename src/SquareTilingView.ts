@@ -9,17 +9,18 @@ export class SquareTilingView {
     }
 
     public getTilingContainer(): Container {
+        const rectangle = this.model.tilingContainerModel.boundingRectangle;
         return new Container({
-            x: this.model.squaresContainerRectangle.x,
-            y: this.model.squaresContainerRectangle.y,
-            width: this.model.squaresContainerRectangle.width,
-            height: this.model.squaresContainerRectangle.height
+            x: rectangle.x,
+            y: rectangle.y,
+            width: rectangle.width,
+            height: rectangle.height
         });
     }
 
-    public getSquareContext(): GraphicsContext {
+    private getTileGraphicContext(): GraphicsContext {
         return new GraphicsContext()
-            .rect(0, 0, this.model.squareSide, this.model.squareSide)
+            .rect(0, 0, this.model.tileSide, this.model.tileSide)
             .stroke({
                 color: "black",
                 width: 2,
@@ -27,30 +28,26 @@ export class SquareTilingView {
             });
     }
 
-    public setExampleTiling(tilingContainer: Container, squareContext: GraphicsContext): void {
-        for (let rowIndex = 0, y = 0;
-            rowIndex < this.model.textureHeightSquareCount;
-            rowIndex++, y += this.model.squareSide) {
+    public setExampleTiling(tilingContainer: Container): void {
+        for (let rowIndex = 0; rowIndex < this.model.textureTileRowCount; rowIndex++) {
+            for (let columnIndex = 0; columnIndex < this.model.textureTileColumnCount;
+                columnIndex++) {
 
-            for (let columnIndex = 0, x = 0;
-                columnIndex < this.model.textureWidthSquareCount;
-                columnIndex++, x += this.model.squareSide) {
+                // Покажем только диагональные элементы
+                const shouldFillByTexture = rowIndex == columnIndex;
+                const tileModel = this.model.getTileModel(rowIndex, columnIndex, shouldFillByTexture);
 
-                const square = new Graphics(squareContext.clone())
-                square.position.set(x, y);
+                const tile = new Graphics(this.getTileGraphicContext());
+                tile.position.set(tileModel.boundingRectangle.x, tileModel.boundingRectangle.y);
 
-                // Протестируем только диагональные элементы
-                if (rowIndex == columnIndex) {
-                    const squareTexture = this.model.getImageSquareTexture(rowIndex, columnIndex);
-                    if (squareTexture) {
-                        square.fill({
-                            texture: squareTexture,
-                            textureSpace: "local"
-                        });
-                    }
+                if (shouldFillByTexture) {
+                    tile.fill({
+                        texture: tileModel.texture,
+                        textureSpace: "local"
+                    });
                 }
 
-                tilingContainer.addChild(square);
+                tilingContainer.addChild(tile);
             }
         }
     }
