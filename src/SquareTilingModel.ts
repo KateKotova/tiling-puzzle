@@ -1,6 +1,7 @@
 import { Graphics, Rectangle, Renderer, Texture } from "pixi.js";
 import { TilingTextureModel } from "./TilingTextureModel.ts";
 import { ImageContainerModel } from "./ImageContainerModel.ts";
+import { TilingContainerModel } from "./TilingContainerModel.ts";
 import { SquareTileModel } from "./SquareTileModel.ts";
 
 export class SquareTilingModel {
@@ -9,13 +10,14 @@ export class SquareTilingModel {
 
     public textureModel: TilingTextureModel;
     private textureTileSide: number = 0;
-    public textureWidthTileCount: number = 0;
-    public textureHeightTileCount: number = 0;
-    private textureXTilesOffset: number = 0;
-    private textureYTilesOffset: number = 0;
+    public textureTileColumnCount: number = 0;
+    public textureTileRowCount: number = 0;
+    private textureXTilingOffset: number = 0;
+    private textureYTilingOffset: number = 0;
 
     public imageContainerModel: ImageContainerModel;
-    public tilingContainerRectangle: Rectangle = new Rectangle();
+    public tilingContainerModel: TilingContainerModel;
+    
     public tileSide: number = 0;
 
     private renderer: Renderer;
@@ -34,36 +36,24 @@ export class SquareTilingModel {
         this.imageContainerModel = imageContainerModel;
         this.renderer = renderer;
 
-        this.initialiazeTextureTileInfo();        
-        this.initialiazeImageTileInfo();
+        this.initializeTextureTileInfo();
+
+        this.tilingContainerModel = new TilingContainerModel(this.imageContainerModel,
+            this.textureXTilingOffset, this.textureYTilingOffset);
+        
+        this.tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
     }
 
-    private initialiazeTextureTileInfo(): void {
+    private initializeTextureTileInfo(): void {
         this.textureTileSide = this.textureModel.minSide / this.textureMinSideTileCount;
 
-        this.textureWidthTileCount = Math.trunc(this.textureModel.width / this.textureTileSide);
-        this.textureHeightTileCount = Math.trunc(this.textureModel.height / this.textureTileSide);
+        this.textureTileColumnCount = Math.trunc(this.textureModel.width / this.textureTileSide);
+        this.textureTileRowCount = Math.trunc(this.textureModel.height / this.textureTileSide);
 
-        this.textureXTilesOffset = (this.textureModel.width
-            - this.textureTileSide * this.textureWidthTileCount) / 2;
-        this.textureYTilesOffset = (this.textureModel.height
-            - this.textureTileSide * this.textureHeightTileCount) / 2;
-    }
-
-    private initialiazeImageTileInfo(): void {
-        const tilingContainerXOffset = this.textureXTilesOffset
-            * this.imageContainerModel.sideToTextureSideRatio;
-        const tilingContainerYOffset = this.textureYTilesOffset
-            * this.imageContainerModel.sideToTextureSideRatio;
-    
-        this.tilingContainerRectangle = new Rectangle(
-            tilingContainerXOffset,
-            tilingContainerYOffset,
-            this.imageContainerModel.width - tilingContainerXOffset * 2,
-            this.imageContainerModel.height - tilingContainerYOffset * 2,
-        );
-    
-        this.tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
+        this.textureXTilingOffset = (this.textureModel.width
+            - this.textureTileSide * this.textureTileColumnCount) / 2;
+        this.textureYTilingOffset = (this.textureModel.height
+            - this.textureTileSide * this.textureTileRowCount) / 2;
     }
 
     public getImageTileTexture(rowIndex: number, columnIndex: number): Texture | undefined {
@@ -71,16 +61,16 @@ export class SquareTilingModel {
         columnIndex = Math.floor(columnIndex);
 
         if (rowIndex < 0
-            || rowIndex >= this.textureHeightTileCount
+            || rowIndex >= this.textureTileRowCount
             || columnIndex < 0
-            || columnIndex >= this.textureWidthTileCount) {
+            || columnIndex >= this.textureTileColumnCount) {
             return undefined;
         }
 
         const globalTile = new Graphics()
             .rect(
-                columnIndex * this.textureTileSide + this.textureXTilesOffset,
-                rowIndex * this.textureTileSide + this.textureYTilesOffset,
+                columnIndex * this.textureTileSide + this.textureXTilingOffset,
+                rowIndex * this.textureTileSide + this.textureYTilingOffset,
                 this.textureTileSide,
                 this.textureTileSide
             )

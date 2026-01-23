@@ -6,8 +6,10 @@ import {
 } from "pixi.js";
 import { TilingTextureModel } from "./TilingTextureModel.ts";
 import { ImageContainerModel } from "./ImageContainerModel.ts";
-import { SquareTilingModel } from "./SquareTilingModel.ts";
-import { SquareTilingView } from "./SquareTilingView.ts";
+//import { SquareTilingModel } from "./SquareTilingModel.ts";
+//import { SquareTilingView } from "./SquareTilingView.ts";
+import { TriangleTilingModel } from "./TriangleTilingModel.ts";
+import { TriangleTilingView } from "./TriangleTilingView.ts";
 
 async function main(): Promise<void> {
   try {
@@ -20,20 +22,23 @@ async function main(): Promise<void> {
 
     await Assets.load({
       alias: "example-image",
+      //src: "assets/horse-example-image-rotated.png",
       src: "assets/horse-example-image.png",
     });
 
     const texture = Assets.get("example-image");
     const textureModel = new TilingTextureModel(texture);
 
-    const containerWidth = 500;
+    const containerWidth = 600;
     const containerHeight = 400;
     const imageContainerModel = new ImageContainerModel(textureModel,
       containerWidth, containerHeight);
 
-    const textureMinSideTileCount = 5;
-    const tilingModel = new SquareTilingModel(textureModel, textureMinSideTileCount,
-      imageContainerModel, app.renderer);
+    const textureMinSideTileCount = 4;
+    //const tilingModel = new SquareTilingModel(textureModel, textureMinSideTileCount,
+    //   imageContainerModel, app.renderer);
+    const tilingModel = new TriangleTilingModel(textureModel, textureMinSideTileCount,
+       imageContainerModel, app.renderer);
     
     const screenCenterX = app.screen.width / 2;
     const screenCenterY = app.screen.height / 2;
@@ -71,12 +76,12 @@ async function main(): Promise<void> {
       });
     imageContainer.addChild(image);
 
-    const tilingView = new SquareTilingView(tilingModel);
+    //const tilingView = new SquareTilingView(tilingModel);
+    const tilingView = new TriangleTilingView(tilingModel);
     const tilingContainer = tilingView.getTilingContainer();
     imageContainer.addChild(tilingContainer);
 
-    const tileGraphicContext = tilingView.getTileGraphicContext();
-    tilingView.setExampleTiling(tilingContainer, tileGraphicContext);
+    tilingView.setExampleTiling(tilingContainer);
     
     /*
     // Bunny

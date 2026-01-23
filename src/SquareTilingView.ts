@@ -9,15 +9,16 @@ export class SquareTilingView {
     }
 
     public getTilingContainer(): Container {
+        const rectangle = this.model.tilingContainerModel.boundingRectangle;
         return new Container({
-            x: this.model.tilingContainerRectangle.x,
-            y: this.model.tilingContainerRectangle.y,
-            width: this.model.tilingContainerRectangle.width,
-            height: this.model.tilingContainerRectangle.height
+            x: rectangle.x,
+            y: rectangle.y,
+            width: rectangle.width,
+            height: rectangle.height
         });
     }
 
-    public getTileGraphicContext(): GraphicsContext {
+    private getTileGraphicContext(): GraphicsContext {
         return new GraphicsContext()
             .rect(0, 0, this.model.tileSide, this.model.tileSide)
             .stroke({
@@ -27,16 +28,16 @@ export class SquareTilingView {
             });
     }
 
-    public setExampleTiling(tilingContainer: Container, tileGraphicContext: GraphicsContext): void {
-        for (let rowIndex = 0; rowIndex < this.model.textureHeightTileCount; rowIndex++) {
-            for (let columnIndex = 0; columnIndex < this.model.textureWidthTileCount;
+    public setExampleTiling(tilingContainer: Container): void {
+        for (let rowIndex = 0; rowIndex < this.model.textureTileRowCount; rowIndex++) {
+            for (let columnIndex = 0; columnIndex < this.model.textureTileColumnCount;
                 columnIndex++) {
 
                 // Покажем только диагональные элементы
                 const shouldFillByTexture = rowIndex == columnIndex;
                 const tileModel = this.model.getTileModel(rowIndex, columnIndex, shouldFillByTexture);
 
-                const tile = new Graphics(tileGraphicContext.clone())
+                const tile = new Graphics(this.getTileGraphicContext());
                 tile.position.set(tileModel.boundingRectangle.x, tileModel.boundingRectangle.y);
 
                 if (shouldFillByTexture) {
