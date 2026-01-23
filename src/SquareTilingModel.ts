@@ -1,6 +1,7 @@
 import { Graphics, Rectangle, Renderer, Texture } from "pixi.js";
 import { TilingTextureModel } from "./TilingTextureModel.ts";
 import { ImageContainerModel } from "./ImageContainerModel.ts";
+import { SquareTileModel } from "./SquareTileModel.ts";
 
 export class SquareTilingModel {
     public textureMinSideSquareCount: number;
@@ -90,6 +91,22 @@ export class SquareTilingModel {
 
         const result = this.renderer.generateTexture(globalSquare);
         globalSquare.destroy();
+        return result;
+    }
+
+    public getTileModel(rowIndex: number,
+        columnIndex: number,
+        shouldGetTexture: boolean = true): SquareTileModel {
+        
+        const result = new SquareTileModel();
+        result.x = columnIndex * this.squareSide;
+        result.y = rowIndex * this.squareSide;
+        result.side = this.squareSide;
+
+        if (shouldGetTexture) {
+            result.texture = this.getImageSquareTexture(rowIndex, columnIndex);
+        }
+
         return result;
     }
 }

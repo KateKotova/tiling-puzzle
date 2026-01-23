@@ -28,26 +28,22 @@ export class SquareTilingView {
     }
 
     public setExampleTiling(tilingContainer: Container, squareContext: GraphicsContext): void {
-        for (let rowIndex = 0, y = 0;
-            rowIndex < this.model.textureHeightSquareCount;
-            rowIndex++, y += this.model.squareSide) {
+        for (let rowIndex = 0; rowIndex < this.model.textureHeightSquareCount; rowIndex++) {
+            for (let columnIndex = 0; columnIndex < this.model.textureWidthSquareCount;
+                columnIndex++) {
 
-            for (let columnIndex = 0, x = 0;
-                columnIndex < this.model.textureWidthSquareCount;
-                columnIndex++, x += this.model.squareSide) {
+                // Покажем только диагональные элементы
+                const tileModel = this.model.getTileModel(rowIndex, columnIndex,
+                    rowIndex == columnIndex);
 
                 const square = new Graphics(squareContext.clone())
-                square.position.set(x, y);
+                square.position.set(tileModel.x, tileModel.y);
 
-                // Протестируем только диагональные элементы
-                if (rowIndex == columnIndex) {
-                    const squareTexture = this.model.getImageSquareTexture(rowIndex, columnIndex);
-                    if (squareTexture) {
-                        square.fill({
-                            texture: squareTexture,
-                            textureSpace: "local"
-                        });
-                    }
+                if (tileModel.texture) {
+                    square.fill({
+                        texture: tileModel.texture,
+                        textureSpace: "local"
+                    });
                 }
 
                 tilingContainer.addChild(square);
