@@ -37,7 +37,7 @@ export class SquareTilingView {
                     rowIndex == columnIndex);
 
                 const square = new Graphics(squareContext.clone())
-                square.position.set(tileModel.x, tileModel.y);
+                square.position.set(tileModel.boundingRectangle.x, tileModel.boundingRectangle.y);
 
                 if (tileModel.texture) {
                     square.fill({

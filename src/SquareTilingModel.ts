@@ -99,9 +99,13 @@ export class SquareTilingModel {
         shouldGetTexture: boolean = true): SquareTileModel {
         
         const result = new SquareTileModel();
-        result.x = columnIndex * this.squareSide;
-        result.y = rowIndex * this.squareSide;
         result.side = this.squareSide;
+        result.boundingRectangle = new Rectangle(
+            columnIndex * this.squareSide,
+            rowIndex * this.squareSide,
+            this.squareSide,
+            this.squareSide
+        );
 
         if (shouldGetTexture) {
             result.texture = this.getImageSquareTexture(rowIndex, columnIndex);
