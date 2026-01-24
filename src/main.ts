@@ -4,12 +4,13 @@ import {
   Container,
   Graphics
 } from "pixi.js";
-import { TilingTextureModel } from "./TilingTextureModel.ts";
-import { ImageContainerModel } from "./ImageContainerModel.ts";
-//import { SquareTilingModel } from "./SquareTilingModel.ts";
-//import { SquareTilingView } from "./SquareTilingView.ts";
-import { TriangleTilingModel } from "./TriangleTilingModel.ts";
-import { TriangleTilingView } from "./TriangleTilingView.ts";
+import { TilingTextureModel } from "./models/TilingTextureModel.ts";
+import { ImageContainerModel } from "./models/ImageContainerModel.ts";
+import { TilingType } from "./models/TilingType.ts";
+import { TilingModel } from "./models/TilingModel.ts";
+import { SquareTilingModel } from "./models/polygons/tilings/SquareTilingModel.ts";
+import { TriangleTilingModel } from "./models/polygons/tilings/TriangleTilingModel.ts";
+import { TilingViewFactory } from "./views/polygons/TilingViewFactory.ts";
 
 async function main(): Promise<void> {
   try {
@@ -35,11 +36,22 @@ async function main(): Promise<void> {
       containerWidth, containerHeight);
 
     const textureMinSideTileCount = 4;
-    //const tilingModel = new SquareTilingModel(textureModel, textureMinSideTileCount,
-    //   imageContainerModel, app.renderer);
-    const tilingModel = new TriangleTilingModel(textureModel, textureMinSideTileCount,
-       imageContainerModel, app.renderer);
-    
+    const tilingType = TilingType.Triangle;
+    let tilingModel: TilingModel | null = null;
+
+    switch (tilingType) {
+      case TilingType.Square:
+        tilingModel = new SquareTilingModel(textureModel, textureMinSideTileCount,
+          imageContainerModel, app.renderer);
+        break;
+      case TilingType.Triangle:
+        tilingModel = new TriangleTilingModel(textureModel, textureMinSideTileCount,
+          imageContainerModel, app.renderer);
+        break;
+      default:
+        break;
+    }
+
     const screenCenterX = app.screen.width / 2;
     const screenCenterY = app.screen.height / 2;
 
@@ -76,13 +88,15 @@ async function main(): Promise<void> {
       });
     imageContainer.addChild(image);
 
-    //const tilingView = new SquareTilingView(tilingModel);
-    const tilingView = new TriangleTilingView(tilingModel);
-    const tilingContainer = tilingView.getTilingContainer();
-    imageContainer.addChild(tilingContainer);
+    if (tilingModel) {
+      const tilingViewFactory = new TilingViewFactory();
+      const tilingView = tilingViewFactory.createTilingView(tilingModel);
+      if (tilingView) {
+        imageContainer.addChild(tilingView.tilingContainer);
+        tilingView.setExampleTiling();
+      }
+    }
 
-    tilingView.setExampleTiling(tilingContainer);
-    
     /*
     // Bunny
     const texture = await Assets.load("/assets/bunny.png");

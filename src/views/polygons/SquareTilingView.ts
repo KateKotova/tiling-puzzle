@@ -1,14 +1,17 @@
 import { Container, Graphics, GraphicsContext } from "pixi.js";
-import { SquareTilingModel } from "./SquareTilingModel.ts";
+import { TilingView } from "./TilingView.ts";
+import { SquareTilingModel } from "../../models/polygons/tilings/SquareTilingModel.ts";
 
-export class SquareTilingView {
+export class SquareTilingView implements TilingView {
     public model: SquareTilingModel;
+    public tilingContainer: Container;
 
     constructor(model: SquareTilingModel) {
         this.model = model;
+        this.tilingContainer = this.createTilingContainer();
     }
 
-    public getTilingContainer(): Container {
+    private createTilingContainer(): Container {
         const rectangle = this.model.tilingContainerModel.boundingRectangle;
         return new Container({
             x: rectangle.x,
@@ -28,7 +31,7 @@ export class SquareTilingView {
             });
     }
 
-    public setExampleTiling(tilingContainer: Container): void {
+    public setExampleTiling(): void {
         for (let rowIndex = 0; rowIndex < this.model.textureTileRowCount; rowIndex++) {
             for (let columnIndex = 0; columnIndex < this.model.textureTileColumnCount;
                 columnIndex++) {
@@ -47,7 +50,7 @@ export class SquareTilingView {
                     });
                 }
 
-                tilingContainer.addChild(tile);
+                this.tilingContainer.addChild(tile);
             }
         }
     }

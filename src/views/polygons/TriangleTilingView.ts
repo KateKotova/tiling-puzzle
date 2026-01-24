@@ -1,14 +1,17 @@
 import { Container, Graphics } from "pixi.js";
-import { TriangleTilingModel } from "./TriangleTilingModel.ts";
+import { TilingView } from "./TilingView.ts";
+import { TriangleTilingModel } from "../../models/polygons/tilings/TriangleTilingModel.ts";
 
-export class TriangleTilingView {
+export class TriangleTilingView implements TilingView {
     public model: TriangleTilingModel;
+    public tilingContainer: Container;
 
     constructor(model: TriangleTilingModel) {
         this.model = model;
+        this.tilingContainer = this.createTilingContainer();
     }
 
-    public getTilingContainer(): Container {
+    private createTilingContainer(): Container {
         const rectangle = this.model.tilingContainerModel.boundingRectangle;
         return new Container({
             x: rectangle.x,
@@ -18,7 +21,7 @@ export class TriangleTilingView {
         });
     }
 
-    public setExampleTiling(tilingContainer: Container): void {
+    public setExampleTiling(): void {
         for (let rowIndex = 0; rowIndex < this.model.textureTileRowCount; rowIndex++) {
             for (let columnIndex = 0; columnIndex < this.model.textureTileColumnCount;
                 columnIndex++) {
@@ -49,7 +52,7 @@ export class TriangleTilingView {
                     });
                 }
 
-                tilingContainer.addChild(tile);
+                this.tilingContainer.addChild(tile);
             }
         }
     }

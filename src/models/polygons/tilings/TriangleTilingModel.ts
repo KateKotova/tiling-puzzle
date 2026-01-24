@@ -1,10 +1,14 @@
 import { Graphics, Point, Rectangle, Renderer, Texture } from "pixi.js";
-import { TilingTextureModel } from "./TilingTextureModel.ts";
-import { ImageContainerModel } from "./ImageContainerModel.ts";
-import { TilingContainerModel } from "./TilingContainerModel.ts";
-import { TriangleTileModel } from "./TriangleTileModel.ts";
+import { TilingType } from "../../TilingType.ts";
+import { TilingModel } from "../../TilingModel.ts";
+import { TilingTextureModel } from "../../TilingTextureModel.ts";
+import { ImageContainerModel } from "../../ImageContainerModel.ts";
+import { TilingContainerModel } from "../../TilingContainerModel.ts";
+import { TriangleTileModel } from "../tiles/TriangleTileModel.ts";
 
-export class TriangleTilingModel {
+export class TriangleTilingModel implements TilingModel {
+    public static readonly tilingType: TilingType = TilingType.Triangle;
+
     public textureMinSideTilePairCount: number;
     public static readonly textureMinSideMinTilePairCount = 2;
 
@@ -16,7 +20,7 @@ export class TriangleTilingModel {
     private textureXTilingOffset: number = 0;
     private textureYTilingOffset: number = 0;
 
-    public imageContainerModel: ImageContainerModel;
+    private imageContainerModel: ImageContainerModel;
     public tilingContainerModel: TilingContainerModel;
 
     public tileSide: number = 0;
@@ -45,6 +49,10 @@ export class TriangleTilingModel {
         
         this.tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
         this.tileHeight = this.textureTileHeight * this.imageContainerModel.sideToTextureSideRatio;
+    }
+
+    public getTilingType(): TilingType {
+        return TriangleTilingModel.tilingType;
     }
 
     private initializeTextureTileInfo(): void {
