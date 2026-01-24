@@ -1,32 +1,22 @@
-import { Container, Graphics } from "pixi.js";
-import { TriangleTilingModel } from "./TriangleTilingModel.ts";
+import { Graphics } from "pixi.js";
+import { TilingView } from "./TilingView.ts";
+import { TriangleTilingModel } from "../../models/polygons/tilings/TriangleTilingModel.ts";
 
-export class TriangleTilingView {
-    public model: TriangleTilingModel;
-
+export class TriangleTilingView extends TilingView {
     constructor(model: TriangleTilingModel) {
-        this.model = model;
+        super(model);
     }
 
-    public getTilingContainer(): Container {
-        const rectangle = this.model.tilingContainerModel.boundingRectangle;
-        return new Container({
-            x: rectangle.x,
-            y: rectangle.y,
-            width: rectangle.width,
-            height: rectangle.height
-        });
-    }
-
-    public setExampleTiling(tilingContainer: Container): void {
-        for (let rowIndex = 0; rowIndex < this.model.textureTileRowCount; rowIndex++) {
-            for (let columnIndex = 0; columnIndex < this.model.textureTileColumnCount;
+    public setExampleTiling(): void {
+        const model = this.model as TriangleTilingModel;
+        for (let rowIndex = 0; rowIndex < model.textureTileRowCount; rowIndex++) {
+            for (let columnIndex = 0; columnIndex < model.textureTileColumnCount;
                 columnIndex++) {
 
                 const shouldFillByTexture = rowIndex == columnIndex
                     || rowIndex == columnIndex - 3
                     || rowIndex == columnIndex + 3;
-                const tileModel = this.model.getTileModel(rowIndex, columnIndex, shouldFillByTexture);
+                const tileModel = model.getTileModel(rowIndex, columnIndex, shouldFillByTexture);
 
                 const tile = new Graphics()
                     .regularPoly(
@@ -49,7 +39,7 @@ export class TriangleTilingView {
                     });
                 }
 
-                tilingContainer.addChild(tile);
+                this.tilingContainer.addChild(tile);
             }
         }
     }

@@ -1,10 +1,14 @@
-import { Graphics, Rectangle, Renderer, Texture } from "pixi.js";
-import { TilingTextureModel } from "./TilingTextureModel.ts";
-import { ImageContainerModel } from "./ImageContainerModel.ts";
-import { TilingContainerModel } from "./TilingContainerModel.ts";
-import { SquareTileModel } from "./SquareTileModel.ts";
+import { Graphics, Point, Rectangle, Renderer, Texture } from "pixi.js";
+import { TilingType } from "../../TilingType.ts";
+import { TilingModel } from "../../TilingModel.ts";
+import { TilingTextureModel } from "../../TilingTextureModel.ts";
+import { ImageContainerModel } from "../../ImageContainerModel.ts";
+import { TilingContainerModel } from "../../TilingContainerModel.ts";
+import { SquareTileModel } from "../tiles/SquareTileModel.ts";
 
-export class SquareTilingModel {
+export class SquareTilingModel implements TilingModel {
+    public static readonly tilingType: TilingType = TilingType.Square;
+
     public textureMinSideTileCount: number;
     public static readonly textureMinSideMinTileCount = 2;
 
@@ -15,7 +19,7 @@ export class SquareTilingModel {
     private textureXTilingOffset: number = 0;
     private textureYTilingOffset: number = 0;
 
-    public imageContainerModel: ImageContainerModel;
+    private imageContainerModel: ImageContainerModel;
     public tilingContainerModel: TilingContainerModel;
     
     public tileSide: number = 0;
@@ -42,6 +46,10 @@ export class SquareTilingModel {
             this.textureXTilingOffset, this.textureYTilingOffset);
         
         this.tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
+    }
+
+    public getTilingType(): TilingType {
+        return SquareTilingModel.tilingType;
     }
 
     private initializeTextureTileInfo(): void {
@@ -96,6 +104,8 @@ export class SquareTilingModel {
             this.tileSide,
             this.tileSide
         );
+        result.centerPoint = new Point(result.boundingRectangle.x + this.tileSide / 2,
+            result.boundingRectangle.y + this.tileSide / 2);
 
         if (shouldGetTexture) {
             result.texture = this.getImageTileTexture(rowIndex, columnIndex);

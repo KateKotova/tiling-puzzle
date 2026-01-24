@@ -4,15 +4,30 @@ import {
   Container,
   Graphics
 } from "pixi.js";
-import { TilingTextureModel } from "./TilingTextureModel.ts";
-import { ImageContainerModel } from "./ImageContainerModel.ts";
-//import { SquareTilingModel } from "./SquareTilingModel.ts";
-//import { SquareTilingView } from "./SquareTilingView.ts";
-import { TriangleTilingModel } from "./TriangleTilingModel.ts";
-import { TriangleTilingView } from "./TriangleTilingView.ts";
+import { TilingTextureModel } from "./models/TilingTextureModel.ts";
+import { ImageContainerModel } from "./models/ImageContainerModel.ts";
+import { TilingType } from "./models/TilingType.ts";
+import { TilingModel } from "./models/TilingModel.ts";
+//import { SquareTilingModel } from "./models/polygons/tilings/SquareTilingModel.ts";
+//import { TriangleTilingModel } from "./models/polygons/tilings/TriangleTilingModel.ts";
+import { HexagonTilingModel } from "./models/polygons/tilings/HexagonTilingModel.ts";
+import { TilingViewFactory } from "./views/polygons/TilingViewFactory.ts";
 
 async function main(): Promise<void> {
   try {
+    //#region test data
+
+    //const exampleImageSrc = "assets/horse-example-image-rotated.png";
+    const exampleImageSrc = "assets/horse-example-image.png";
+
+    const containerWidth = 500;
+    const containerHeight = 400;
+
+    const textureMinSideTileCount = 4;
+    const tilingType = TilingType.Hexagon;
+
+    //#endregion test data end
+
     const app = new Application();
     // @ts-expect-error PixiJS DevTools
     globalThis.__PIXI_APP__ = app;
@@ -22,24 +37,34 @@ async function main(): Promise<void> {
 
     await Assets.load({
       alias: "example-image",
-      //src: "assets/horse-example-image-rotated.png",
-      src: "assets/horse-example-image.png",
+      src: exampleImageSrc,
     });
 
     const texture = Assets.get("example-image");
     const textureModel = new TilingTextureModel(texture);
 
-    const containerWidth = 600;
-    const containerHeight = 400;
     const imageContainerModel = new ImageContainerModel(textureModel,
       containerWidth, containerHeight);
 
-    const textureMinSideTileCount = 4;
-    //const tilingModel = new SquareTilingModel(textureModel, textureMinSideTileCount,
-    //   imageContainerModel, app.renderer);
-    const tilingModel = new TriangleTilingModel(textureModel, textureMinSideTileCount,
-       imageContainerModel, app.renderer);
-    
+    let tilingModel: TilingModel | null = null;
+
+    switch (tilingType) {
+      // case TilingType.Square:
+      //   tilingModel = new SquareTilingModel(textureModel, textureMinSideTileCount,
+      //     imageContainerModel, app.renderer);
+      //   break;
+      // case TilingType.Triangle:
+      //   tilingModel = new TriangleTilingModel(textureModel, textureMinSideTileCount,
+      //     imageContainerModel, app.renderer);
+      //   break;
+      case TilingType.Hexagon:
+        tilingModel = new HexagonTilingModel(textureModel, textureMinSideTileCount,
+          imageContainerModel, app.renderer);
+        break;
+      default:
+        break;
+    }
+
     const screenCenterX = app.screen.width / 2;
     const screenCenterY = app.screen.height / 2;
 
@@ -76,13 +101,15 @@ async function main(): Promise<void> {
       });
     imageContainer.addChild(image);
 
-    //const tilingView = new SquareTilingView(tilingModel);
-    const tilingView = new TriangleTilingView(tilingModel);
-    const tilingContainer = tilingView.getTilingContainer();
-    imageContainer.addChild(tilingContainer);
+    if (tilingModel) {
+      const tilingViewFactory = new TilingViewFactory();
+      const tilingView = tilingViewFactory.createTilingView(tilingModel);
+      if (tilingView) {
+        imageContainer.addChild(tilingView.tilingContainer);
+        tilingView.setExampleTiling();
+      }
+    }
 
-    tilingView.setExampleTiling(tilingContainer);
-    
     /*
     // Bunny
     const texture = await Assets.load("/assets/bunny.png");
