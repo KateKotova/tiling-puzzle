@@ -14,6 +14,19 @@ import { TilingViewFactory } from "./views/polygons/TilingViewFactory.ts";
 
 async function main(): Promise<void> {
   try {
+    //#region test data
+
+    const exampleImageSrc = "assets/horse-example-image-rotated.png";
+    //const exampleImageSrc = "assets/horse-example-image.png";
+
+    const containerWidth = 600;
+    const containerHeight = 400;
+
+    const textureMinSideTileCount = 4;
+    const tilingType = TilingType.Triangle;
+
+    //#endregion test data end
+
     const app = new Application();
     // @ts-expect-error PixiJS DevTools
     globalThis.__PIXI_APP__ = app;
@@ -23,20 +36,15 @@ async function main(): Promise<void> {
 
     await Assets.load({
       alias: "example-image",
-      //src: "assets/horse-example-image-rotated.png",
-      src: "assets/horse-example-image.png",
+      src: exampleImageSrc,
     });
 
     const texture = Assets.get("example-image");
     const textureModel = new TilingTextureModel(texture);
 
-    const containerWidth = 600;
-    const containerHeight = 400;
     const imageContainerModel = new ImageContainerModel(textureModel,
       containerWidth, containerHeight);
 
-    const textureMinSideTileCount = 4;
-    const tilingType = TilingType.Triangle;
     let tilingModel: TilingModel | null = null;
 
     switch (tilingType) {
