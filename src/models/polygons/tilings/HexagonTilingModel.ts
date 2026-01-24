@@ -4,7 +4,7 @@ import { TilingModel } from "../../TilingModel.ts";
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { TilingContainerModel } from "../../TilingContainerModel.ts";
-import { HexagonTileModel } from "../tiles/HexagonTileModel.ts";
+import { RegularPolygonTileModel } from "../tiles/RegularPolygonTileModel.ts";
 
 export class HexagonTilingModel implements TilingModel {
     public static readonly tilingType: TilingType = TilingType.Hexagon;
@@ -115,10 +115,12 @@ export class HexagonTilingModel implements TilingModel {
 
     public getTileModel(rowIndex: number,
         columnIndex: number,
-        shouldGetTexture: boolean = true): HexagonTileModel {
+        shouldGetTexture: boolean = true): RegularPolygonTileModel {
         
-        const result = new HexagonTileModel();
+        const result = new RegularPolygonTileModel();
         result.side = this.tileSide;
+        result.sideCount = 6;
+        result.rotationAngle = Math.PI / 2;
         result.boundingRectangle = new Rectangle(
             columnIndex * this.tileSide / 2 * 3,
             rowIndex * this.tileHeight + (columnIndex % 2 == 1 ? this.tileHeight / 2 : 0),

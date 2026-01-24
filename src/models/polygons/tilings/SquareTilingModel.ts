@@ -4,7 +4,7 @@ import { TilingModel } from "../../TilingModel.ts";
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { TilingContainerModel } from "../../TilingContainerModel.ts";
-import { SquareTileModel } from "../tiles/SquareTileModel.ts";
+import { RegularPolygonTileModel } from "../tiles/RegularPolygonTileModel.ts";
 
 export class SquareTilingModel implements TilingModel {
     public static readonly tilingType: TilingType = TilingType.Square;
@@ -94,16 +94,19 @@ export class SquareTilingModel implements TilingModel {
 
     public getTileModel(rowIndex: number,
         columnIndex: number,
-        shouldGetTexture: boolean = true): SquareTileModel {
+        shouldGetTexture: boolean = true): RegularPolygonTileModel {
         
-        const result = new SquareTileModel();
+        const result = new RegularPolygonTileModel();
         result.side = this.tileSide;
+        result.sideCount = 4;
+        result.rotationAngle = Math.PI / 4;
         result.boundingRectangle = new Rectangle(
             columnIndex * this.tileSide,
             rowIndex * this.tileSide,
             this.tileSide,
             this.tileSide
         );
+        result.circumscribedCircleRadius = Math.sqrt(2) / 2 * this.tileSide;
         result.centerPoint = new Point(result.boundingRectangle.x + this.tileSide / 2,
             result.boundingRectangle.y + this.tileSide / 2);
 

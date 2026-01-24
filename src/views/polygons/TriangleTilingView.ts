@@ -17,20 +17,7 @@ export class TriangleTilingView extends TilingView {
                     || rowIndex == columnIndex - 3
                     || rowIndex == columnIndex + 3;
                 const tileModel = model.getTileModel(rowIndex, columnIndex, shouldFillByTexture);
-
-                const tile = new Graphics()
-                    .regularPoly(
-                        tileModel.centerPoint.x,
-                        tileModel.centerPoint.y,
-                        tileModel.circumscribedCircleRadius,
-                        3,
-                        tileModel.rotationAngle
-                    )
-                    .stroke({
-                        color: "black",
-                        width: 2,
-                        alpha: 0.7
-                    });
+                const tile = new Graphics(this.getRegularPolygonTileGraphicsContext(tileModel));
 
                 if (shouldFillByTexture) {
                     tile.fill({

@@ -4,7 +4,7 @@ import { TilingModel } from "../../TilingModel.ts";
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { TilingContainerModel } from "../../TilingContainerModel.ts";
-import { TriangleTileModel } from "../tiles/TriangleTileModel.ts";
+import { RegularPolygonTileModel } from "../tiles/RegularPolygonTileModel.ts";
 
 export class TriangleTilingModel implements TilingModel {
     public static readonly tilingType: TilingType = TilingType.Triangle;
@@ -106,11 +106,12 @@ export class TriangleTilingModel implements TilingModel {
 
     public getTileModel(rowIndex: number,
         columnIndex: number,
-        shouldGetTexture: boolean = true): TriangleTileModel {
+        shouldGetTexture: boolean = true): RegularPolygonTileModel {
         
         const tileSideHalf = this.tileSide / 2;
-        const result = new TriangleTileModel();
+        const result = new RegularPolygonTileModel();
         result.side = this.tileSide;
+        result.sideCount = 3;
         result.boundingRectangle = new Rectangle(
             columnIndex * tileSideHalf,
             rowIndex * this.tileHeight,
