@@ -1,14 +1,14 @@
 import { Graphics } from "pixi.js";
 import { TilingView } from "./TilingView.ts";
-import { TriangleTilingModel } from "../../models/polygons/tilings/TriangleTilingModel.ts";
+import { HexagonTilingModel } from "../../models/polygons/tilings/HexagonTilingModel.ts";
 
-export class TriangleTilingView extends TilingView {
-    constructor(model: TriangleTilingModel) {
+export class HexagonTilingView extends TilingView {
+    constructor(model: HexagonTilingModel) {
         super(model);
     }
 
     public setExampleTiling(): void {
-        const model = this.model as TriangleTilingModel;
+        const model = this.model as HexagonTilingModel;
         for (let rowIndex = 0; rowIndex < model.textureTileRowCount; rowIndex++) {
             for (let columnIndex = 0; columnIndex < model.textureTileColumnCount;
                 columnIndex++) {
@@ -23,8 +23,8 @@ export class TriangleTilingView extends TilingView {
                         tileModel.centerPoint.x,
                         tileModel.centerPoint.y,
                         tileModel.circumscribedCircleRadius,
-                        3,
-                        tileModel.rotationAngle
+                        6,
+                        Math.PI / 2
                     )
                     .stroke({
                         color: "black",

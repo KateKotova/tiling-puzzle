@@ -1,4 +1,4 @@
-import { Graphics, Rectangle, Renderer, Texture } from "pixi.js";
+import { Graphics, Point, Rectangle, Renderer, Texture } from "pixi.js";
 import { TilingType } from "../../TilingType.ts";
 import { TilingModel } from "../../TilingModel.ts";
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
@@ -104,6 +104,8 @@ export class SquareTilingModel implements TilingModel {
             this.tileSide,
             this.tileSide
         );
+        result.centerPoint = new Point(result.boundingRectangle.x + this.tileSide / 2,
+            result.boundingRectangle.y + this.tileSide / 2);
 
         if (shouldGetTexture) {
             result.texture = this.getImageTileTexture(rowIndex, columnIndex);

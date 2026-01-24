@@ -1,29 +1,16 @@
-import { Container, Graphics, GraphicsContext } from "pixi.js";
+import { Graphics, GraphicsContext } from "pixi.js";
 import { TilingView } from "./TilingView.ts";
 import { SquareTilingModel } from "../../models/polygons/tilings/SquareTilingModel.ts";
 
-export class SquareTilingView implements TilingView {
-    public model: SquareTilingModel;
-    public tilingContainer: Container;
-
+export class SquareTilingView extends TilingView {
     constructor(model: SquareTilingModel) {
-        this.model = model;
-        this.tilingContainer = this.createTilingContainer();
-    }
-
-    private createTilingContainer(): Container {
-        const rectangle = this.model.tilingContainerModel.boundingRectangle;
-        return new Container({
-            x: rectangle.x,
-            y: rectangle.y,
-            width: rectangle.width,
-            height: rectangle.height
-        });
+        super(model);
     }
 
     private getTileGraphicContext(): GraphicsContext {
+        const model = this.model as SquareTilingModel;
         return new GraphicsContext()
-            .rect(0, 0, this.model.tileSide, this.model.tileSide)
+            .rect(0, 0, model.tileSide, model.tileSide)
             .stroke({
                 color: "black",
                 width: 2,
@@ -32,13 +19,14 @@ export class SquareTilingView implements TilingView {
     }
 
     public setExampleTiling(): void {
-        for (let rowIndex = 0; rowIndex < this.model.textureTileRowCount; rowIndex++) {
-            for (let columnIndex = 0; columnIndex < this.model.textureTileColumnCount;
+        const model = this.model as SquareTilingModel;
+        for (let rowIndex = 0; rowIndex < model.textureTileRowCount; rowIndex++) {
+            for (let columnIndex = 0; columnIndex < model.textureTileColumnCount;
                 columnIndex++) {
 
                 // Покажем только диагональные элементы
                 const shouldFillByTexture = rowIndex == columnIndex;
-                const tileModel = this.model.getTileModel(rowIndex, columnIndex, shouldFillByTexture);
+                const tileModel = model.getTileModel(rowIndex, columnIndex, shouldFillByTexture);
 
                 const tile = new Graphics(this.getTileGraphicContext());
                 tile.position.set(tileModel.boundingRectangle.x, tileModel.boundingRectangle.y);

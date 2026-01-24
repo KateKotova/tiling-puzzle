@@ -8,22 +8,23 @@ import { TilingTextureModel } from "./models/TilingTextureModel.ts";
 import { ImageContainerModel } from "./models/ImageContainerModel.ts";
 import { TilingType } from "./models/TilingType.ts";
 import { TilingModel } from "./models/TilingModel.ts";
-import { SquareTilingModel } from "./models/polygons/tilings/SquareTilingModel.ts";
-import { TriangleTilingModel } from "./models/polygons/tilings/TriangleTilingModel.ts";
+//import { SquareTilingModel } from "./models/polygons/tilings/SquareTilingModel.ts";
+//import { TriangleTilingModel } from "./models/polygons/tilings/TriangleTilingModel.ts";
+import { HexagonTilingModel } from "./models/polygons/tilings/HexagonTilingModel.ts";
 import { TilingViewFactory } from "./views/polygons/TilingViewFactory.ts";
 
 async function main(): Promise<void> {
   try {
     //#region test data
 
-    const exampleImageSrc = "assets/horse-example-image-rotated.png";
-    //const exampleImageSrc = "assets/horse-example-image.png";
+    //const exampleImageSrc = "assets/horse-example-image-rotated.png";
+    const exampleImageSrc = "assets/horse-example-image.png";
 
-    const containerWidth = 600;
+    const containerWidth = 500;
     const containerHeight = 400;
 
     const textureMinSideTileCount = 4;
-    const tilingType = TilingType.Triangle;
+    const tilingType = TilingType.Hexagon;
 
     //#endregion test data end
 
@@ -48,12 +49,16 @@ async function main(): Promise<void> {
     let tilingModel: TilingModel | null = null;
 
     switch (tilingType) {
-      case TilingType.Square:
-        tilingModel = new SquareTilingModel(textureModel, textureMinSideTileCount,
-          imageContainerModel, app.renderer);
-        break;
-      case TilingType.Triangle:
-        tilingModel = new TriangleTilingModel(textureModel, textureMinSideTileCount,
+      // case TilingType.Square:
+      //   tilingModel = new SquareTilingModel(textureModel, textureMinSideTileCount,
+      //     imageContainerModel, app.renderer);
+      //   break;
+      // case TilingType.Triangle:
+      //   tilingModel = new TriangleTilingModel(textureModel, textureMinSideTileCount,
+      //     imageContainerModel, app.renderer);
+      //   break;
+      case TilingType.Hexagon:
+        tilingModel = new HexagonTilingModel(textureModel, textureMinSideTileCount,
           imageContainerModel, app.renderer);
         break;
       default:
