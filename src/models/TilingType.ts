@@ -1,5 +1,7 @@
 export enum TilingType {
+    Unknown = "Unknown",
     Square = "Square",
     Triangle = "Triangle",
-    Hexagon = "Hexagon"
+    Hexagon = "Hexagon",
+    OctagonAndSquare = "OctagonAndSquare"
 }

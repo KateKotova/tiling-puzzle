@@ -45,7 +45,7 @@ export class SquareTilingModel implements TilingModel {
         this.tilingContainerModel = new TilingContainerModel(this.imageContainerModel,
             this.textureXTilingOffset, this.textureYTilingOffset);
         
-        this.tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
+        this.initializeImageTileInfo();
     }
 
     public getTilingType(): TilingType {
@@ -62,6 +62,10 @@ export class SquareTilingModel implements TilingModel {
             - this.textureTileSide * this.textureTileColumnCount) / 2;
         this.textureYTilingOffset = (this.textureModel.height
             - this.textureTileSide * this.textureTileRowCount) / 2;
+    }
+
+    private initializeImageTileInfo(): void {
+        this.tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
     }
 
     public getImageTileTexture(rowIndex: number, columnIndex: number): Texture | undefined {

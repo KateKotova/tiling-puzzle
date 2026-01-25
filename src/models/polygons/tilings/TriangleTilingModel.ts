@@ -47,8 +47,7 @@ export class TriangleTilingModel implements TilingModel {
         this.tilingContainerModel = new TilingContainerModel(this.imageContainerModel,
             this.textureXTilingOffset, this.textureYTilingOffset);
         
-        this.tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
-        this.tileHeight = this.textureTileHeight * this.imageContainerModel.sideToTextureSideRatio;
+        this.initializeImageTileInfo();
     }
 
     public getTilingType(): TilingType {
@@ -74,6 +73,11 @@ export class TriangleTilingModel implements TilingModel {
             - this.textureTileSide / 2 * (this.textureTileColumnCount + 1)) / 2;
         this.textureYTilingOffset = (this.textureModel.height
             - this.textureTileHeight * this.textureTileRowCount) / 2;
+    }
+
+    private initializeImageTileInfo(): void {
+        this.tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
+        this.tileHeight = this.textureTileHeight * this.imageContainerModel.sideToTextureSideRatio;
     }
 
     public getImageTileTexture(rowIndex: number, columnIndex: number): Texture | undefined {
@@ -118,7 +122,6 @@ export class TriangleTilingModel implements TilingModel {
             this.tileSide,
             this.tileHeight
         );
-
         result.circumscribedCircleRadius = this.tileHeight * 2 / 3;
 
         const tileIsRotated = (rowIndex % 2 == 0 && columnIndex % 2 == 0)

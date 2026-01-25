@@ -6,16 +6,16 @@ import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { TilingContainerModel } from "../../TilingContainerModel.ts";
 import { RegularPolygonTileModel } from "../tiles/RegularPolygonTileModel.ts";
 
-export class HexagonTilingModel implements TilingModel {
-    public static readonly tilingType: TilingType = TilingType.Hexagon;
+export class OctagonAndSquareTilingModel implements TilingModel {
+    public static readonly tilingType: TilingType = TilingType.OctagonAndSquare;
 
-    public textureMinSideTilePairCount: number;
-    public static readonly textureMinSideMinTilePairCount = 2;
+    public textureMinSideOctagonTileCount: number;
+    public static readonly textureMinSideMinOctagonTileCount = 2;
 
     public textureModel: TilingTextureModel;
     private textureTileSide: number = 0;
-    private textureTileWidth: number = 0;
-    private textureTileHeight: number = 0;
+    private textureOctagonTileWidthOrHeight: number = 0;
+    private textureSquareTileWidthOrHeight: number = 0;
     public textureTileColumnCount: number = 0;
     public textureTileRowCount: number = 0;
     private textureXTilingOffset: number = 0;
@@ -25,20 +25,21 @@ export class HexagonTilingModel implements TilingModel {
     public tilingContainerModel: TilingContainerModel;
 
     public tileSide: number = 0;
-    public tileWidth: number = 0;
-    public tileHeight: number = 0;
+    public octagonTileWidthOrHeight: number = 0;
+    public squareTileWidthOrHeight: number = 0;
 
     private renderer: Renderer;
 
     constructor(textureModel: TilingTextureModel,
-        textureMinSideTilePairCount: number,
+        textureMinSideOctagonTileCount: number,
         imageContainerModel: ImageContainerModel,
         renderer: Renderer) {
 
-        this.textureMinSideTilePairCount
-            = textureMinSideTilePairCount < HexagonTilingModel.textureMinSideMinTilePairCount
-                ? HexagonTilingModel.textureMinSideMinTilePairCount
-                : Math.floor(textureMinSideTilePairCount);
+        this.textureMinSideOctagonTileCount
+            = textureMinSideOctagonTileCount
+                < OctagonAndSquareTilingModel.textureMinSideMinOctagonTileCount
+                ? OctagonAndSquareTilingModel.textureMinSideMinOctagonTileCount
+                : Math.floor(textureMinSideOctagonTileCount);
 
         this.textureModel = textureModel;
         this.imageContainerModel = imageContainerModel;
@@ -53,38 +54,39 @@ export class HexagonTilingModel implements TilingModel {
     }
 
     public getTilingType(): TilingType {
-        return HexagonTilingModel.tilingType;
+        return OctagonAndSquareTilingModel.tilingType;
     }
 
     private initializeTextureTileInfo(): void {
-        const sqrt3 = Math.sqrt(3);
+        const sqrt2 = Math.sqrt(2);
+        const sqrt2PlusOne = sqrt2 + 1;
+        this.textureTileSide = this.textureModel.minSide / this.textureMinSideOctagonTileCount
+            / sqrt2PlusOne;
         if (this.textureModel.widthToHeightRatio <= 1) {
-            this.textureTileSide = this.textureModel.minSide
-                / (0.5 + 3 * this.textureMinSideTilePairCount);
-            this.textureTileColumnCount = 2 * this.textureMinSideTilePairCount;
-            this.textureTileRowCount = Math.trunc(this.textureModel.height
-                / this.textureTileSide / sqrt3 - 0.5);
+            this.textureTileColumnCount = this.textureMinSideOctagonTileCount;
+            this.textureTileRowCount = 2 * Math.trunc(this.textureModel.height / this.textureTileSide
+                / sqrt2PlusOne) - 1;
         } else {
-            this.textureTileSide = this.textureModel.minSide / sqrt3
-                / (this.textureMinSideTilePairCount + 0.5);
-            this.textureTileColumnCount = 2 * Math.trunc((this.textureModel.width
-                / this.textureTileSide - 0.5) / 3);
-            this.textureTileRowCount = this.textureMinSideTilePairCount;
+            this.textureTileColumnCount = 2 * Math.trunc(
+                this.textureModel.width / this.textureTileSide / sqrt2PlusOne);
+            this.textureTileRowCount = 2 * this.textureMinSideOctagonTileCount - 1;
         }
 
-        this.textureTileWidth = 2 * this.textureTileSide;
-        this.textureTileHeight = sqrt3 * this.textureTileSide;
+        this.textureOctagonTileWidthOrHeight = this.textureTileSide * sqrt2PlusOne;
+        this.squareTileWidthOrHeight = sqrt2 * this.textureTileSide;
 
         this.textureXTilingOffset = (this.textureModel.width
-            - this.textureTileSide * (0.5 + 3 / 2 * this.textureTileColumnCount)) / 2;
+            - this.textureTileSide * this.textureTileColumnCount) / 2;
         this.textureYTilingOffset = (this.textureModel.height
-            - sqrt3 * this.textureTileSide * (this.textureTileRowCount + 0.5)) / 2;
+            - this.textureTileSide * (this.textureTileRowCount / 2 + 0.5)) / 2;
     }
 
     private initializeImageTileInfo(): void {
         this.tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
-        this.tileWidth = this.textureTileWidth * this.imageContainerModel.sideToTextureSideRatio;
-        this.tileHeight = this.textureTileHeight * this.imageContainerModel.sideToTextureSideRatio;
+        this.octagonTileWidthOrHeight = this.textureOctagonTileWidthOrHeight
+            * this.imageContainerModel.sideToTextureSideRatio;
+        this.squareTileWidthOrHeight = this.textureSquareTileWidthOrHeight
+            * this.imageContainerModel.sideToTextureSideRatio;
     }
 
     public getImageTileTexture(rowIndex: number, columnIndex: number): Texture | undefined {
@@ -94,18 +96,19 @@ export class HexagonTilingModel implements TilingModel {
         if (rowIndex < 0
             || rowIndex >= this.textureTileRowCount
             || columnIndex < 0
-            || columnIndex >= this.textureTileColumnCount) {
+            || columnIndex >= this.textureTileColumnCount - (rowIndex % 2)) {
             return undefined;
         }
 
+        // TODO От boundingRectangle
         const globalTile = new Graphics()
             .rect(
                 columnIndex * this.textureTileSide / 2 * 3 + this.textureXTilingOffset,
-                rowIndex * this.textureTileHeight
-                    + (columnIndex % 2 == 1 ? this.textureTileHeight / 2 : 0)
+                rowIndex * this.textureOctagonTileHeight
+                    + (columnIndex % 2 == 1 ? this.textureOctagonTileHeight / 2 : 0)
                     + this.textureYTilingOffset,
-                this.textureTileWidth,
-                this.textureTileHeight
+                this.textureOctagonTileWidthOrHeight,
+                this.textureOctagonTileHeight
             )
             .fill({
                 texture: this.textureModel.texture,
@@ -127,13 +130,13 @@ export class HexagonTilingModel implements TilingModel {
         result.rotationAngle = Math.PI / 2;
         result.boundingRectangle = new Rectangle(
             columnIndex * this.tileSide / 2 * 3,
-            rowIndex * this.tileHeight + (columnIndex % 2 == 1 ? this.tileHeight / 2 : 0),
-            this.tileWidth,
-            this.tileHeight
+            rowIndex * this.octagonTileHeight + (columnIndex % 2 == 1 ? this.octagonTileHeight / 2 : 0),
+            this.octagonTileWidthOrHeight,
+            this.octagonTileHeight
         );
         result.circumscribedCircleRadius = this.tileSide;
-        result.centerPoint = new Point(result.boundingRectangle.x + this.tileWidth / 2,
-            result.boundingRectangle.y + this.tileHeight / 2);
+        result.centerPoint = new Point(result.boundingRectangle.x + this.octagonTileWidthOrHeight / 2,
+            result.boundingRectangle.y + this.octagonTileHeight / 2);
 
         if (shouldGetTexture) {
             result.texture = this.getImageTileTexture(rowIndex, columnIndex);
