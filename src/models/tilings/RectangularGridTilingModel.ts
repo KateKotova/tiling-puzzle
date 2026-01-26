@@ -1,10 +1,11 @@
 import { Graphics, Renderer, Texture } from "pixi.js";
 import { TilingType } from "./TilingType.ts";
 import { TilingModel } from "./TilingModel.ts";
-import { TilingTextureModel } from "./TilingTextureModel.ts";
-import { ImageContainerModel } from "./ImageContainerModel.ts";
-import { TilingContainerModel } from "./TilingContainerModel.ts";
-import { RegularPolygonTileModel } from "./polygons/tiles/RegularPolygonTileModel.ts";
+import { TilingTextureModel } from "../TilingTextureModel.ts";
+import { ImageContainerModel } from "../ImageContainerModel.ts";
+import { TilingContainerModel } from "../TilingContainerModel.ts";
+import { RegularPolygonTileModel } from "../polygons/tiles/RegularPolygonTileModel.ts";
+import { RectangularGridTilePosition } from "../tiles/RectangularGridTilePosition.ts";
 
 export abstract class RectangularGridTilingModel implements TilingModel {
     public static readonly tilingType: TilingType = TilingType.Unknown;
@@ -19,8 +20,9 @@ export abstract class RectangularGridTilingModel implements TilingModel {
 
     //#endregion Texture tile info
 
+    public isInitialized: boolean = false;
     protected imageContainerModel: ImageContainerModel;
-    public tilingContainerModel: TilingContainerModel;
+    public tilingContainerModel: TilingContainerModel | undefined;
 
     private renderer: Renderer;
 
@@ -31,17 +33,18 @@ export abstract class RectangularGridTilingModel implements TilingModel {
         this.textureModel = textureModel;
         this.imageContainerModel = imageContainerModel;
         this.renderer = renderer;
-
-        this.initializeTextureTileInfo();
-        
-        this.tilingContainerModel = new TilingContainerModel(this.imageContainerModel,
-            this.textureXTilingOffset, this.textureYTilingOffset);
-
-        this.initializeImageTileInfo();
     }
 
     public getTilingType(): TilingType {
         return RectangularGridTilingModel.tilingType;
+    }
+
+    public initialize(): void {
+        this.initializeTextureTileInfo();        
+        this.tilingContainerModel = new TilingContainerModel(this.imageContainerModel,
+            this.textureXTilingOffset, this.textureYTilingOffset);
+        this.initializeImageTileInfo();
+        this.isInitialized = true;
     }
 
     protected abstract initializeTextureTileInfo(): void;
@@ -55,8 +58,13 @@ export abstract class RectangularGridTilingModel implements TilingModel {
             && columnIndex < this.textureTileColumnCount;
     }
 
-    protected abstract getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
-        : RegularPolygonTileModel;
+    protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
+        : RegularPolygonTileModel {
+        
+        const result = new RegularPolygonTileModel();
+        result.position = new RectangularGridTilePosition(rowIndex, columnIndex);
+        return result;
+    }
 
     public getTileModel(rowIndex: number,
         columnIndex: number,
@@ -76,7 +84,7 @@ export abstract class RectangularGridTilingModel implements TilingModel {
         return result;
     }
 
-    protected getImageTileTexture(tileModel: RegularPolygonTileModel): Texture {
+    public getImageTileTexture(tileModel: RegularPolygonTileModel): Texture {
         const globalTile = new Graphics()
             .rect(
                 tileModel.boundingRectangle.x / this.imageContainerModel.sideToTextureSideRatio

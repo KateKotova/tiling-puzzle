@@ -1,11 +1,7 @@
-import { Point, Rectangle, Texture } from "pixi.js";
+import { TileModel } from "../../tiles/TileModel";
 
-export class RegularPolygonTileModel {
-    public texture: Texture | undefined;
+export class RegularPolygonTileModel extends TileModel {
     public side: number = 0;
     public sideCount: number = 0;
-    public centerPoint: Point = new Point();
     public circumscribedCircleRadius: number = 0;
-    public rotationAngle: number = 0;
-    public boundingRectangle: Rectangle = new Rectangle();
 }

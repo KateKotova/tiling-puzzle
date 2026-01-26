@@ -1,63 +1,48 @@
-import { Graphics, Point, Rectangle, Renderer, Texture } from "pixi.js";
-import { TilingType } from "../../TilingType.ts";
-import { TilingModel } from "../../TilingModel.ts";
+//import { Graphics, Point, Rectangle, Renderer, Texture } from "pixi.js";
+import { Renderer } from "pixi.js";
+import { TilingType } from "../../tilings/TilingType.ts";
+import { RectangularGridTilingModel } from "../../tilings/RectangularGridTilingModel.ts";
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
-import { TilingContainerModel } from "../../TilingContainerModel.ts";
-import { RegularPolygonTileModel } from "../tiles/RegularPolygonTileModel.ts";
+//import { TilingContainerModel } from "../../TilingContainerModel.ts";
+//import { RegularPolygonTileModel } from "../tiles/RegularPolygonTileModel.ts";
 
-export class OctagonAndSquareTilingModel implements TilingModel {
+export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
     public static readonly tilingType: TilingType = TilingType.OctagonAndSquare;
 
     public textureMinSideOctagonTileCount: number;
     public static readonly textureMinSideMinOctagonTileCount = 2;
 
-    public textureModel: TilingTextureModel;
-    private textureTileSide: number = 0;
-    private textureOctagonTileWidthOrHeight: number = 0;
-    private textureSquareTileWidthOrHeight: number = 0;
-    public textureTileColumnCount: number = 0;
-    public textureTileRowCount: number = 0;
-    private textureXTilingOffset: number = 0;
-    private textureYTilingOffset: number = 0;
+    //#region Texture tile info
 
-    private imageContainerModel: ImageContainerModel;
-    public tilingContainerModel: TilingContainerModel;
+    private textureTileSide: number = 0;
+    private textureOctagonTileBoundingSide: number = 0;
+    private textureSquareTileBoundingSide: number = 0;
+
+    //#endregion Texture tile info
 
     public tileSide: number = 0;
-    public octagonTileWidthOrHeight: number = 0;
-    public squareTileWidthOrHeight: number = 0;
-
-    private renderer: Renderer;
+    public octagonTileBoundingSide: number = 0;
+    public squareTileBoundingSide: number = 0;
 
     constructor(textureModel: TilingTextureModel,
         textureMinSideOctagonTileCount: number,
         imageContainerModel: ImageContainerModel,
         renderer: Renderer) {
 
+        super(textureModel, imageContainerModel, renderer);
         this.textureMinSideOctagonTileCount
             = textureMinSideOctagonTileCount
                 < OctagonAndSquareTilingModel.textureMinSideMinOctagonTileCount
                 ? OctagonAndSquareTilingModel.textureMinSideMinOctagonTileCount
                 : Math.floor(textureMinSideOctagonTileCount);
-
-        this.textureModel = textureModel;
-        this.imageContainerModel = imageContainerModel;
-        this.renderer = renderer;
-
-        this.initializeTextureTileInfo();
-        
-        this.tilingContainerModel = new TilingContainerModel(this.imageContainerModel,
-            this.textureXTilingOffset, this.textureYTilingOffset);
-
-        this.initializeImageTileInfo();
     }
 
     public getTilingType(): TilingType {
         return OctagonAndSquareTilingModel.tilingType;
     }
 
-    private initializeTextureTileInfo(): void {
+    protected initializeTextureTileInfo(): void {
         const sqrt2 = Math.sqrt(2);
         const sqrt2PlusOne = sqrt2 + 1;
         this.textureTileSide = this.textureModel.minSide / this.textureMinSideOctagonTileCount
@@ -72,8 +57,8 @@ export class OctagonAndSquareTilingModel implements TilingModel {
             this.textureTileRowCount = 2 * this.textureMinSideOctagonTileCount - 1;
         }
 
-        this.textureOctagonTileWidthOrHeight = this.textureTileSide * sqrt2PlusOne;
-        this.squareTileWidthOrHeight = sqrt2 * this.textureTileSide;
+        this.textureOctagonTileBoundingSide = this.textureTileSide * sqrt2PlusOne;
+        this.squareTileBoundingSide = sqrt2 * this.textureTileSide;
 
         this.textureXTilingOffset = (this.textureModel.width
             - this.textureTileSide * this.textureTileColumnCount) / 2;
@@ -81,67 +66,37 @@ export class OctagonAndSquareTilingModel implements TilingModel {
             - this.textureTileSide * (this.textureTileRowCount / 2 + 0.5)) / 2;
     }
 
-    private initializeImageTileInfo(): void {
+    protected initializeImageTileInfo(): void {
         this.tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
-        this.octagonTileWidthOrHeight = this.textureOctagonTileWidthOrHeight
+        this.octagonTileBoundingSide = this.textureOctagonTileBoundingSide
             * this.imageContainerModel.sideToTextureSideRatio;
-        this.squareTileWidthOrHeight = this.textureSquareTileWidthOrHeight
+        this.squareTileBoundingSide = this.textureSquareTileBoundingSide
             * this.imageContainerModel.sideToTextureSideRatio;
     }
 
-    public getImageTileTexture(rowIndex: number, columnIndex: number): Texture | undefined {
-        rowIndex = Math.floor(rowIndex);
-        columnIndex = Math.floor(columnIndex);
-
-        if (rowIndex < 0
-            || rowIndex >= this.textureTileRowCount
-            || columnIndex < 0
-            || columnIndex >= this.textureTileColumnCount - (rowIndex % 2)) {
-            return undefined;
-        }
-
-        // TODO От boundingRectangle
-        const globalTile = new Graphics()
-            .rect(
-                columnIndex * this.textureTileSide / 2 * 3 + this.textureXTilingOffset,
-                rowIndex * this.textureOctagonTileHeight
-                    + (columnIndex % 2 == 1 ? this.textureOctagonTileHeight / 2 : 0)
-                    + this.textureYTilingOffset,
-                this.textureOctagonTileWidthOrHeight,
-                this.textureOctagonTileHeight
-            )
-            .fill({
-                texture: this.textureModel.texture,
-                textureSpace: "global"
-            });
-
-        const result = this.renderer.generateTexture(globalTile);
-        globalTile.destroy();
-        return result;
+    public getGridIndicesAreCorrect(rowIndex: number, columnIndex: number): boolean {
+        return rowIndex >= 0
+            && rowIndex < this.textureTileRowCount
+            && columnIndex >= 0
+            && columnIndex < this.textureTileColumnCount - (rowIndex % 2);
     }
 
-    public getTileModel(rowIndex: number,
-        columnIndex: number,
-        shouldGetTexture: boolean = true): RegularPolygonTileModel {
-        
-        const result = new RegularPolygonTileModel();
+    /*protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
+            : RegularPolygonTileModel {
+            
+        const result = super.getTileModelWithoutTexture(rowIndex, columnIndex);
         result.side = this.tileSide;
         result.sideCount = 6;
         result.rotationAngle = Math.PI / 2;
         result.boundingRectangle = new Rectangle(
             columnIndex * this.tileSide / 2 * 3,
-            rowIndex * this.octagonTileHeight + (columnIndex % 2 == 1 ? this.octagonTileHeight / 2 : 0),
-            this.octagonTileWidthOrHeight,
-            this.octagonTileHeight
+            rowIndex * this.tileHeight + (columnIndex % 2 == 1 ? this.tileHeight / 2 : 0),
+            this.tileWidth,
+            this.tileHeight
         );
         result.circumscribedCircleRadius = this.tileSide;
-        result.centerPoint = new Point(result.boundingRectangle.x + this.octagonTileWidthOrHeight / 2,
-            result.boundingRectangle.y + this.octagonTileHeight / 2);
-
-        if (shouldGetTexture) {
-            result.texture = this.getImageTileTexture(rowIndex, columnIndex);
-        }
-
+        result.centerPoint = new Point(result.boundingRectangle.x + this.tileWidth / 2,
+            result.boundingRectangle.y + this.tileHeight / 2);
         return result;
-    }
+    }*/
 }
