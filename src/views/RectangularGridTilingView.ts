@@ -38,8 +38,6 @@ export abstract class RectangularGridTilingView extends TilingView {
                     });
                 }
 
-                console.log(`${rowIndex} ${columnIndex}`)
-
                 this.tilingContainer.addChild(tile);
             }
         }
