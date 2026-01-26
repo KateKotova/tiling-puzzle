@@ -6,12 +6,13 @@ import {
 } from "pixi.js";
 import { TilingTextureModel } from "./models/TilingTextureModel.ts";
 import { ImageContainerModel } from "./models/ImageContainerModel.ts";
-import { TilingType } from "./models/TilingType.ts";
-import { TilingModel } from "./models/TilingModel.ts";
+import { TilingType } from "./models/tilings/TilingType.ts";
 //import { SquareTilingModel } from "./models/polygons/tilings/SquareTilingModel.ts";
 //import { TriangleTilingModel } from "./models/polygons/tilings/TriangleTilingModel.ts";
-import { HexagonTilingModel } from "./models/polygons/tilings/HexagonTilingModel.ts";
-import { TilingViewFactory } from "./views/polygons/TilingViewFactory.ts";
+//import { HexagonTilingModel } from "./models/polygons/tilings/HexagonTilingModel.ts";
+import { OctagonAndSquareTilingModel } from "./models/polygons/tilings/OctagonAndSquareTilingModel.ts";
+import { TilingModel } from "./models/tilings/TilingModel.ts";
+import { RegularPolygonTilingView } from "./views/polygons/RegularPolygonTilingView.ts";
 
 async function main(): Promise<void> {
   try {
@@ -24,7 +25,7 @@ async function main(): Promise<void> {
     const containerHeight = 400;
 
     const textureMinSideTileCount = 4;
-    const tilingType = TilingType.Hexagon;
+    const tilingType = TilingType.OctagonAndSquare;
 
     //#endregion test data end
 
@@ -57,13 +58,21 @@ async function main(): Promise<void> {
       //   tilingModel = new TriangleTilingModel(textureModel, textureMinSideTileCount,
       //     imageContainerModel, app.renderer);
       //   break;
-      case TilingType.Hexagon:
-        tilingModel = new HexagonTilingModel(textureModel, textureMinSideTileCount,
+      // case TilingType.Hexagon:
+      //   tilingModel = new HexagonTilingModel(textureModel, textureMinSideTileCount,
+      //     imageContainerModel, app.renderer);
+      //   break;
+      case TilingType.OctagonAndSquare:
+        tilingModel = new OctagonAndSquareTilingModel(textureModel, textureMinSideTileCount,
           imageContainerModel, app.renderer);
         break;
       default:
         break;
     }
+    if (!tilingModel) {
+      return;
+    }
+    tilingModel.initialize();
 
     const screenCenterX = app.screen.width / 2;
     const screenCenterY = app.screen.height / 2;
@@ -101,14 +110,9 @@ async function main(): Promise<void> {
       });
     imageContainer.addChild(image);
 
-    if (tilingModel) {
-      const tilingViewFactory = new TilingViewFactory();
-      const tilingView = tilingViewFactory.createTilingView(tilingModel);
-      if (tilingView) {
-        imageContainer.addChild(tilingView.tilingContainer);
-        tilingView.setExampleTiling();
-      }
-    }
+    const tilingView = new RegularPolygonTilingView(tilingModel);
+    imageContainer.addChild(tilingView.tilingContainer);
+    tilingView.setExampleTiling();
 
     /*
     // Bunny
