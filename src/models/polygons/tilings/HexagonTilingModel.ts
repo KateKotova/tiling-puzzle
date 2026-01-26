@@ -22,6 +22,7 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
     public tileSide: number = 0;
     public tileWidth: number = 0;
     public tileHeight: number = 0;
+    public tileCircumscribedCircleRadius: number = 0;
 
     constructor(textureModel: TilingTextureModel,
         textureMinSideTilePairCount: number,
@@ -68,6 +69,7 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
         this.tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
         this.tileWidth = this.textureTileWidth * this.imageContainerModel.sideToTextureSideRatio;
         this.tileHeight = this.textureTileHeight * this.imageContainerModel.sideToTextureSideRatio;
+        this.tileCircumscribedCircleRadius = this.tileSide;
     }
 
     protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
@@ -83,7 +85,7 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
             this.tileWidth,
             this.tileHeight
         );
-        result.circumscribedCircleRadius = this.tileSide;
+        result.circumscribedCircleRadius = this.tileCircumscribedCircleRadius;
         result.centerPoint = new Point(result.boundingRectangle.x + this.tileWidth / 2,
             result.boundingRectangle.y + this.tileHeight / 2);
         return result;

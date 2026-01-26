@@ -1,11 +1,9 @@
-//import { Graphics, Point, Rectangle, Renderer, Texture } from "pixi.js";
-import { Renderer } from "pixi.js";
+import { Point, Rectangle, Renderer } from "pixi.js";
 import { TilingType } from "../../tilings/TilingType.ts";
 import { RectangularGridTilingModel } from "../../tilings/RectangularGridTilingModel.ts";
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
-//import { TilingContainerModel } from "../../TilingContainerModel.ts";
-//import { RegularPolygonTileModel } from "../tiles/RegularPolygonTileModel.ts";
+import { RegularPolygonTileModel } from "../tiles/RegularPolygonTileModel.ts";
 
 export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
     public static readonly tilingType: TilingType = TilingType.OctagonAndSquare;
@@ -24,6 +22,8 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
     public tileSide: number = 0;
     public octagonTileBoundingSide: number = 0;
     public squareTileBoundingSide: number = 0;
+    public octagonTileCircumscribedCircleRadius: number = 0;
+    public squareTileCircumscribedCircleRadius: number = 0;
 
     constructor(textureModel: TilingTextureModel,
         textureMinSideOctagonTileCount: number,
@@ -52,18 +52,18 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
             this.textureTileRowCount = 2 * Math.trunc(this.textureModel.height / this.textureTileSide
                 / sqrt2PlusOne) - 1;
         } else {
-            this.textureTileColumnCount = 2 * Math.trunc(
+            this.textureTileColumnCount = Math.trunc(
                 this.textureModel.width / this.textureTileSide / sqrt2PlusOne);
             this.textureTileRowCount = 2 * this.textureMinSideOctagonTileCount - 1;
         }
 
         this.textureOctagonTileBoundingSide = this.textureTileSide * sqrt2PlusOne;
-        this.squareTileBoundingSide = sqrt2 * this.textureTileSide;
+        this.textureSquareTileBoundingSide = sqrt2 * this.textureTileSide;
 
         this.textureXTilingOffset = (this.textureModel.width
-            - this.textureTileSide * this.textureTileColumnCount) / 2;
+            - this.textureOctagonTileBoundingSide * this.textureTileColumnCount) / 2;
         this.textureYTilingOffset = (this.textureModel.height
-            - this.textureTileSide * (this.textureTileRowCount / 2 + 0.5)) / 2;
+            - this.textureOctagonTileBoundingSide * (this.textureTileRowCount / 2 + 0.5)) / 2;
     }
 
     protected initializeImageTileInfo(): void {
@@ -72,6 +72,9 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
             * this.imageContainerModel.sideToTextureSideRatio;
         this.squareTileBoundingSide = this.textureSquareTileBoundingSide
             * this.imageContainerModel.sideToTextureSideRatio;
+        const sqrt2 = Math.sqrt(2);
+        this.octagonTileCircumscribedCircleRadius = this.tileSide / Math.sqrt(2 - sqrt2);
+        this.squareTileCircumscribedCircleRadius = sqrt2 / 2 * this.tileSide;
     }
 
     public getGridIndicesAreCorrect(rowIndex: number, columnIndex: number): boolean {
@@ -81,22 +84,38 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
             && columnIndex < this.textureTileColumnCount - (rowIndex % 2);
     }
 
-    /*protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
+    protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
             : RegularPolygonTileModel {
             
         const result = super.getTileModelWithoutTexture(rowIndex, columnIndex);
         result.side = this.tileSide;
-        result.sideCount = 6;
-        result.rotationAngle = Math.PI / 2;
-        result.boundingRectangle = new Rectangle(
-            columnIndex * this.tileSide / 2 * 3,
-            rowIndex * this.tileHeight + (columnIndex % 2 == 1 ? this.tileHeight / 2 : 0),
-            this.tileWidth,
-            this.tileHeight
-        );
-        result.circumscribedCircleRadius = this.tileSide;
-        result.centerPoint = new Point(result.boundingRectangle.x + this.tileWidth / 2,
-            result.boundingRectangle.y + this.tileHeight / 2);
+
+        if (rowIndex % 2 == 0) {
+            result.sideCount = 8;
+            result.rotationAngle = 3 / 8 * Math.PI;
+            result.boundingRectangle = new Rectangle(
+                columnIndex * this.octagonTileBoundingSide,
+                rowIndex / 2 * this.octagonTileBoundingSide,
+                this.octagonTileBoundingSide,
+                this.octagonTileBoundingSide
+            );
+            result.circumscribedCircleRadius = this.octagonTileCircumscribedCircleRadius;
+        } else {
+            result.sideCount = 4;
+            result.rotationAngle = 0;
+            const offset = this.tileSide + this.squareTileBoundingSide / 2;
+            result.boundingRectangle = new Rectangle(
+                this.octagonTileBoundingSide * columnIndex + offset,
+                this.octagonTileBoundingSide * (rowIndex - 1) / 2 + offset,
+                this.squareTileBoundingSide,
+                this.squareTileBoundingSide
+            );
+            result.circumscribedCircleRadius = this.squareTileCircumscribedCircleRadius;
+        }
+
+        result.centerPoint = new Point(
+            result.boundingRectangle.x + result.boundingRectangle.width / 2,
+            result.boundingRectangle.y + result.boundingRectangle.height / 2);
         return result;
-    }*/
+    }
 }

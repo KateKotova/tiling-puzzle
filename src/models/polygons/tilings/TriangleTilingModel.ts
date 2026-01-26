@@ -20,6 +20,7 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
 
     public tileSide: number = 0;
     public tileHeight: number = 0;
+    public tileCircumscribedCircleRadius: number = 0;
 
     constructor(textureModel: TilingTextureModel,
         textureMinSideTilePairCount: number,
@@ -61,6 +62,7 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
     protected initializeImageTileInfo(): void {
         this.tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
         this.tileHeight = this.textureTileHeight * this.imageContainerModel.sideToTextureSideRatio;
+        this.tileCircumscribedCircleRadius = this.tileHeight * 2 / 3;
     }
 
     protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
@@ -76,7 +78,7 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
             this.tileSide,
             this.tileHeight
         );
-        result.circumscribedCircleRadius = this.tileHeight * 2 / 3;
+        result.circumscribedCircleRadius = this.tileCircumscribedCircleRadius;
 
         const tileIsRotated = (rowIndex % 2 == 0 && columnIndex % 2 == 0)
             || (rowIndex % 2 == 1 && columnIndex % 2 == 1);

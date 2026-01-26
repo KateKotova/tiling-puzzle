@@ -24,9 +24,7 @@ export abstract class RectangularGridTilingView extends TilingView {
                     continue;
                 }
 
-                const shouldFillByTexture = rowIndex == columnIndex
-                    || rowIndex == columnIndex - 3
-                    || rowIndex == columnIndex + 3;
+                const shouldFillByTexture = Math.random() >= 0.5;
                 const tileModel = model.getTileModel(rowIndex, columnIndex, shouldFillByTexture);
                 if (!tileModel) {
                     continue;
@@ -39,6 +37,8 @@ export abstract class RectangularGridTilingView extends TilingView {
                         textureSpace: "local"
                     });
                 }
+
+                console.log(`${rowIndex} ${columnIndex}`)
 
                 this.tilingContainer.addChild(tile);
             }

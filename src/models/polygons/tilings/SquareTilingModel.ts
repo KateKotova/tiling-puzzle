@@ -18,6 +18,7 @@ export class SquareTilingModel extends RectangularGridTilingModel {
     //#endregion Texture tile info
 
     public tileSide: number = 0;
+    public tileCircumscribedCircleRadius: number = 0;
 
     constructor(textureModel: TilingTextureModel,
         textureMinSideTileCount: number,
@@ -49,6 +50,7 @@ export class SquareTilingModel extends RectangularGridTilingModel {
 
     protected initializeImageTileInfo(): void {
         this.tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
+        this.tileCircumscribedCircleRadius = Math.sqrt(2) / 2 * this.tileSide;
     }
 
     protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
@@ -64,7 +66,7 @@ export class SquareTilingModel extends RectangularGridTilingModel {
             this.tileSide,
             this.tileSide
         );
-        result.circumscribedCircleRadius = Math.sqrt(2) / 2 * this.tileSide;
+        result.circumscribedCircleRadius = this.tileCircumscribedCircleRadius;
         result.centerPoint = new Point(result.boundingRectangle.x + this.tileSide / 2,
             result.boundingRectangle.y + this.tileSide / 2);
         return result;

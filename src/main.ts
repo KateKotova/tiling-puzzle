@@ -9,7 +9,8 @@ import { ImageContainerModel } from "./models/ImageContainerModel.ts";
 import { TilingType } from "./models/tilings/TilingType.ts";
 //import { SquareTilingModel } from "./models/polygons/tilings/SquareTilingModel.ts";
 //import { TriangleTilingModel } from "./models/polygons/tilings/TriangleTilingModel.ts";
-import { HexagonTilingModel } from "./models/polygons/tilings/HexagonTilingModel.ts";
+//import { HexagonTilingModel } from "./models/polygons/tilings/HexagonTilingModel.ts";
+import { OctagonAndSquareTilingModel } from "./models/polygons/tilings/OctagonAndSquareTilingModel.ts";
 import { TilingModel } from "./models/tilings/TilingModel.ts";
 import { RegularPolygonTilingView } from "./views/polygons/RegularPolygonTilingView.ts";
 
@@ -23,8 +24,8 @@ async function main(): Promise<void> {
     const containerWidth = 500;
     const containerHeight = 400;
 
-    const textureMinSideTileCount = 3;
-    const tilingType = TilingType.Hexagon;
+    const textureMinSideTileCount = 4;
+    const tilingType = TilingType.OctagonAndSquare;
 
     //#endregion test data end
 
@@ -57,8 +58,12 @@ async function main(): Promise<void> {
       //   tilingModel = new TriangleTilingModel(textureModel, textureMinSideTileCount,
       //     imageContainerModel, app.renderer);
       //   break;
-      case TilingType.Hexagon:
-        tilingModel = new HexagonTilingModel(textureModel, textureMinSideTileCount,
+      // case TilingType.Hexagon:
+      //   tilingModel = new HexagonTilingModel(textureModel, textureMinSideTileCount,
+      //     imageContainerModel, app.renderer);
+      //   break;
+      case TilingType.OctagonAndSquare:
+        tilingModel = new OctagonAndSquareTilingModel(textureModel, textureMinSideTileCount,
           imageContainerModel, app.renderer);
         break;
       default:
