@@ -16,8 +16,8 @@ export class RegularPolygonTilingView extends RectangularGridTilingView {
 
         return new Graphics()
             .regularPoly(
-                tileModel.rotatingBoundingRectangle.width / 2.0,
-                tileModel.rotatingBoundingRectangle.height / 2.0,
+                tileModel.absoluteBoundingRectangle.width / 2.0,
+                tileModel.absoluteBoundingRectangle.height / 2.0,
                 tileModel.circumscribedCircleRadius,
                 tileModel.sideCount,
                 tileModel.regularPolygonInitialRotationAngle

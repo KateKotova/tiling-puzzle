@@ -4,6 +4,7 @@ import { TileType } from "./TileType.ts";
 import { TileLockType } from "./TileLockType.ts";
 import { TileSvgPathStrings } from "./TileSvgPathStrings.ts";
 import { TileLockHeightToSideRatios } from "./TileLockHeightToSideRatios.ts";
+import { Size } from "../geometry/Size.ts";
 
 export abstract class TileModel {
     public tileType: TileType = TileType.Unknown;
@@ -11,7 +12,7 @@ export abstract class TileModel {
     public texture: Texture | undefined;
     public centerPoint: Point = new Point();
     public rotationAngle: number = 0;
-    public rotatingBoundingRectangle: Rectangle = new Rectangle();
+    public rotatingBoundingRectangleSize: Size = new Size();
     public absoluteBoundingRectangle: Rectangle = new Rectangle();
     public position: TilePosition = new TilePosition();
 

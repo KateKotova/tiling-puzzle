@@ -5,6 +5,7 @@ import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { RegularPolygonTileModel } from "../tiles/RegularPolygonTileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
+import { Size } from "../../geometry/Size.ts";
 
 export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
     public static readonly tilingType: TilingType = TilingType.OctagonAndSquare;
@@ -96,7 +97,7 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
         if (rowIndex % 2 == 0) {
             result.sideCount = 8;
             result.regularPolygonInitialRotationAngle = 3 / 8.0 * Math.PI;
-            result.rotatingBoundingRectangle = new Rectangle(
+            result.absoluteBoundingRectangle = new Rectangle(
                 columnIndex * this.octagonTileBoundingSide,
                 rowIndex / 2.0 * this.octagonTileBoundingSide,
                 this.octagonTileBoundingSide,
@@ -107,7 +108,7 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
             result.sideCount = 4;
             result.regularPolygonInitialRotationAngle = 0;
             const offset = this.tileSide + this.squareTileBoundingSide / 2.0;
-            result.rotatingBoundingRectangle = new Rectangle(
+            result.absoluteBoundingRectangle = new Rectangle(
                 this.octagonTileBoundingSide * columnIndex + offset,
                 this.octagonTileBoundingSide * (rowIndex - 1) / 2.0 + offset,
                 this.squareTileBoundingSide,
@@ -116,10 +117,11 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
             result.circumscribedCircleRadius = this.squareTileCircumscribedCircleRadius;
         }
 
-        result.absoluteBoundingRectangle = result.rotatingBoundingRectangle;
+        result.rotatingBoundingRectangleSize = new Size(result.absoluteBoundingRectangle.width,
+            result.absoluteBoundingRectangle.height);
         result.centerPoint = new Point(
-            result.rotatingBoundingRectangle.x + result.rotatingBoundingRectangle.width / 2.0,
-            result.rotatingBoundingRectangle.y + result.rotatingBoundingRectangle.height / 2.0);
+            result.absoluteBoundingRectangle.x + result.absoluteBoundingRectangle.width / 2.0,
+            result.absoluteBoundingRectangle.y + result.absoluteBoundingRectangle.height / 2.0);
         return result;
     }
 }

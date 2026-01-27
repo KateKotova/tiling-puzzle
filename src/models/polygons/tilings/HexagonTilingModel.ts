@@ -5,6 +5,7 @@ import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { RegularPolygonTileModel } from "../tiles/RegularPolygonTileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
+import { Size } from "../../geometry/Size.ts";
 
 export class HexagonTilingModel extends RectangularGridTilingModel {
     public static readonly tilingType: TilingType = TilingType.Hexagon;
@@ -82,16 +83,16 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
         result.sideCount = 6;
         result.rotationAngle = 0;
         result.regularPolygonInitialRotationAngle = Math.PI / 2;
-        result.rotatingBoundingRectangle = new Rectangle(
+        result.absoluteBoundingRectangle = new Rectangle(
             columnIndex * this.tileSide / 2.0 * 3,
             rowIndex * this.tileHeight + (columnIndex % 2 == 1 ? this.tileHeight / 2.0 : 0),
             this.tileWidth,
             this.tileHeight
         );
-        result.absoluteBoundingRectangle = result.rotatingBoundingRectangle;
+        result.rotatingBoundingRectangleSize = new Size(this.tileWidth, this.tileHeight);
         result.circumscribedCircleRadius = this.tileCircumscribedCircleRadius;
-        result.centerPoint = new Point(result.rotatingBoundingRectangle.x + this.tileWidth / 2.0,
-            result.rotatingBoundingRectangle.y + this.tileHeight / 2.0);
+        result.centerPoint = new Point(result.absoluteBoundingRectangle.x + this.tileWidth / 2.0,
+            result.absoluteBoundingRectangle.y + this.tileHeight / 2.0);
         return result;
     }
 }

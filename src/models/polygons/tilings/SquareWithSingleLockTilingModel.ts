@@ -7,6 +7,7 @@ import { TileLockType } from "../../tiles/TileLockType.ts";
 import { TileLockHeightToSideRatios } from "../../tiles/TileLockHeightToSideRatios.ts";
 import { SquareWithSingleLockTileModel } from "../tiles/SquareWithSingleLockTileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
+import { Size } from "../../geometry/Size.ts";
 
 export class SquareWithSingleLockTilingModel extends RectangularGridTilingModel {
     public static readonly tilingType: TilingType = TilingType.SquareWithSingleLock;
@@ -87,12 +88,6 @@ export class SquareWithSingleLockTilingModel extends RectangularGridTilingModel 
         result.side = this.tileSide;
         const tileIsRotated = (rowIndex + columnIndex) % 2 == 1;
         result.rotationAngle = tileIsRotated ? Math.PI / 2 : 0;
-        result.rotatingBoundingRectangle = new Rectangle(
-            columnIndex * this.tileSide + this.lockHeight,
-            rowIndex * this.tileSide,
-            this.tileMinSide,
-            this.tileMaxSide
-        );
         result.absoluteBoundingRectangle = tileIsRotated
             ? new Rectangle(
                 columnIndex * this.tileSide,
@@ -100,10 +95,16 @@ export class SquareWithSingleLockTilingModel extends RectangularGridTilingModel 
                 this.tileMaxSide,
                 this.tileMinSide
             )
-            : result.rotatingBoundingRectangle;
+            : new Rectangle(
+                columnIndex * this.tileSide + this.lockHeight,
+                rowIndex * this.tileSide,
+                this.tileMinSide,
+                this.tileMaxSide
+            );
+        result.rotatingBoundingRectangleSize = new Size(this.tileMinSide, this.tileMaxSide);
         result.centerPoint = new Point(
-            result.rotatingBoundingRectangle.x + result.rotatingBoundingRectangle.width / 2.0,
-            result.rotatingBoundingRectangle.y + result.rotatingBoundingRectangle.height / 2.0);
+            result.absoluteBoundingRectangle.x + result.absoluteBoundingRectangle.width / 2.0,
+            result.absoluteBoundingRectangle.y + result.absoluteBoundingRectangle.height / 2.0);
         return result;
     }
 }

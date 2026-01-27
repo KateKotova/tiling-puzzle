@@ -5,6 +5,7 @@ import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { RegularPolygonTileModel } from "../tiles/RegularPolygonTileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
+import { Size } from "../../geometry/Size.ts";
 
 export class SquareTilingModel extends RectangularGridTilingModel {
     public static readonly tilingType: TilingType = TilingType.Square;
@@ -63,16 +64,16 @@ export class SquareTilingModel extends RectangularGridTilingModel {
         result.sideCount = 4;
         result.rotationAngle = 0;
         result.regularPolygonInitialRotationAngle = Math.PI / 4;
-        result.rotatingBoundingRectangle = new Rectangle(
+        result.absoluteBoundingRectangle = new Rectangle(
             columnIndex * this.tileSide,
             rowIndex * this.tileSide,
             this.tileSide,
             this.tileSide
         );
-        result.absoluteBoundingRectangle = result.rotatingBoundingRectangle;
+        result.rotatingBoundingRectangleSize = new Size(this.tileSide, this.tileSide);
         result.circumscribedCircleRadius = this.tileCircumscribedCircleRadius;
-        result.centerPoint = new Point(result.rotatingBoundingRectangle.x + this.tileSide / 2.0,
-            result.rotatingBoundingRectangle.y + this.tileSide / 2.0);
+        result.centerPoint = new Point(result.absoluteBoundingRectangle.x + this.tileSide / 2.0,
+            result.absoluteBoundingRectangle.y + this.tileSide / 2.0);
         return result;
     }
 }

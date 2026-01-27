@@ -31,8 +31,8 @@ export abstract class RectangularGridTilingView extends TilingView {
                 }
 
                 const tile = this.getTileGraphics(tileModel);
-                tile.pivot.set(tileModel.rotatingBoundingRectangle.width / 2.0 / tile.scale.x,
-                    tileModel.rotatingBoundingRectangle.height / 2.0 / tile.scale.y);                
+                tile.pivot.set(tileModel.rotatingBoundingRectangleSize.width / 2.0 / tile.scale.x,
+                    tileModel.rotatingBoundingRectangleSize.height / 2.0 / tile.scale.y);                
                 tile.rotation = tileModel.rotationAngle;   
                 tile.position.set(tileModel.centerPoint.x, tileModel.centerPoint.y);
 

@@ -7,14 +7,9 @@ import {
 import { TilingTextureModel } from "./models/TilingTextureModel.ts";
 import { ImageContainerModel } from "./models/ImageContainerModel.ts";
 import { TilingType } from "./models/tilings/TilingType.ts";
-import { SquareTilingModel } from "./models/polygons/tilings/SquareTilingModel.ts";
-//import { TriangleTilingModel } from "./models/polygons/tilings/TriangleTilingModel.ts";
-//import { HexagonTilingModel } from "./models/polygons/tilings/HexagonTilingModel.ts";
-//import { OctagonAndSquareTilingModel } from "./models/polygons/tilings/OctagonAndSquareTilingModel.ts";
-import { TilingModel } from "./models/tilings/TilingModel.ts";
-import { RegularPolygonTilingView } from "./views/polygons/RegularPolygonTilingView.ts";
-//import { SquareWithSingleLockTilingView } from "./views/polygons/SquareWithSingleLockTilingView.ts";
-//import { SquareWithSingleLockTilingModel } from "./models/polygons/tilings/SquareWithSingleLockTilingModel.ts";
+import { RectangularGridTilingModelFactory } from "./models/tilings/RectangularGridTilingModelFactory.ts";
+import { RectangularGridTilingViewFactory } from "./views/polygons/RectangularGridTilingModelFactory.ts";
+import { RectangularGridTilingModel } from "./models/tilings/RectangularGridTilingModel.ts";
 
 async function main(): Promise<void> {
   try {
@@ -27,7 +22,7 @@ async function main(): Promise<void> {
     const containerHeight = 400;
 
     const textureMinSideTileCount = 4;
-    const tilingType = TilingType.Square;
+    const tilingType = TilingType.SquareWithSingleLock;
 
     //#endregion test data end
 
@@ -47,38 +42,19 @@ async function main(): Promise<void> {
     const textureModel = new TilingTextureModel(texture);
 
     const imageContainerModel = new ImageContainerModel(textureModel,
-      containerWidth, containerHeight);
+      containerWidth, containerHeight);      
 
-    let tilingModel: TilingModel | null = null;
-
-    switch (tilingType) {
-      case TilingType.Square:
-        tilingModel = new SquareTilingModel(textureModel, textureMinSideTileCount,
-          imageContainerModel, app.renderer);
-        break;
-      // case TilingType.Triangle:
-      //   tilingModel = new TriangleTilingModel(textureModel, textureMinSideTileCount,
-      //     imageContainerModel, app.renderer);
-      //   break;
-      // case TilingType.Hexagon:
-      //   tilingModel = new HexagonTilingModel(textureModel, textureMinSideTileCount,
-      //     imageContainerModel, app.renderer);
-      //   break;
-      // case TilingType.OctagonAndSquare:
-      //   tilingModel = new OctagonAndSquareTilingModel(textureModel, textureMinSideTileCount,
-      //     imageContainerModel, app.renderer);
-      //   break;
-      // case TilingType.SquareWithSingleLock:
-      //   tilingModel = new SquareWithSingleLockTilingModel(textureModel, textureMinSideTileCount,
-      //     imageContainerModel, app.renderer);
-      //   break;
-      default:
-        break;
-    }
+    const rectangularGridTilingModelFactory = new RectangularGridTilingModelFactory();
+    const tilingModel: RectangularGridTilingModel | null
+      = rectangularGridTilingModelFactory.getTilingModel(
+        tilingType,
+        textureMinSideTileCount,
+        textureModel,
+        imageContainerModel,
+        app.renderer);
     if (!tilingModel) {
       return;
     }
-    tilingModel.initialize();
 
     const screenCenterX = app.screen.width / 2.0;
     const screenCenterY = app.screen.height / 2.0;
@@ -116,13 +92,9 @@ async function main(): Promise<void> {
       });
     imageContainer.addChild(image);
 
-    const tilingView = new RegularPolygonTilingView(tilingModel);
+    const rectangularGridTilingViewFactory = new RectangularGridTilingViewFactory();
+    const tilingView = rectangularGridTilingViewFactory.getTilingModel(tilingModel);
     imageContainer.addChild(tilingView.tilingContainer);
-    tilingView.setExampleTiling();
-
-    // const tilingView = new SquareWithSingleLockTilingView(tilingModel);
-    // imageContainer.addChild(tilingView.tilingContainer);
-    // tilingView.setExampleTiling();
 
     /*
     // Bunny

@@ -5,6 +5,7 @@ import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { RegularPolygonTileModel } from "../tiles/RegularPolygonTileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
+import { Size } from "../../geometry/Size.ts";
 
 export class TriangleTilingModel extends RectangularGridTilingModel {
     public static readonly tilingType: TilingType = TilingType.Triangle;
@@ -76,13 +77,13 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
         result.sideCount = 3;
         result.rotationAngle = 0;
         result.regularPolygonInitialRotationAngle = 0;
-        result.rotatingBoundingRectangle = new Rectangle(
+        result.absoluteBoundingRectangle = new Rectangle(
             columnIndex * tileSideHalf,
             rowIndex * this.tileHeight,
             this.tileSide,
             this.tileHeight
         );
-        result.absoluteBoundingRectangle = result.rotatingBoundingRectangle;
+        result.rotatingBoundingRectangleSize = new Size(this.tileSide, this.tileHeight);
         result.circumscribedCircleRadius = this.tileCircumscribedCircleRadius;
 
         const tileIsRotated = (rowIndex % 2 == 0 && columnIndex % 2 == 0)
@@ -92,9 +93,10 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
         }
 
         const centerPointY = tileIsRotated
-            ? result.rotatingBoundingRectangle.y + this.tileHeight / 3.0
-            : result.rotatingBoundingRectangle.y + result.circumscribedCircleRadius;
-        result.centerPoint = new Point(result.rotatingBoundingRectangle.x + tileSideHalf, centerPointY);
+            ? result.absoluteBoundingRectangle.y + this.tileHeight / 3.0
+            : result.absoluteBoundingRectangle.y + result.circumscribedCircleRadius;
+        result.centerPoint = new Point(result.absoluteBoundingRectangle.x + tileSideHalf,
+            centerPointY);
 
         return result;
     }
