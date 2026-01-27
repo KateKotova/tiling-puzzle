@@ -4,6 +4,7 @@ import { RectangularGridTilingModel } from "../../tilings/RectangularGridTilingM
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { RegularPolygonTileModel } from "../tiles/RegularPolygonTileModel.ts";
+import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
 
 export class TriangleTilingModel extends RectangularGridTilingModel {
     public static readonly tilingType: TilingType = TilingType.Triangle;
@@ -43,53 +44,57 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
         if (this.textureModel.widthToHeightRatio <= 1) {
             this.textureTileSide = this.textureModel.minSide
                 / (this.textureMinSideTilePairCount + 0.5);
-            this.textureTileHeight = sqrt3 / 2 * this.textureTileSide;
+            this.textureTileHeight = sqrt3 / 2.0 * this.textureTileSide;
         } else {
             this.textureTileHeight = this.textureModel.minSide / this.textureMinSideTilePairCount;
             this.textureTileSide = 2 / sqrt3 * this.textureTileHeight;
         }
 
         this.textureTileColumnCount = 2 * Math.trunc(
-            (this.textureModel.width - this.textureTileSide / 2) / this.textureTileSide);
+            (this.textureModel.width - this.textureTileSide / 2.0) / this.textureTileSide);
         this.textureTileRowCount = Math.trunc(this.textureModel.height / this.textureTileHeight);
 
         this.textureXTilingOffset = (this.textureModel.width
-            - this.textureTileSide / 2 * (this.textureTileColumnCount + 1)) / 2;
+            - this.textureTileSide / 2.0 * (this.textureTileColumnCount + 1)) / 2.0;
         this.textureYTilingOffset = (this.textureModel.height
-            - this.textureTileHeight * this.textureTileRowCount) / 2;
+            - this.textureTileHeight * this.textureTileRowCount) / 2.0;
     }
 
     protected initializeImageTileInfo(): void {
         this.tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
         this.tileHeight = this.textureTileHeight * this.imageContainerModel.sideToTextureSideRatio;
-        this.tileCircumscribedCircleRadius = this.tileHeight * 2 / 3;
+        this.tileCircumscribedCircleRadius = this.tileHeight * 2 / 3.0;
     }
 
     protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
             : RegularPolygonTileModel {
             
-        const result = super.getTileModelWithoutTexture(rowIndex, columnIndex);
-        const tileSideHalf = this.tileSide / 2;
+        const result = new RegularPolygonTileModel();
+        result.position = new RectangularGridTilePosition(rowIndex, columnIndex);
+        const tileSideHalf = this.tileSide / 2.0;
         result.side = this.tileSide;
         result.sideCount = 3;
-        result.boundingRectangle = new Rectangle(
+        result.rotationAngle = 0;
+        result.regularPolygonInitialRotationAngle = 0;
+        result.rotatingBoundingRectangle = new Rectangle(
             columnIndex * tileSideHalf,
             rowIndex * this.tileHeight,
             this.tileSide,
             this.tileHeight
         );
+        result.absoluteBoundingRectangle = result.rotatingBoundingRectangle;
         result.circumscribedCircleRadius = this.tileCircumscribedCircleRadius;
 
         const tileIsRotated = (rowIndex % 2 == 0 && columnIndex % 2 == 0)
             || (rowIndex % 2 == 1 && columnIndex % 2 == 1);
         if (tileIsRotated) {
-            result.rotationAngle = Math.PI;
+            result.regularPolygonInitialRotationAngle = Math.PI;
         }
 
         const centerPointY = tileIsRotated
-            ? result.boundingRectangle.y + this.tileHeight / 3
-            : result.boundingRectangle.y + result.circumscribedCircleRadius;
-        result.centerPoint = new Point(result.boundingRectangle.x + tileSideHalf, centerPointY);
+            ? result.rotatingBoundingRectangle.y + this.tileHeight / 3.0
+            : result.rotatingBoundingRectangle.y + result.circumscribedCircleRadius;
+        result.centerPoint = new Point(result.rotatingBoundingRectangle.x + tileSideHalf, centerPointY);
 
         return result;
     }

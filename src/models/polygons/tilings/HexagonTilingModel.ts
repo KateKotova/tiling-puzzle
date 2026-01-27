@@ -4,6 +4,7 @@ import { RectangularGridTilingModel } from "../../tilings/RectangularGridTilingM
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { RegularPolygonTileModel } from "../tiles/RegularPolygonTileModel.ts";
+import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
 
 export class HexagonTilingModel extends RectangularGridTilingModel {
     public static readonly tilingType: TilingType = TilingType.Hexagon;
@@ -52,7 +53,7 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
             this.textureTileSide = this.textureModel.minSide / sqrt3
                 / (this.textureMinSideTilePairCount + 0.5);
             this.textureTileColumnCount = 2 * Math.trunc((this.textureModel.width
-                / this.textureTileSide - 0.5) / 3);
+                / this.textureTileSide - 0.5) / 3.0);
             this.textureTileRowCount = this.textureMinSideTilePairCount;
         }
 
@@ -60,9 +61,9 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
         this.textureTileHeight = sqrt3 * this.textureTileSide;
 
         this.textureXTilingOffset = (this.textureModel.width
-            - this.textureTileSide * (0.5 + 3 / 2 * this.textureTileColumnCount)) / 2;
+            - this.textureTileSide * (0.5 + 3 / 2.0 * this.textureTileColumnCount)) / 2.0;
         this.textureYTilingOffset = (this.textureModel.height
-            - sqrt3 * this.textureTileSide * (this.textureTileRowCount + 0.5)) / 2;
+            - sqrt3 * this.textureTileSide * (this.textureTileRowCount + 0.5)) / 2.0;
     }
 
     protected initializeImageTileInfo(): void {
@@ -75,19 +76,22 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
     protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
             : RegularPolygonTileModel {
             
-        const result = super.getTileModelWithoutTexture(rowIndex, columnIndex);
+        const result = new RegularPolygonTileModel();
+        result.position = new RectangularGridTilePosition(rowIndex, columnIndex);
         result.side = this.tileSide;
         result.sideCount = 6;
-        result.rotationAngle = Math.PI / 2;
-        result.boundingRectangle = new Rectangle(
-            columnIndex * this.tileSide / 2 * 3,
-            rowIndex * this.tileHeight + (columnIndex % 2 == 1 ? this.tileHeight / 2 : 0),
+        result.rotationAngle = 0;
+        result.regularPolygonInitialRotationAngle = Math.PI / 2;
+        result.rotatingBoundingRectangle = new Rectangle(
+            columnIndex * this.tileSide / 2.0 * 3,
+            rowIndex * this.tileHeight + (columnIndex % 2 == 1 ? this.tileHeight / 2.0 : 0),
             this.tileWidth,
             this.tileHeight
         );
+        result.absoluteBoundingRectangle = result.rotatingBoundingRectangle;
         result.circumscribedCircleRadius = this.tileCircumscribedCircleRadius;
-        result.centerPoint = new Point(result.boundingRectangle.x + this.tileWidth / 2,
-            result.boundingRectangle.y + this.tileHeight / 2);
+        result.centerPoint = new Point(result.rotatingBoundingRectangle.x + this.tileWidth / 2.0,
+            result.rotatingBoundingRectangle.y + this.tileHeight / 2.0);
         return result;
     }
 }

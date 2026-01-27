@@ -4,6 +4,7 @@ import { RectangularGridTilingModel } from "../../tilings/RectangularGridTilingM
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { RegularPolygonTileModel } from "../tiles/RegularPolygonTileModel.ts";
+import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
 
 export class SquareTilingModel extends RectangularGridTilingModel {
     public static readonly tilingType: TilingType = TilingType.Square;
@@ -43,32 +44,35 @@ export class SquareTilingModel extends RectangularGridTilingModel {
         this.textureTileRowCount = Math.trunc(this.textureModel.height / this.textureTileSide);
 
         this.textureXTilingOffset = (this.textureModel.width
-            - this.textureTileSide * this.textureTileColumnCount) / 2;
+            - this.textureTileSide * this.textureTileColumnCount) / 2.0;
         this.textureYTilingOffset = (this.textureModel.height
-            - this.textureTileSide * this.textureTileRowCount) / 2;
+            - this.textureTileSide * this.textureTileRowCount) / 2.0;
     }
 
     protected initializeImageTileInfo(): void {
         this.tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
-        this.tileCircumscribedCircleRadius = Math.sqrt(2) / 2 * this.tileSide;
+        this.tileCircumscribedCircleRadius = Math.sqrt(2) / 2.0 * this.tileSide;
     }
 
     protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
             : RegularPolygonTileModel {
             
-        const result = super.getTileModelWithoutTexture(rowIndex, columnIndex);
+        const result = new RegularPolygonTileModel();
+        result.position = new RectangularGridTilePosition(rowIndex, columnIndex);
         result.side = this.tileSide;
         result.sideCount = 4;
-        result.rotationAngle = Math.PI / 4;
-        result.boundingRectangle = new Rectangle(
+        result.rotationAngle = 0;
+        result.regularPolygonInitialRotationAngle = Math.PI / 4;
+        result.rotatingBoundingRectangle = new Rectangle(
             columnIndex * this.tileSide,
             rowIndex * this.tileSide,
             this.tileSide,
             this.tileSide
         );
+        result.absoluteBoundingRectangle = result.rotatingBoundingRectangle;
         result.circumscribedCircleRadius = this.tileCircumscribedCircleRadius;
-        result.centerPoint = new Point(result.boundingRectangle.x + this.tileSide / 2,
-            result.boundingRectangle.y + this.tileSide / 2);
+        result.centerPoint = new Point(result.rotatingBoundingRectangle.x + this.tileSide / 2.0,
+            result.rotatingBoundingRectangle.y + this.tileSide / 2.0);
         return result;
     }
 }

@@ -11,7 +11,8 @@ export abstract class TileModel {
     public texture: Texture | undefined;
     public centerPoint: Point = new Point();
     public rotationAngle: number = 0;
-    public boundingRectangle: Rectangle = new Rectangle();
+    public rotatingBoundingRectangle: Rectangle = new Rectangle();
+    public absoluteBoundingRectangle: Rectangle = new Rectangle();
     public position: TilePosition = new TilePosition();
 
     public getSvgPathString(): string {

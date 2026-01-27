@@ -4,8 +4,7 @@ import { TilingModel } from "./TilingModel.ts";
 import { TilingTextureModel } from "../TilingTextureModel.ts";
 import { ImageContainerModel } from "../ImageContainerModel.ts";
 import { TilingContainerModel } from "../TilingContainerModel.ts";
-import { RegularPolygonTileModel } from "../polygons/tiles/RegularPolygonTileModel.ts";
-import { RectangularGridTilePosition } from "../tiles/RectangularGridTilePosition.ts";
+import { TileModel } from "../tiles/TileModel.ts";
 
 export abstract class RectangularGridTilingModel implements TilingModel {
     public static readonly tilingType: TilingType = TilingType.Unknown;
@@ -58,17 +57,11 @@ export abstract class RectangularGridTilingModel implements TilingModel {
             && columnIndex < this.textureTileColumnCount;
     }
 
-    protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
-        : RegularPolygonTileModel {
-        
-        const result = new RegularPolygonTileModel();
-        result.position = new RectangularGridTilePosition(rowIndex, columnIndex);
-        return result;
-    }
+    protected abstract getTileModelWithoutTexture(rowIndex: number, columnIndex: number): TileModel;
 
     public getTileModel(rowIndex: number,
         columnIndex: number,
-        shouldGetTexture: boolean = true): RegularPolygonTileModel | undefined {
+        shouldGetTexture: boolean = true): TileModel | undefined {
 
         rowIndex = Math.floor(rowIndex);
         columnIndex = Math.floor(columnIndex);
@@ -84,15 +77,19 @@ export abstract class RectangularGridTilingModel implements TilingModel {
         return result;
     }
 
-    public getImageTileTexture(tileModel: RegularPolygonTileModel): Texture {
+    public getImageTileTexture(tileModel: TileModel): Texture {
         const globalTile = new Graphics()
             .rect(
-                tileModel.boundingRectangle.x / this.imageContainerModel.sideToTextureSideRatio
+                tileModel.absoluteBoundingRectangle.x
+                    / this.imageContainerModel.sideToTextureSideRatio
                     + this.textureXTilingOffset,
-                tileModel.boundingRectangle.y / this.imageContainerModel.sideToTextureSideRatio
+                tileModel.absoluteBoundingRectangle.y
+                    / this.imageContainerModel.sideToTextureSideRatio
                     + this.textureYTilingOffset,
-                tileModel.boundingRectangle.width / this.imageContainerModel.sideToTextureSideRatio,
-                tileModel.boundingRectangle.height / this.imageContainerModel.sideToTextureSideRatio
+                tileModel.absoluteBoundingRectangle.width
+                    / this.imageContainerModel.sideToTextureSideRatio,
+                tileModel.absoluteBoundingRectangle.height
+                    / this.imageContainerModel.sideToTextureSideRatio
             )
             .fill({
                 texture: this.textureModel.texture,

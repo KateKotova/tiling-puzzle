@@ -4,6 +4,7 @@ import { RectangularGridTilingModel } from "../../tilings/RectangularGridTilingM
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { RegularPolygonTileModel } from "../tiles/RegularPolygonTileModel.ts";
+import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
 
 export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
     public static readonly tilingType: TilingType = TilingType.OctagonAndSquare;
@@ -61,9 +62,9 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
         this.textureSquareTileBoundingSide = sqrt2 * this.textureTileSide;
 
         this.textureXTilingOffset = (this.textureModel.width
-            - this.textureOctagonTileBoundingSide * this.textureTileColumnCount) / 2;
+            - this.textureOctagonTileBoundingSide * this.textureTileColumnCount) / 2.0;
         this.textureYTilingOffset = (this.textureModel.height
-            - this.textureOctagonTileBoundingSide * (this.textureTileRowCount / 2 + 0.5)) / 2;
+            - this.textureOctagonTileBoundingSide * (this.textureTileRowCount / 2.0 + 0.5)) / 2.0;
     }
 
     protected initializeImageTileInfo(): void {
@@ -74,7 +75,7 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
             * this.imageContainerModel.sideToTextureSideRatio;
         const sqrt2 = Math.sqrt(2);
         this.octagonTileCircumscribedCircleRadius = this.tileSide / Math.sqrt(2 - sqrt2);
-        this.squareTileCircumscribedCircleRadius = sqrt2 / 2 * this.tileSide;
+        this.squareTileCircumscribedCircleRadius = sqrt2 / 2.0 * this.tileSide;
     }
 
     public getGridIndicesAreCorrect(rowIndex: number, columnIndex: number): boolean {
@@ -87,35 +88,38 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
     protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
             : RegularPolygonTileModel {
             
-        const result = super.getTileModelWithoutTexture(rowIndex, columnIndex);
+        const result = new RegularPolygonTileModel();
+        result.position = new RectangularGridTilePosition(rowIndex, columnIndex);
         result.side = this.tileSide;
+        result.rotationAngle = 0;
 
         if (rowIndex % 2 == 0) {
             result.sideCount = 8;
-            result.rotationAngle = 3 / 8 * Math.PI;
-            result.boundingRectangle = new Rectangle(
+            result.regularPolygonInitialRotationAngle = 3 / 8.0 * Math.PI;
+            result.rotatingBoundingRectangle = new Rectangle(
                 columnIndex * this.octagonTileBoundingSide,
-                rowIndex / 2 * this.octagonTileBoundingSide,
+                rowIndex / 2.0 * this.octagonTileBoundingSide,
                 this.octagonTileBoundingSide,
                 this.octagonTileBoundingSide
             );
             result.circumscribedCircleRadius = this.octagonTileCircumscribedCircleRadius;
         } else {
             result.sideCount = 4;
-            result.rotationAngle = 0;
-            const offset = this.tileSide + this.squareTileBoundingSide / 2;
-            result.boundingRectangle = new Rectangle(
+            result.regularPolygonInitialRotationAngle = 0;
+            const offset = this.tileSide + this.squareTileBoundingSide / 2.0;
+            result.rotatingBoundingRectangle = new Rectangle(
                 this.octagonTileBoundingSide * columnIndex + offset,
-                this.octagonTileBoundingSide * (rowIndex - 1) / 2 + offset,
+                this.octagonTileBoundingSide * (rowIndex - 1) / 2.0 + offset,
                 this.squareTileBoundingSide,
                 this.squareTileBoundingSide
             );
             result.circumscribedCircleRadius = this.squareTileCircumscribedCircleRadius;
         }
 
+        result.absoluteBoundingRectangle = result.rotatingBoundingRectangle;
         result.centerPoint = new Point(
-            result.boundingRectangle.x + result.boundingRectangle.width / 2,
-            result.boundingRectangle.y + result.boundingRectangle.height / 2);
+            result.rotatingBoundingRectangle.x + result.rotatingBoundingRectangle.width / 2.0,
+            result.rotatingBoundingRectangle.y + result.rotatingBoundingRectangle.height / 2.0);
         return result;
     }
 }
