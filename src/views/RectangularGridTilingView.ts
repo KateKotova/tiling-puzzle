@@ -1,4 +1,4 @@
-import { Graphics, GraphicsContext } from "pixi.js";
+import { Graphics, Matrix } from "pixi.js";
 import { TilingView } from "./TilingView.ts";
 import { RectangularGridTilingModel } from "../models/tilings/RectangularGridTilingModel.ts";
 import { TileModel } from "../models/tiles/TileModel.ts";
@@ -12,7 +12,7 @@ export abstract class RectangularGridTilingView extends TilingView {
         super(model);
     }
 
-    protected abstract getTileGraphicsContext(tileModel: TileModel): GraphicsContext;
+    protected abstract getTileGraphics(tileModel: TileModel): Graphics;
 
     public setExampleTiling(): void {
         const model = this.model as RectangularGridTilingModel;
@@ -30,11 +30,17 @@ export abstract class RectangularGridTilingView extends TilingView {
                     continue;
                 }
 
-                const tile = new Graphics(this.getTileGraphicsContext(tileModel));
+                const tile = this.getTileGraphics(tileModel);
+                tile.pivot.set(tileModel.rotatingBoundingRectangleSize.width / 2.0 / tile.scale.x,
+                    tileModel.rotatingBoundingRectangleSize.height / 2.0 / tile.scale.y);                
+                tile.rotation = tileModel.rotationAngle;   
+                tile.position.set(tileModel.centerPoint.x, tileModel.centerPoint.y);
+
                 if (shouldFillByTexture) {
                     tile.fill({
                         texture: tileModel.texture,
-                        textureSpace: "local"
+                        textureSpace: "local",
+                        matrix: new Matrix().rotate(-tileModel.rotationAngle)
                     });
                 }
 

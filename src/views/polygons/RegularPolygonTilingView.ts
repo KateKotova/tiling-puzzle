@@ -1,4 +1,4 @@
-import { GraphicsContext } from "pixi.js";
+import { Graphics } from "pixi.js";
 import { RegularPolygonTileModel } from "../../models/polygons/tiles/RegularPolygonTileModel.ts";
 import { TileModel } from "../../models/tiles/TileModel.ts";
 import { TilingModel } from "../../models/tilings/TilingModel.ts";
@@ -9,18 +9,18 @@ export class RegularPolygonTilingView extends RectangularGridTilingView {
         super(model);
     }
 
-    protected getTileGraphicsContext(tileModel: TileModel): GraphicsContext {
+    protected getTileGraphics(tileModel: TileModel): Graphics {
         if (!(tileModel instanceof RegularPolygonTileModel)) {
             throw new Error("The tile is not an instance of RegularPolygonTileModel");
         }
 
-        return new GraphicsContext()
+        return new Graphics()
             .regularPoly(
-                tileModel.centerPoint.x,
-                tileModel.centerPoint.y,
+                tileModel.absoluteBoundingRectangle.width / 2.0,
+                tileModel.absoluteBoundingRectangle.height / 2.0,
                 tileModel.circumscribedCircleRadius,
                 tileModel.sideCount,
-                tileModel.rotationAngle
+                tileModel.regularPolygonInitialRotationAngle
             )
             .stroke({
                 color: "black",
