@@ -11,7 +11,7 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
     public static readonly tilingType: TilingType = TilingType.Triangle;
 
     public textureMinSideTilePairCount: number;
-    public static readonly textureMinSideMinTilePairCount = 2;
+    public static readonly textureMinSideMinTilePairCount = 1;
 
     //#region Texture tile info
 
@@ -47,7 +47,7 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
                 / (this.textureMinSideTilePairCount + 0.5);
             this.textureTileHeight = sqrt3 / 2.0 * this.textureTileSide;
         } else {
-            this.textureTileHeight = this.textureModel.minSide / this.textureMinSideTilePairCount;
+            this.textureTileHeight = this.textureModel.minSide / this.textureMinSideTilePairCount / 2;
             this.textureTileSide = 2 / sqrt3 * this.textureTileHeight;
         }
 

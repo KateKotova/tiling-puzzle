@@ -8,7 +8,7 @@ import { Size } from "../geometry/Size.ts";
 
 export abstract class TileModel {
     public tileType: TileType = TileType.Unknown;
-    public tileLockType: TileLockType = TileLockType.Unknown;
+    public tileLockType: TileLockType = TileLockType.None;
     public texture: Texture | undefined;
     public centerPoint: Point = new Point();
     public rotationAngle: number = 0;

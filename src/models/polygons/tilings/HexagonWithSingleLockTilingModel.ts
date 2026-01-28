@@ -3,12 +3,16 @@ import { TilingType } from "../../tilings/TilingType.ts";
 import { RectangularGridTilingModel } from "../../tilings/RectangularGridTilingModel.ts";
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
-import { RegularPolygonTileModel } from "../tiles/RegularPolygonTileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
 import { Size } from "../../geometry/Size.ts";
+import { TileLockHeightToSideRatios } from "../../tiles/TileLockHeightToSideRatios.ts";
+import { TileLockType } from "../../tiles/TileLockType.ts";
+import { RegularPolygonWithSingleLockTileModel } from "../tiles/RegularPolygonWithSingleLockTileModel.ts";
+import { TileType } from "../../tiles/TileType.ts";
 
-export class HexagonTilingModel extends RectangularGridTilingModel {
-    public static readonly tilingType: TilingType = TilingType.Hexagon;
+export class HexagonWithSingleLockTilingModel extends RectangularGridTilingModel {
+    public static readonly tilingType: TilingType = TilingType.HexagonWithSingleLock;
+    public static readonly lockType: TileLockType = TileLockType.Single;
 
     public textureMinSideTilePairCount: number;
     public static readonly textureMinSideMinTilePairCount = 1;
@@ -16,15 +20,16 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
     //#region Texture tile info
 
     private textureTileSide: number = 0;
+    private textureLockHeight: number = 0;
     private textureTileWidth: number = 0;
     private textureTileHeight: number = 0;
 
     //#endregion Texture tile info
 
     public tileSide: number = 0;
+    private lockHeight: number = 0;
     public tileWidth: number = 0;
     public tileHeight: number = 0;
-    public tileCircumscribedCircleRadius: number = 0;
 
     constructor(textureModel: TilingTextureModel,
         textureMinSideTilePairCount: number,
@@ -33,64 +38,72 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
 
         super(textureModel, imageContainerModel, renderer);
         this.textureMinSideTilePairCount
-            = textureMinSideTilePairCount < HexagonTilingModel.textureMinSideMinTilePairCount
-                ? HexagonTilingModel.textureMinSideMinTilePairCount
+            = textureMinSideTilePairCount
+                < HexagonWithSingleLockTilingModel.textureMinSideMinTilePairCount
+                ? HexagonWithSingleLockTilingModel.textureMinSideMinTilePairCount
                 : Math.floor(textureMinSideTilePairCount);
     }
 
     public getTilingType(): TilingType {
-        return HexagonTilingModel.tilingType;
+        return HexagonWithSingleLockTilingModel.tilingType;
+    }
+
+    public getLockHeightToSideRatio(): number {
+        return TileLockHeightToSideRatios[HexagonWithSingleLockTilingModel.lockType];
     }
 
     protected initializeTextureTileInfo(): void {
+        const lockHeightToSideRatio = this.getLockHeightToSideRatio();
         const sqrt3 = Math.sqrt(3);
         if (this.textureModel.widthToHeightRatio <= 1) {
             this.textureTileSide = this.textureModel.minSide
                 / (0.5 + 3 * this.textureMinSideTilePairCount);
+            this.textureLockHeight = this.textureTileSide * lockHeightToSideRatio;
             this.textureTileColumnCount = 2 * this.textureMinSideTilePairCount;
-            this.textureTileRowCount = Math.trunc(this.textureModel.height
+            this.textureTileRowCount = Math.trunc((this.textureModel.height - this.textureLockHeight)
                 / this.textureTileSide / sqrt3 - 0.5);
         } else {
             this.textureTileSide = this.textureModel.minSide / sqrt3
-                / (this.textureMinSideTilePairCount * 2 + 0.5);
+                / (this.textureMinSideTilePairCount * 2 + 0.5 + lockHeightToSideRatio / 2);
+            this.textureLockHeight = this.textureTileSide * lockHeightToSideRatio;
             this.textureTileColumnCount = 2 * Math.trunc((this.textureModel.width
                 / this.textureTileSide - 0.5) / 3.0);
             this.textureTileRowCount = 2 * this.textureMinSideTilePairCount;
         }
 
         this.textureTileWidth = 2 * this.textureTileSide;
-        this.textureTileHeight = sqrt3 * this.textureTileSide;
+        this.textureTileHeight = sqrt3 * this.textureTileSide + this.textureLockHeight;
 
         this.textureXTilingOffset = (this.textureModel.width
             - this.textureTileSide * (0.5 + 3 / 2.0 * this.textureTileColumnCount)) / 2.0;
-        this.textureYTilingOffset = (this.textureModel.height
+        this.textureYTilingOffset = (this.textureModel.height - this.textureLockHeight
             - sqrt3 * this.textureTileSide * (this.textureTileRowCount + 0.5)) / 2.0;
     }
 
     protected initializeImageTileInfo(): void {
         this.tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
+        this.lockHeight = this.textureLockHeight * this.imageContainerModel.sideToTextureSideRatio;
         this.tileWidth = this.textureTileWidth * this.imageContainerModel.sideToTextureSideRatio;
         this.tileHeight = this.textureTileHeight * this.imageContainerModel.sideToTextureSideRatio;
-        this.tileCircumscribedCircleRadius = this.tileSide;
     }
 
     protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
-            : RegularPolygonTileModel {
+            : RegularPolygonWithSingleLockTileModel {
             
-        const result = new RegularPolygonTileModel();
+        const result = new RegularPolygonWithSingleLockTileModel();
+        result.tileType = TileType.HexagonWithSingleLock;
         result.position = new RectangularGridTilePosition(rowIndex, columnIndex);
         result.side = this.tileSide;
-        result.sideCount = 6;
         result.rotationAngle = 0;
-        result.regularPolygonInitialRotationAngle = Math.PI / 2;
+        const tileHeightWithoutLock = this.tileHeight - this.lockHeight;
         result.absoluteBoundingRectangle = new Rectangle(
             columnIndex * this.tileSide / 2.0 * 3,
-            rowIndex * this.tileHeight + (columnIndex % 2 == 1 ? this.tileHeight / 2.0 : 0),
+            rowIndex * tileHeightWithoutLock
+                + (columnIndex % 2 == 1 ? tileHeightWithoutLock / 2.0 : 0),
             this.tileWidth,
             this.tileHeight
         );
         result.rotatingBoundingRectangleSize = new Size(this.tileWidth, this.tileHeight);
-        result.circumscribedCircleRadius = this.tileCircumscribedCircleRadius;
         result.centerPoint = new Point(result.absoluteBoundingRectangle.x + this.tileWidth / 2.0,
             result.absoluteBoundingRectangle.y + this.tileHeight / 2.0);
         return result;
