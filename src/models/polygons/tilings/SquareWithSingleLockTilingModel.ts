@@ -5,9 +5,10 @@ import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { TileLockType } from "../../tiles/TileLockType.ts";
 import { TileLockHeightToSideRatios } from "../../tiles/TileLockHeightToSideRatios.ts";
-import { SquareWithSingleLockTileModel } from "../tiles/SquareWithSingleLockTileModel.ts";
+import { RegularPolygonWithSingleLockTileModel } from "../tiles/RegularPolygonWithSingleLockTileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
 import { Size } from "../../geometry/Size.ts";
+import { TileType } from "../../tiles/TileType.ts";
 
 export class SquareWithSingleLockTilingModel extends RectangularGridTilingModel {
     public static readonly tilingType: TilingType = TilingType.SquareWithSingleLock;
@@ -81,9 +82,10 @@ export class SquareWithSingleLockTilingModel extends RectangularGridTilingModel 
     }
 
     protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
-            : SquareWithSingleLockTileModel {
+            : RegularPolygonWithSingleLockTileModel {
             
-        const result = new SquareWithSingleLockTileModel();
+        const result = new RegularPolygonWithSingleLockTileModel();
+        result.tileType = TileType.SquareWithSingleLock;
         result.position = new RectangularGridTilePosition(rowIndex, columnIndex);
         result.side = this.tileSide;
         const tileIsRotated = (rowIndex + columnIndex) % 2 == 1;
