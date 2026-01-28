@@ -5,5 +5,6 @@ export enum TilingType {
     Triangle = "Triangle",
     Hexagon = "Hexagon",
     HexagonWithSingleLock = "HexagonWithSingleLock",
-    OctagonAndSquare = "OctagonAndSquare"
+    OctagonAndSquare = "OctagonAndSquare",
+    OctagonAndSquareWithSingleLock = "OctagonAndSquareWithSingleLock"
 }
