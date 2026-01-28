@@ -8,6 +8,7 @@ import { TriangleTilingModel } from "../polygons/tilings/TriangleTilingModel.ts"
 import { HexagonTilingModel } from "../polygons/tilings/HexagonTilingModel.ts";
 import { OctagonAndSquareTilingModel } from "../polygons/tilings/OctagonAndSquareTilingModel.ts";
 import { SquareWithSingleLockTilingModel } from "../polygons/tilings/SquareWithSingleLockTilingModel.ts";
+import { HexagonWithSingleLockTilingModel } from "../polygons/tilings/HexagonWithSingleLockTilingModel.ts";
 
 export class RectangularGridTilingModelFactory {
     public getTilingModel(tilingType: TilingType,
@@ -37,6 +38,10 @@ export class RectangularGridTilingModelFactory {
                 break;
             case TilingType.SquareWithSingleLock:
                 model = new SquareWithSingleLockTilingModel(textureModel,
+                    textureMinSideTilePairCount, imageContainerModel, renderer);
+                break;
+            case TilingType.HexagonWithSingleLock:
+                model = new HexagonWithSingleLockTilingModel(textureModel,
                     textureMinSideTilePairCount, imageContainerModel, renderer);
                 break;
             default:

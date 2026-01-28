@@ -1,5 +1,6 @@
 export enum TileType {
     Unknown = "Unknown",
     RegularPolygon = "RegularPolygon",
-    SquareWithSingleLock = "SquareWithSingleLock"
+    SquareWithSingleLock = "SquareWithSingleLock",
+    HexagonWithSingleLock = "HexagonWithSingleLock"
 }

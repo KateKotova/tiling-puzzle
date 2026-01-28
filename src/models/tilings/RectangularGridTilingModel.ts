@@ -5,9 +5,12 @@ import { TilingTextureModel } from "../TilingTextureModel.ts";
 import { ImageContainerModel } from "../ImageContainerModel.ts";
 import { TilingContainerModel } from "../TilingContainerModel.ts";
 import { TileModel } from "../tiles/TileModel.ts";
+import { TileLockType } from "../tiles/TileLockType.ts";
+import { TileLockHeightToSideRatios } from "../tiles/TileLockHeightToSideRatios.ts";
 
 export abstract class RectangularGridTilingModel implements TilingModel {
     public static readonly tilingType: TilingType = TilingType.Unknown;
+    public static readonly lockType: TileLockType = TileLockType.None;
 
     //#region Texture tile info
 
@@ -36,6 +39,10 @@ export abstract class RectangularGridTilingModel implements TilingModel {
 
     public getTilingType(): TilingType {
         return RectangularGridTilingModel.tilingType;
+    }
+
+    public getLockHeightToSideRatio(): number {
+        return TileLockHeightToSideRatios[RectangularGridTilingModel.lockType];
     }
 
     public initialize(): void {
