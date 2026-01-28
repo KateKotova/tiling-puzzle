@@ -1,4 +1,4 @@
-import { Graphics, Renderer, Texture } from "pixi.js";
+import { Graphics, Matrix, Renderer, Texture } from "pixi.js";
 import { TilingType } from "./TilingType.ts";
 import { TilingModel } from "./TilingModel.ts";
 import { TilingTextureModel } from "../TilingTextureModel.ts";
@@ -85,22 +85,37 @@ export abstract class RectangularGridTilingModel implements TilingModel {
     }
 
     public getImageTileTexture(tileModel: TileModel): Texture {
+        const sideToTextureSideRatio = this.imageContainerModel.sideToTextureSideRatio;
+        const boundingRectangleCenterPointX = (tileModel.absoluteBoundingRectangle.x
+            + tileModel.absoluteBoundingRectangle.width / 2.0)
+            / sideToTextureSideRatio
+            + this.textureXTilingOffset;
+        const boundingRectangleCenterPointY = (tileModel.absoluteBoundingRectangle.y
+            + tileModel.absoluteBoundingRectangle.height / 2.0)
+            / sideToTextureSideRatio
+            + this.textureYTilingOffset;
+        const rotatingBoundingRectangleWidth = tileModel.rotatingBoundingRectangleSize.width
+            / sideToTextureSideRatio;
+        const rotatingBoundingRectangleHeight = tileModel.rotatingBoundingRectangleSize.height
+            / sideToTextureSideRatio;
+
+        const textureMatrix = new Matrix();
+        textureMatrix.setTransform(0, 0,
+            boundingRectangleCenterPointX, boundingRectangleCenterPointY,
+            1, 1,
+            -tileModel.rotationAngle,
+            0, 0);
         const globalTile = new Graphics()
             .rect(
-                tileModel.absoluteBoundingRectangle.x
-                    / this.imageContainerModel.sideToTextureSideRatio
-                    + this.textureXTilingOffset,
-                tileModel.absoluteBoundingRectangle.y
-                    / this.imageContainerModel.sideToTextureSideRatio
-                    + this.textureYTilingOffset,
-                tileModel.absoluteBoundingRectangle.width
-                    / this.imageContainerModel.sideToTextureSideRatio,
-                tileModel.absoluteBoundingRectangle.height
-                    / this.imageContainerModel.sideToTextureSideRatio
+                -rotatingBoundingRectangleWidth / 2.0,
+                -rotatingBoundingRectangleHeight / 2.0,
+                rotatingBoundingRectangleWidth,
+                rotatingBoundingRectangleHeight
             )
             .fill({
                 texture: this.textureModel.texture,
-                textureSpace: "global"
+                textureSpace: "global",
+                matrix: textureMatrix
             });
 
         const result = this.renderer.generateTexture(globalTile);

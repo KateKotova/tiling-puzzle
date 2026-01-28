@@ -1,4 +1,3 @@
-import { Matrix } from "pixi.js";
 import { TilingView } from "./TilingView.ts";
 import { RectangularGridTilingModel } from "../../models/tilings/RectangularGridTilingModel.ts";
 import { TilingModel } from "../../models/tilings/TilingModel.ts";
@@ -39,8 +38,7 @@ export class RectangularGridTilingView extends TilingView {
                 if (shouldFillByTexture) {
                     tile.fill({
                         texture: tileModel.texture,
-                        textureSpace: "local",
-                        matrix: new Matrix().rotate(-tileModel.rotationAngle)
+                        textureSpace: "local"
                     });
                 }
 
