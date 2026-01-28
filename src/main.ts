@@ -1,15 +1,11 @@
-import {
-  Application,
-  Assets,
-  Container,
-  Graphics
-} from "pixi.js";
+import { Application, Assets, Container, Graphics } from "pixi.js";
 import { TilingTextureModel } from "./models/TilingTextureModel.ts";
 import { ImageContainerModel } from "./models/ImageContainerModel.ts";
 import { TilingType } from "./models/tilings/TilingType.ts";
-import { RectangularGridTilingModelFactory } from "./models/tilings/RectangularGridTilingModelFactory.ts";
-import { RectangularGridTilingViewFactory } from "./views/polygons/RectangularGridTilingModelFactory.ts";
+import { RectangularGridTilingModelFactory }
+  from "./models/tilings/RectangularGridTilingModelFactory.ts";
 import { RectangularGridTilingModel } from "./models/tilings/RectangularGridTilingModel.ts";
+import { RectangularGridTilingView } from "./views/tilings/RectangularGridTilingView.ts";
 
 async function main(): Promise<void> {
   try {
@@ -92,8 +88,8 @@ async function main(): Promise<void> {
       });
     imageContainer.addChild(image);
 
-    const rectangularGridTilingViewFactory = new RectangularGridTilingViewFactory();
-    const tilingView = rectangularGridTilingViewFactory.getTilingModel(tilingModel);
+    const tilingView = new RectangularGridTilingView(tilingModel);
+    tilingView.setExampleTiling();
     imageContainer.addChild(tilingView.tilingContainer);
 
     /*

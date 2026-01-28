@@ -16,36 +16,36 @@ export class RectangularGridTilingModelFactory {
         imageContainerModel: ImageContainerModel,
         renderer: Renderer
     ): RectangularGridTilingModel | null {
-        let tilingModel: RectangularGridTilingModel | null = null;
+        let model: RectangularGridTilingModel | null = null;
         const textureMinSideTilePairCount = Math.trunc(textureMinSideTileCount / 2);
         switch (tilingType) {
             case TilingType.Square:
-                tilingModel = new SquareTilingModel(textureModel, textureMinSideTileCount,
+                model = new SquareTilingModel(textureModel, textureMinSideTileCount,
                     imageContainerModel, renderer);
                 break;
             case TilingType.Triangle:
-                tilingModel = new TriangleTilingModel(textureModel, textureMinSideTilePairCount,
+                model = new TriangleTilingModel(textureModel, textureMinSideTilePairCount,
                     imageContainerModel, renderer);
                 break;
             case TilingType.Hexagon:
-                tilingModel = new HexagonTilingModel(textureModel, textureMinSideTilePairCount,
+                model = new HexagonTilingModel(textureModel, textureMinSideTilePairCount,
                     imageContainerModel, renderer);
                 break;
             case TilingType.OctagonAndSquare:
-                tilingModel = new OctagonAndSquareTilingModel(textureModel, textureMinSideTileCount,
+                model = new OctagonAndSquareTilingModel(textureModel, textureMinSideTileCount,
                     imageContainerModel, renderer);
                 break;
             case TilingType.SquareWithSingleLock:
-                tilingModel = new SquareWithSingleLockTilingModel(textureModel,
+                model = new SquareWithSingleLockTilingModel(textureModel,
                     textureMinSideTilePairCount, imageContainerModel, renderer);
                 break;
             default:
                 break;
         }
 
-        if (tilingModel) {
-            tilingModel.initialize();
+        if (model) {
+            model.initialize();
         }
-        return tilingModel;
+        return model;
     }
 }

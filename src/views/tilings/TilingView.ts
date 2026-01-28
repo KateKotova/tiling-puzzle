@@ -1,5 +1,5 @@
 import { Container } from "pixi.js";
-import { TilingModel } from "../models/tilings/TilingModel.ts";
+import { TilingModel } from "../../models/tilings/TilingModel.ts";
 
 export abstract class TilingView {
     public model: TilingModel;
