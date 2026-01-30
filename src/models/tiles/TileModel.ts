@@ -2,9 +2,10 @@ import { Point, Rectangle, Texture } from "pixi.js";
 import { TilePosition } from "./TilePosition.ts";
 import { TileType } from "./TileType.ts";
 import { TileLockType } from "./TileLockType.ts";
-import { TileSvgPathStrings } from "./TileSvgPathStrings.ts";
+import { TileTypeSvgData } from "./TileTypeSvgData.ts";
 import { TileLockHeightToSideRatios } from "./TileLockHeightToSideRatios.ts";
 import { Size } from "../geometry/Size.ts";
+import { TileSvgData } from "./TileSvgData.ts";
 
 export abstract class TileModel {
     public tileType: TileType = TileType.Unknown;
@@ -16,8 +17,8 @@ export abstract class TileModel {
     public absoluteBoundingRectangle: Rectangle = new Rectangle();
     public position: TilePosition = new TilePosition();
 
-    public getSvgPathString(): string {
-        return TileSvgPathStrings[this.tileType];
+    public getSvgData(): TileSvgData | null {
+        return TileTypeSvgData[this.tileType];
     }
 
     public getLockHeightToSideRatios(): number {

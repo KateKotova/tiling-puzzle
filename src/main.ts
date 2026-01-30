@@ -26,7 +26,11 @@ async function main(): Promise<void> {
     // @ts-expect-error PixiJS DevTools
     globalThis.__PIXI_APP__ = app;
 
-    await app.init({ background: "#1099bb", resizeTo: window });
+    await app.init({
+      background: "#1099bb",
+      resizeTo: window,
+      //antialias: true
+    });
     document.getElementById("pixi-container")!.appendChild(app.canvas);
 
     await Assets.load({
@@ -89,7 +93,7 @@ async function main(): Promise<void> {
     imageContainer.addChild(image);
 
     const tilingView = new RectangularGridTilingView(tilingModel);
-    tilingView.setExampleTiling();
+    tilingView.setExampleTiling(app.renderer);
     imageContainer.addChild(tilingView.tilingContainer);
 
     /*

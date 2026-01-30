@@ -1,4 +1,4 @@
-import { Graphics } from "pixi.js";
+import { Color, Container, Graphics, Renderer, Sprite } from "pixi.js";
 import { TileView } from "./TileView.ts";
 import { TileModel } from "../../models/tiles/TileModel.ts";
 import { RegularPolygonTileModel } from "../../models/polygons/tiles/RegularPolygonTileModel.ts";
@@ -11,20 +11,39 @@ export class RegularPolygonTileView extends TileView {
         super(model);
     }
 
-    public getGraphics(): Graphics {
+    public getContainer(renderer: Renderer, replacingTextureFillColor: Color): Container {
         const model = this.model as RegularPolygonTileModel;
-        return new Graphics()
+        const graphics = new Graphics()
             .regularPoly(
                 model.absoluteBoundingRectangle.width / 2.0,
                 model.absoluteBoundingRectangle.height / 2.0,
                 model.circumscribedCircleRadius,
                 model.sideCount,
                 model.regularPolygonInitialRotationAngle
-            )
-            .stroke({
-                color: "black",
-                width: 2,
-                alpha: 0.7
+            );
+
+        if (this.model.texture) {
+            graphics.fill({
+                texture: this.model.texture,
+                textureSpace: "local"
             });
+        } else {
+            graphics.fill({
+                color: replacingTextureFillColor,
+                alpha: 1
+            });
+        }
+
+        const graphicsTexture = renderer.generateTexture({
+            target: graphics,
+            resolution: 2,
+            antialias: true,
+            textureSourceOptions: {
+                scaleMode: 'linear'
+            }
+        });
+
+        const result = new Sprite(graphicsTexture);
+        return result;
     }
 }

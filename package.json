@@ -10,6 +10,7 @@
     "dev": "vite --host"
   },
   "dependencies": {
+    "pixi-filters": "^6.1.5",
     "pixi.js": "^8.8.1"
   },
   "devDependencies": {

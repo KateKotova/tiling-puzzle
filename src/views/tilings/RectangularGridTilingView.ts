@@ -1,3 +1,5 @@
+import { Color, Renderer } from "pixi.js";
+import { GlowFilter } from "pixi-filters";
 import { TilingView } from "./TilingView.ts";
 import { RectangularGridTilingModel } from "../../models/tilings/RectangularGridTilingModel.ts";
 import { TilingModel } from "../../models/tilings/TilingModel.ts";
@@ -11,9 +13,10 @@ export class RectangularGridTilingView extends TilingView {
         super(model);
     }
 
-    public setExampleTiling(): void {
+    public setExampleTiling(renderer: Renderer): void {
         const model = this.model as RectangularGridTilingModel;
         const tileViewFactory = new TileViewFactory();
+        const replacingTextureFillColor = new Color(0x00AA00);
         
         for (let rowIndex = 0; rowIndex < model.textureTileRowCount; rowIndex++) {
             for (let columnIndex = 0; columnIndex < model.textureTileColumnCount;
@@ -29,17 +32,25 @@ export class RectangularGridTilingView extends TilingView {
                     continue;
                 }
 
-                const tile = tileViewFactory.getView(tileModel).getGraphics();
+                const tile = tileViewFactory
+                    .getView(tileModel)
+                    .getContainer(renderer, replacingTextureFillColor);
+
                 tile.pivot.set(tileModel.rotatingBoundingRectangleSize.width / 2.0 / tile.scale.x,
                     tileModel.rotatingBoundingRectangleSize.height / 2.0 / tile.scale.y);                
                 tile.rotation = tileModel.rotationAngle;   
                 tile.position.set(tileModel.centerPoint.x, tileModel.centerPoint.y);
 
                 if (shouldFillByTexture) {
-                    tile.fill({
-                        texture: tileModel.texture,
-                        textureSpace: "local"
+                    const glowFilter = new GlowFilter({
+                        distance: 5,
+                        outerStrength: 2,
+                        innerStrength: 1,
+                        color: 0x00FF00,
+                        quality: 0.5,
+                        knockout: false
                     });
+                    tile.filters = [glowFilter];
                 }
 
                 this.tilingContainer.addChild(tile);

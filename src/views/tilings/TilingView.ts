@@ -1,4 +1,4 @@
-import { Container } from "pixi.js";
+import { Container, Renderer } from "pixi.js";
 import { TilingModel } from "../../models/tilings/TilingModel.ts";
 
 export abstract class TilingView {
@@ -23,5 +23,5 @@ export abstract class TilingView {
         });
     }
 
-    public abstract setExampleTiling(): void;
+    public abstract setExampleTiling(renderer: Renderer): void;
 }
