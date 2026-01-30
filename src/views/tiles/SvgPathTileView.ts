@@ -2,13 +2,20 @@ import { BlurFilter, Color, Container, Graphics, GraphicsPath, Renderer, Sprite,
 import { TileView } from "./TileView.ts";
 import { TileModel } from "../../models/tiles/TileModel.ts";
 import { RegularPolygonTileModel } from "../../models/polygons/tiles/RegularPolygonTileModel.ts";
+import { Size } from "../../models/geometry/Size.ts";
 
 export class SvgPathTileView extends TileView {
+    private spriteBoundingSize: Size;
+
     constructor (model: TileModel) {
         if (model instanceof RegularPolygonTileModel) {
             throw new Error("The tile must not be an instance of RegularPolygonTileModel");
         }
         super(model);
+        this.spriteBoundingSize = new Size(
+            this.model.rotatingBoundingRectangleSize.width + 0.5,
+            this.model.rotatingBoundingRectangleSize.height + 0.5
+        );
     }
 
     public getContainer(renderer: Renderer, replacingTextureFillColor: Color): Container {
@@ -22,8 +29,8 @@ export class SvgPathTileView extends TileView {
             replacingTextureFillColor);
 
         const sprite = new Sprite(graphicsTexture);
-        sprite.width = this.model.rotatingBoundingRectangleSize.width;
-        sprite.height = this.model.rotatingBoundingRectangleSize.height;
+        sprite.width = this.spriteBoundingSize.width;
+        sprite.height = this.spriteBoundingSize.height;
         sprite.roundPixels = false;
 
         const result = new Container();        
@@ -49,8 +56,7 @@ export class SvgPathTileView extends TileView {
                 alpha: 1
             });
 
-        const spriteSizeToGraphicsRatio = this.model.rotatingBoundingRectangleSize.width
-            / maskGraphics.width;
+        const spriteSizeToGraphicsRatio = this.spriteBoundingSize.width / maskGraphics.width;
         const resultStrokeWidth = 1;
 
         maskGraphics.stroke({ 
@@ -112,10 +118,8 @@ export class SvgPathTileView extends TileView {
             });
         }
 
-        const textureWidth = this.getPowerOfTwoSize(
-            this.model.rotatingBoundingRectangleSize.width);
-        const textureHeight = this.getPowerOfTwoSize(
-            this.model.rotatingBoundingRectangleSize.height);
+        const textureWidth = this.getPowerOfTwoSize(this.spriteBoundingSize.width);
+        const textureHeight = this.getPowerOfTwoSize(this.spriteBoundingSize.height);
 
         return renderer.generateTexture({
             target: graphics,

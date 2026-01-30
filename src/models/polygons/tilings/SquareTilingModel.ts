@@ -52,7 +52,7 @@ export class SquareTilingModel extends RectangularGridTilingModel {
 
     protected initializeImageTileInfo(): void {
         this.tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
-        this.tileCircumscribedCircleRadius = Math.sqrt(2) / 2.0 * this.tileSide;
+        this.tileCircumscribedCircleRadius = Math.ceil(Math.sqrt(2) / 2.0 * this.tileSide + 0.5);
     }
 
     protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)

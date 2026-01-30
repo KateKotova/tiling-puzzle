@@ -1,22 +1,20 @@
-import { Color, Renderer } from "pixi.js";
-import { GlowFilter } from "pixi-filters";
+import { Renderer, RenderLayer } from "pixi.js";
 import { TilingView } from "./TilingView.ts";
 import { RectangularGridTilingModel } from "../../models/tilings/RectangularGridTilingModel.ts";
 import { TilingModel } from "../../models/tilings/TilingModel.ts";
 import { TileViewFactory } from "../tiles/TileViewFactory.ts";
 
 export class RectangularGridTilingView extends TilingView {
-    constructor(model: TilingModel) {
+    constructor(model: TilingModel, selectedTileLayer: RenderLayer) {
         if (!(model instanceof RectangularGridTilingModel)) {
             throw new Error("The tiling model is not an instance of RectangularGridTilingModel");
         }
-        super(model);
+        super(model, selectedTileLayer);
     }
 
     public setExampleTiling(renderer: Renderer): void {
         const model = this.model as RectangularGridTilingModel;
         const tileViewFactory = new TileViewFactory();
-        const replacingTextureFillColor = new Color(0x00AA00);
         
         for (let rowIndex = 0; rowIndex < model.textureTileRowCount; rowIndex++) {
             for (let columnIndex = 0; columnIndex < model.textureTileColumnCount;
@@ -34,7 +32,7 @@ export class RectangularGridTilingView extends TilingView {
 
                 const tile = tileViewFactory
                     .getView(tileModel)
-                    .getContainer(renderer, replacingTextureFillColor);
+                    .getContainer(renderer, this.emptyTileFillColor);
 
                 tile.pivot.set(tileModel.rotatingBoundingRectangleSize.width / 2.0 / tile.scale.x,
                     tileModel.rotatingBoundingRectangleSize.height / 2.0 / tile.scale.y);                
@@ -42,15 +40,9 @@ export class RectangularGridTilingView extends TilingView {
                 tile.position.set(tileModel.centerPoint.x, tileModel.centerPoint.y);
 
                 if (shouldFillByTexture) {
-                    const glowFilter = new GlowFilter({
-                        distance: 5,
-                        outerStrength: 2,
-                        innerStrength: 1,
-                        color: 0x00FF00,
-                        quality: 0.5,
-                        knockout: false
-                    });
-                    tile.filters = [glowFilter];
+                    tile.filters = [this.selectedTileGlowFilter];
+                } else {
+                    tile.alpha = 0.2;
                 }
 
                 this.tilingContainer.addChild(tile);

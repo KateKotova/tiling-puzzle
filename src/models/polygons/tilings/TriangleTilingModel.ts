@@ -64,7 +64,7 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
     protected initializeImageTileInfo(): void {
         this.tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
         this.tileHeight = this.textureTileHeight * this.imageContainerModel.sideToTextureSideRatio;
-        this.tileCircumscribedCircleRadius = this.tileHeight * 2 / 3.0;
+        this.tileCircumscribedCircleRadius = Math.ceil(this.tileHeight * 2 / 3.0);
     }
 
     protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
@@ -92,11 +92,8 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
             result.regularPolygonInitialRotationAngle = Math.PI;
         }
 
-        const centerPointY = tileIsRotated
-            ? result.absoluteBoundingRectangle.y + this.tileHeight / 3.0
-            : result.absoluteBoundingRectangle.y + result.circumscribedCircleRadius;
         result.centerPoint = new Point(result.absoluteBoundingRectangle.x + tileSideHalf,
-            centerPointY);
+            result.absoluteBoundingRectangle.y + this.tileHeight / 2);
 
         return result;
     }

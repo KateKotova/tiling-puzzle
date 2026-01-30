@@ -75,8 +75,9 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
         this.squareTileBoundingSide = this.textureSquareTileBoundingSide
             * this.imageContainerModel.sideToTextureSideRatio;
         const sqrt2 = Math.sqrt(2);
-        this.octagonTileCircumscribedCircleRadius = this.tileSide / Math.sqrt(2 - sqrt2);
-        this.squareTileCircumscribedCircleRadius = sqrt2 / 2.0 * this.tileSide;
+        this.octagonTileCircumscribedCircleRadius = Math.ceil(
+            this.tileSide / Math.sqrt(2 - sqrt2));
+        this.squareTileCircumscribedCircleRadius = Math.ceil(sqrt2 / 2.0 * this.tileSide);
     }
 
     public getGridIndicesAreCorrect(rowIndex: number, columnIndex: number): boolean {

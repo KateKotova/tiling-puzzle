@@ -1,4 +1,4 @@
-import { Application, Assets, Container, Graphics } from "pixi.js";
+import { Application, Assets, Container, Graphics, RenderLayer } from "pixi.js";
 import { TilingTextureModel } from "./models/TilingTextureModel.ts";
 import { ImageContainerModel } from "./models/ImageContainerModel.ts";
 import { TilingType } from "./models/tilings/TilingType.ts";
@@ -18,7 +18,7 @@ async function main(): Promise<void> {
     const containerHeight = 400;
 
     const textureMinSideTileCount = 4;
-    const tilingType = TilingType.OctagonAndSquareWithSingleLock;
+    const tilingType = TilingType.HexagonWithSingleLock;
 
     //#endregion test data end
 
@@ -92,7 +92,10 @@ async function main(): Promise<void> {
       });
     imageContainer.addChild(image);
 
-    const tilingView = new RectangularGridTilingView(tilingModel);
+    const selectedTileLayer = new RenderLayer();
+    app.stage.addChild(selectedTileLayer);
+
+    const tilingView = new RectangularGridTilingView(tilingModel, selectedTileLayer);
     tilingView.setExampleTiling(app.renderer);
     imageContainer.addChild(tilingView.tilingContainer);
 
