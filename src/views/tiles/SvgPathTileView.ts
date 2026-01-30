@@ -56,11 +56,12 @@ export class SvgPathTileView extends TileView {
                 alpha: 1
             });
 
-        const spriteSizeToGraphicsRatio = this.spriteBoundingSize.width / maskGraphics.width;
+        const spriteSideToGraphicsSideRatio = this.spriteBoundingSize.width
+            / maskGraphics.width;
         const resultStrokeWidth = 1;
 
         maskGraphics.stroke({ 
-            width: Math.trunc(resultStrokeWidth / spriteSizeToGraphicsRatio),
+            width: Math.trunc(resultStrokeWidth / spriteSideToGraphicsSideRatio),
             color: 0xFFFFFF, 
             alpha: 1,
             alignment: 0.5 
@@ -72,6 +73,7 @@ export class SvgPathTileView extends TileView {
             width: spriteWidth,
             height: spriteHeight
         });
+        maskGraphics.destroy();
         
         const result = new Sprite(graphicsTexture);
         result.roundPixels = false;
@@ -79,7 +81,7 @@ export class SvgPathTileView extends TileView {
         const blurFilter = new BlurFilter({ 
             strength: 8.0,
             quality: 5,
-            kernelSize: 5             
+            kernelSize: 5
         });
         result.filters = [blurFilter];
 
@@ -94,7 +96,7 @@ export class SvgPathTileView extends TileView {
 
         result.width = spriteWidth;
         result.height = spriteHeight;
-        
+
         return result;
     }
 
@@ -105,7 +107,7 @@ export class SvgPathTileView extends TileView {
         const graphics = new Graphics();
         graphics.roundPixels = false;
         graphics.path(graphicsPath);
-
+        
         if (this.model.texture) {
             graphics.fill({
                 texture: this.model.texture,
@@ -118,10 +120,14 @@ export class SvgPathTileView extends TileView {
             });
         }
 
+        const graphicsSideToSpriteSideRatio = graphics.width / this.spriteBoundingSize.width;
+        const bevelFilter = this.getBevelFilter(graphicsSideToSpriteSideRatio);
+        graphics.filters = [bevelFilter];
+
         const textureWidth = this.getPowerOfTwoSize(this.spriteBoundingSize.width);
         const textureHeight = this.getPowerOfTwoSize(this.spriteBoundingSize.height);
 
-        return renderer.generateTexture({
+        const result =  renderer.generateTexture({
             target: graphics,
             resolution: 2,
             width: textureWidth,
@@ -130,6 +136,9 @@ export class SvgPathTileView extends TileView {
                 scaleMode: 'linear'
             }
         });
+        graphics.destroy();
+
+        return result;
     }
 
     private getPowerOfTwoSize(size: number): number {

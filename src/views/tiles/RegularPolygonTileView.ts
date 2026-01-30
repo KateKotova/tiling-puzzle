@@ -34,6 +34,11 @@ export class RegularPolygonTileView extends TileView {
             });
         }
 
+        const graphicsSideToSpriteSideRatio = graphics.width
+            / this.model.rotatingBoundingRectangleSize.width;
+        const bevelFilter = this.getBevelFilter(graphicsSideToSpriteSideRatio);
+        graphics.filters = [bevelFilter];
+
         const graphicsTexture = renderer.generateTexture({
             target: graphics,
             resolution: 2,
@@ -42,6 +47,7 @@ export class RegularPolygonTileView extends TileView {
                 scaleMode: 'linear'
             }
         });
+        graphics.destroy();
 
         const result = new Sprite(graphicsTexture);
         return result;

@@ -65,11 +65,13 @@ export class OctagonAndSquareWithSpiralLockTilingModel extends RectangularGridTi
 
         if (this.textureModel.widthToHeightRatio <= 1) {
             this.textureTileColumnCount = this.textureMinSideOctagonTileCount;
-            this.textureTileRowCount = 2 * Math.trunc(this.textureModel.height / this.textureTileSide
-                / sqrt2PlusOne) - 1;
+            this.textureTileRowCount = 2 * Math.trunc(
+                (this.textureModel.height - 2 * this.textureLockHeight)
+                / this.textureTileSide / sqrt2PlusOne) - 1;
         } else {
             this.textureTileColumnCount = Math.trunc(
-                this.textureModel.width / this.textureTileSide / sqrt2PlusOne);
+                (this.textureModel.width - 2 * this.textureLockHeight)
+                / this.textureTileSide / sqrt2PlusOne);
             this.textureTileRowCount = 2 * this.textureMinSideOctagonTileCount - 1;
         }
 

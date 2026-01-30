@@ -40,9 +40,9 @@ export class RectangularGridTilingView extends TilingView {
                 tile.position.set(tileModel.centerPoint.x, tileModel.centerPoint.y);
 
                 if (shouldFillByTexture) {
-                    tile.filters = [this.selectedTileGlowFilter];
+                    //tile.filters = [this.selectedTileGlowFilter];
                 } else {
-                    tile.alpha = 0.2;
+                    tile.alpha = 0.5;
                 }
 
                 this.tilingContainer.addChild(tile);
