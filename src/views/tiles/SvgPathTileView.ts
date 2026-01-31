@@ -18,7 +18,7 @@ export class SvgPathTileView extends TileView {
         );
     }
 
-    public getContainer(renderer: Renderer, replacingTextureFillColor: Color): Container {
+    public setTile(renderer: Renderer, replacingTextureFillColor: Color): void {
         const svgData = this.model.getSvgData();
         if (!svgData) {
             throw new Error("The svg data of the tile should not be null");
@@ -33,15 +33,14 @@ export class SvgPathTileView extends TileView {
         sprite.height = this.spriteBoundingSize.height;
         sprite.roundPixels = false;
 
-        const result = new Container();        
-        result.addChild(sprite);
+        this.tile = new Container();        
+        this.tile.addChild(sprite);
         
         const bluredSpriteWithMask = this.getBluredSpriteWithMask(renderer, graphicsPath,
             graphicsTexture, sprite.width, sprite.height);
-        result.addChild(bluredSpriteWithMask);
+        this.tile.addChild(bluredSpriteWithMask);
         
-        result.cacheAsTexture({ resolution: TileView.textureResolution });
-        return result;
+        this.tile.cacheAsTexture({ resolution: TileView.textureResolution });
     }
 
     private getBluredSpriteWithMask(renderer: Renderer,

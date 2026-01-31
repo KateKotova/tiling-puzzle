@@ -7,8 +7,11 @@ import { TileLockHeightToSideRatios } from "./TileLockHeightToSideRatios.ts";
 import { Size } from "../geometry/Size.ts";
 import { TileSvgData } from "./TileSvgData.ts";
 import { AdditionalMath } from "../geometry/AdditionalMath.ts";
+import { SmoothRotationController } from "../geometry/SmoothRotationController.ts";
 
 export abstract class TileModel {
+    private static readonly rotationAccelerationTimeToTotalTimeRatio: number = 0.3;
+    private static readonly rotationTime: number = 300;
     public tileType: TileType = TileType.Unknown;
     public tileLockType: TileLockType = TileLockType.None;
     public texture: Texture | undefined;
@@ -18,6 +21,8 @@ export abstract class TileModel {
     public rotatingBoundingRectangleSize: Size = new Size();
     public absoluteBoundingRectangle: Rectangle = new Rectangle();
     public position: TilePosition = new TilePosition();
+    private rotationController: SmoothRotationController | null = null;
+    public isRotating: boolean = false;
 
     public getSvgData(): TileSvgData | null {
         return TileTypeSvgData[this.tileType];
@@ -31,10 +36,6 @@ export abstract class TileModel {
 
     public getFreedomDegreeRotationAngle(): number {
         return 2 * Math.PI / this.getFreedomDegreeCount();
-    }
-
-    public normalizeCurrentRotationAngle(): void {
-        this.currentRotationAngle = AdditionalMath.getNormalizedAngle(this.currentRotationAngle);
     }
 
     public getSameTargetNextAngleMinAngleDifference(): number {
@@ -67,5 +68,32 @@ export abstract class TileModel {
             }
         }
         return result;
+    }
+
+    public prepareToRotation(angleDifference: number): void {
+        if (this.isRotating) {
+            return;
+        }
+
+        this.isRotating = true;
+        if (!this.rotationController) {
+            this.rotationController = new SmoothRotationController(this.currentRotationAngle,
+                this.currentRotationAngle + angleDifference,
+                TileModel.rotationTime,
+                TileModel.rotationAccelerationTimeToTotalTimeRatio);
+        } else {
+            this.rotationController.reset(this.currentRotationAngle,
+                this.currentRotationAngle + angleDifference);
+        }
+    }
+
+    public completeRotation(angleDifference: number): void {
+        if (!this.isRotating || !this.rotationController?.getIsCompleted()) {
+            return;
+        }
+        
+        this.currentRotationAngle = AdditionalMath.getNormalizedAngle(
+            this.currentRotationAngle + angleDifference);
+        this.isRotating = false;
     }
 }

@@ -11,7 +11,7 @@ export class RegularPolygonTileView extends TileView {
         super(model);
     }
 
-    public getContainer(renderer: Renderer, replacingTextureFillColor: Color): Container {
+    public setTile(renderer: Renderer, replacingTextureFillColor: Color): void {
         const model = this.model as RegularPolygonTileModel;
         const graphics = new Graphics()
             .regularPoly(
@@ -49,8 +49,7 @@ export class RegularPolygonTileView extends TileView {
         });
         graphics.destroy();
 
-        const result = new Sprite(graphicsTexture)
-        result.cacheAsTexture({ resolution: TileView.textureResolution });
-        return result;
+        this.tile = new Sprite(graphicsTexture);
+        this.tile.cacheAsTexture({ resolution: TileView.textureResolution });
     }
 }

@@ -30,9 +30,12 @@ export class RectangularGridTilingView extends TilingView {
                     continue;
                 }
 
-                const tile = tileViewFactory
-                    .getView(tileModel)
-                    .getContainer(renderer, this.emptyTileFillColor);
+                const tileView = tileViewFactory.getView(tileModel);
+                tileView.setTile(renderer, this.emptyTileFillColor);
+                const tile = tileView.tile;
+                if (!tile) {
+                    continue;
+                }
 
                 tile.pivot.set(tileModel.rotatingBoundingRectangleSize.width / 2.0 / tile.scale.x,
                     tileModel.rotatingBoundingRectangleSize.height / 2.0 / tile.scale.y);                
