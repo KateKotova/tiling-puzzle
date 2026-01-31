@@ -6,6 +6,7 @@ import { TileTypeSvgData } from "./TileTypeSvgData.ts";
 import { TileLockHeightToSideRatios } from "./TileLockHeightToSideRatios.ts";
 import { Size } from "../geometry/Size.ts";
 import { TileSvgData } from "./TileSvgData.ts";
+import { AdditionalMath } from "../geometry/AdditionalMath.ts";
 
 export abstract class TileModel {
     public tileType: TileType = TileType.Unknown;
@@ -13,6 +14,7 @@ export abstract class TileModel {
     public texture: Texture | undefined;
     public centerPoint: Point = new Point();
     public rotationAngle: number = 0;
+    public currentRotationAngle: number = 0;
     public rotatingBoundingRectangleSize: Size = new Size();
     public absoluteBoundingRectangle: Rectangle = new Rectangle();
     public position: TilePosition = new TilePosition();
@@ -23,5 +25,47 @@ export abstract class TileModel {
 
     public getLockHeightToSideRatios(): number {
         return TileLockHeightToSideRatios[this.tileLockType];
+    }
+
+    public abstract getFreedomDegreeCount(): number;
+
+    public getFreedomDegreeRotationAngle(): number {
+        return 2 * Math.PI / this.getFreedomDegreeCount();
+    }
+
+    public normalizeCurrentRotationAngle(): void {
+        this.currentRotationAngle = AdditionalMath.getNormalizedAngle(this.currentRotationAngle);
+    }
+
+    public getSameTargetNextAngleMinAngleDifference(): number {
+        const freedomDegreeRotationAngle = this.getFreedomDegreeRotationAngle();
+        const normalizedNextRotationAngle = AdditionalMath.getNormalizedAngle(
+            this.currentRotationAngle + freedomDegreeRotationAngle);
+        return AdditionalMath.getMinAngleDifference(this.currentRotationAngle,
+            normalizedNextRotationAngle);
+    }
+
+    public getNewTargetMinAngleDifference(normalizedTargetRotationAngle: number): number {
+        const freedomDegreeCount = this.getFreedomDegreeCount();
+        let result = AdditionalMath.getMinAngleDifference(this.currentRotationAngle,
+            normalizedTargetRotationAngle);
+        if (freedomDegreeCount == 1) {
+            return result;
+        }
+
+        const freedomDegreeRotationAngle = this.getFreedomDegreeRotationAngle();
+        for (let freedomDegreeIndex = 1, potentialRotationAngle = normalizedTargetRotationAngle;
+            freedomDegreeIndex < freedomDegreeCount;
+            freedomDegreeIndex++, potentialRotationAngle += freedomDegreeRotationAngle) {
+
+            const normalizedPotentialRotationAngle = AdditionalMath
+                .getNormalizedAngle(potentialRotationAngle);
+            const potentionalResult = AdditionalMath.getMinAngleDifference(
+                this.currentRotationAngle, normalizedPotentialRotationAngle);
+            if (Math.abs(potentionalResult) < Math.abs(result)) {
+                result = potentionalResult;
+            }
+        }
+        return result;
     }
 }

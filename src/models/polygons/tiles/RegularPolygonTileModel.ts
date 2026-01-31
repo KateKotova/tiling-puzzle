@@ -9,4 +9,8 @@ export class RegularPolygonTileModel extends TileModel {
     public sideCount: number = 0;
     public circumscribedCircleRadius: number = 0;
     public regularPolygonInitialRotationAngle: number = 0;
+
+    public getFreedomDegreeCount(): number {
+        return this.sideCount;
+    }
 }
