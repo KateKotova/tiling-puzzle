@@ -104,8 +104,15 @@ export class HexagonWithSingleLockTilingModel extends RectangularGridTilingModel
             this.tileHeight
         );
         result.rotatingBoundingRectangleSize = new Size(this.tileWidth, this.tileHeight);
-        result.centerPoint = new Point(result.absoluteBoundingRectangle.x + this.tileWidth / 2.0,
-            result.absoluteBoundingRectangle.y + this.tileHeight / 2.0);
+        result.pivotPoint = new Point(this.tileWidth / 2.0,
+            (this.tileHeight + this.lockHeight) / 2.0);
+        result.centerPoint = new Point(result.absoluteBoundingRectangle.x + result.pivotPoint.x,
+            result.absoluteBoundingRectangle.y + result.pivotPoint.y);        
+
+        result.hitAreaSideCount = 6;
+        result.hitAreaCircumscribedCircleRadius = this.tileSide;
+        result.hitAreaInitialRotationAngle = Math.PI / 2;
+
         return result;
     }
 }

@@ -1,4 +1,4 @@
-import { Color, Container, Renderer, RenderLayer } from "pixi.js";
+import { Color, Container, Renderer, RenderLayer, Ticker } from "pixi.js";
 import { TilingModel } from "../../models/tilings/TilingModel.ts";
 import { GlowFilter } from "pixi-filters";
 
@@ -36,5 +36,5 @@ export abstract class TilingView {
         });
     }
 
-    public abstract setExampleTiling(renderer: Renderer): void;
+    public abstract setExampleTiling(renderer: Renderer, ticker: Ticker): void;
 }

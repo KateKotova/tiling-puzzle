@@ -16,13 +16,14 @@ export abstract class TileModel {
     public tileLockType: TileLockType = TileLockType.None;
     public texture: Texture | undefined;
     public centerPoint: Point = new Point();
+    public pivotPoint: Point = new Point();
     public rotationAngle: number = 0;
     public currentRotationAngle: number = 0;
+    public currentTargetRotationAngle: number = 0;
     public rotatingBoundingRectangleSize: Size = new Size();
     public absoluteBoundingRectangle: Rectangle = new Rectangle();
     public position: TilePosition = new TilePosition();
     private rotationController: SmoothRotationController | null = null;
-    public isRotating: boolean = false;
 
     public getSvgData(): TileSvgData | null {
         return TileTypeSvgData[this.tileType];
@@ -38,7 +39,7 @@ export abstract class TileModel {
         return 2 * Math.PI / this.getFreedomDegreeCount();
     }
 
-    public getSameTargetNextAngleMinAngleDifference(): number {
+    public getSamePositionNextAngleMinAngleDifference(): number {
         const freedomDegreeRotationAngle = this.getFreedomDegreeRotationAngle();
         const normalizedNextRotationAngle = AdditionalMath.getNormalizedAngle(
             this.currentRotationAngle + freedomDegreeRotationAngle);
@@ -46,7 +47,7 @@ export abstract class TileModel {
             normalizedNextRotationAngle);
     }
 
-    public getNewTargetMinAngleDifference(normalizedTargetRotationAngle: number): number {
+    public getNewPositionMinAngleDifference(normalizedTargetRotationAngle: number): number {
         const freedomDegreeCount = this.getFreedomDegreeCount();
         let result = AdditionalMath.getMinAngleDifference(this.currentRotationAngle,
             normalizedTargetRotationAngle);
@@ -70,30 +71,32 @@ export abstract class TileModel {
         return result;
     }
 
-    public prepareToRotation(angleDifference: number): void {
-        if (this.isRotating) {
-            return;
-        }
-
-        this.isRotating = true;
-        if (!this.rotationController) {
+    public prepareToRotation(rotationAngleDifference: number): void {
+        this.currentTargetRotationAngle = this.currentRotationAngle + rotationAngleDifference;
+        if (!this.rotationController) {            
             this.rotationController = new SmoothRotationController(this.currentRotationAngle,
-                this.currentRotationAngle + angleDifference,
+                this.currentTargetRotationAngle,
                 TileModel.rotationTime,
                 TileModel.rotationAccelerationTimeToTotalTimeRatio);
         } else {
             this.rotationController.reset(this.currentRotationAngle,
-                this.currentRotationAngle + angleDifference);
+                this.currentTargetRotationAngle);
         }
     }
 
-    public completeRotation(angleDifference: number): void {
-        if (!this.isRotating || !this.rotationController?.getIsCompleted()) {
-            return;
-        }
-        
+    public executeRotation(deltaTime: number): void {
+        const rotationAngleIncrement: number = this.rotationController?.getIsCompleted()
+            ? 0
+            : (this.rotationController?.getRotationAngleIncrement(deltaTime) ?? 0);
+        this.currentRotationAngle += rotationAngleIncrement;
+    }
+
+    public completeRotation(): void {
         this.currentRotationAngle = AdditionalMath.getNormalizedAngle(
-            this.currentRotationAngle + angleDifference);
-        this.isRotating = false;
+            this.currentTargetRotationAngle);
+    }
+    
+    public getRotaionIsCompleted(): boolean {
+        return this.rotationController?.getIsCompleted() ?? false;
     }
 }

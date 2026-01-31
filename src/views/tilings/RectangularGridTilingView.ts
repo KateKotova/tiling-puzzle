@@ -1,4 +1,4 @@
-import { Renderer, RenderLayer } from "pixi.js";
+import { Renderer, RenderLayer, Ticker } from "pixi.js";
 import { TilingView } from "./TilingView.ts";
 import { RectangularGridTilingModel } from "../../models/tilings/RectangularGridTilingModel.ts";
 import { TilingModel } from "../../models/tilings/TilingModel.ts";
@@ -12,7 +12,7 @@ export class RectangularGridTilingView extends TilingView {
         super(model, selectedTileLayer);
     }
 
-    public setExampleTiling(renderer: Renderer): void {
+    public setExampleTiling(renderer: Renderer, ticker: Ticker): void {
         const model = this.model as RectangularGridTilingModel;
         const tileViewFactory = new TileViewFactory();
         
@@ -29,18 +29,16 @@ export class RectangularGridTilingView extends TilingView {
                 if (!tileModel) {
                     continue;
                 }
+                tileModel.currentRotationAngle = tileModel.rotationAngle;
 
-                const tileView = tileViewFactory.getView(tileModel);
-                tileView.setTile(renderer, this.emptyTileFillColor);
+                const tileView = tileViewFactory.getView(tileModel, renderer, ticker,
+                    this.emptyTileFillColor, this.selectedTileLayer);
                 const tile = tileView.tile;
-                if (!tile) {
-                    continue;
-                }
 
-                tile.pivot.set(tileModel.rotatingBoundingRectangleSize.width / 2.0 / tile.scale.x,
-                    tileModel.rotatingBoundingRectangleSize.height / 2.0 / tile.scale.y);                
-                tile.rotation = tileModel.rotationAngle;   
-                tile.position.set(tileModel.centerPoint.x, tileModel.centerPoint.y);
+                // tile.pivot.set(tileModel.rotatingBoundingRectangleSize.width / 2.0 / tile.scale.x,
+                //     tileModel.rotatingBoundingRectangleSize.height / 2.0 / tile.scale.y);                
+                // tile.rotation = tileModel.rotationAngle;   
+                // tile.position.set(tileModel.centerPoint.x, tileModel.centerPoint.y);
 
                 if (shouldFillByTexture) {
                     //tile.filters = [this.selectedTileGlowFilter];

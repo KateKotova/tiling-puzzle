@@ -77,7 +77,7 @@ export class SmoothRotationController {
             accelerationTime, acceleration, constantTime);
         
         const rotationAngleIncrement = (newTimeDistance - currentTimeDistance) * direction;
-        
+
         return {
             rotationAngleIncrement,
             newCurrentTime: newTime,

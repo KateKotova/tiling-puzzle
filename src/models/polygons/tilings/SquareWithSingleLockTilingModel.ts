@@ -102,9 +102,15 @@ export class SquareWithSingleLockTilingModel extends RectangularGridTilingModel 
                 this.tileMaxSide
             );
         result.rotatingBoundingRectangleSize = new Size(this.tileMinSide, this.tileMaxSide);
+        result.pivotPoint = new Point(this.tileMinSide / 2.0, this.tileMaxSide / 2.0);
         result.centerPoint = new Point(
             result.absoluteBoundingRectangle.x + result.absoluteBoundingRectangle.width / 2.0,
             result.absoluteBoundingRectangle.y + result.absoluteBoundingRectangle.height / 2.0);
+
+        result.hitAreaSideCount = 4;
+        result.hitAreaCircumscribedCircleRadius = Math.sqrt(2) / 2.0 * this.tileSide;
+        result.hitAreaInitialRotationAngle = Math.PI / 4;
+
         return result;
     }
 }

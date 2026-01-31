@@ -72,8 +72,10 @@ export class SquareTilingModel extends RectangularGridTilingModel {
         );
         result.rotatingBoundingRectangleSize = new Size(this.tileSide, this.tileSide);
         result.circumscribedCircleRadius = this.tileCircumscribedCircleRadius;
-        result.centerPoint = new Point(result.absoluteBoundingRectangle.x + this.tileSide / 2.0,
-            result.absoluteBoundingRectangle.y + this.tileSide / 2.0);
+        const tileHalfSide = this.tileSide / 2.0;
+        result.pivotPoint = new Point(tileHalfSide, tileHalfSide);
+        result.centerPoint = new Point(result.absoluteBoundingRectangle.x + result.pivotPoint.x,
+            result.absoluteBoundingRectangle.y + result.pivotPoint.y);
         return result;
     }
 }

@@ -1,28 +1,48 @@
-import { BlurFilter, Color, Container, Graphics, GraphicsPath, Renderer, Sprite, Texture } from "pixi.js";
+import {
+    BlurFilter,
+    Color,
+    Container,
+    Graphics,
+    GraphicsPath,
+    Point,
+    Renderer,
+    RenderLayer,
+    Sprite,
+    Texture,
+    Ticker
+} from "pixi.js";
 import { TileView } from "./TileView.ts";
 import { TileModel } from "../../models/tiles/TileModel.ts";
 import { RegularPolygonTileModel } from "../../models/polygons/tiles/RegularPolygonTileModel.ts";
 import { Size } from "../../models/geometry/Size.ts";
+import { RegularPolygonWithSingleLockTileModel } from "../../models/polygons/tiles/RegularPolygonWithSingleLockTileModel.ts";
+import { AdditionalMath } from "../../models/geometry/AdditionalMath.ts";
 
 export class SvgPathTileView extends TileView {
-    private spriteBoundingSize: Size;
+    private spriteBoundingSize: Size = new Size();
 
-    constructor (model: TileModel) {
+    constructor (model: TileModel,
+            renderer: Renderer,
+            ticker: Ticker,
+            replacingTextureFillColor: Color,
+            selectedTileLayer: RenderLayer) {
+
         if (model instanceof RegularPolygonTileModel) {
             throw new Error("The tile must not be an instance of RegularPolygonTileModel");
         }
-        super(model);
-        this.spriteBoundingSize = new Size(
-            this.model.rotatingBoundingRectangleSize.width + 0.5,
-            this.model.rotatingBoundingRectangleSize.height + 0.5
-        );
+        super(model, renderer, ticker, replacingTextureFillColor, selectedTileLayer);
     }
 
-    public setTile(renderer: Renderer, replacingTextureFillColor: Color): void {
+   protected createTile(renderer: Renderer, replacingTextureFillColor: Color): Container {
         const svgData = this.model.getSvgData();
         if (!svgData) {
             throw new Error("The svg data of the tile should not be null");
         }
+
+        this.spriteBoundingSize = new Size(
+            this.model.rotatingBoundingRectangleSize.width + 0.5,
+            this.model.rotatingBoundingRectangleSize.height + 0.5
+        );
 
         const graphicsPath = new GraphicsPath(svgData.path);
         const graphicsTexture = this.getGraphicsTexture(renderer, graphicsPath,
@@ -33,14 +53,30 @@ export class SvgPathTileView extends TileView {
         sprite.height = this.spriteBoundingSize.height;
         sprite.roundPixels = false;
 
-        this.tile = new Container();        
-        this.tile.addChild(sprite);
+        const result = new Container();        
+        result.addChild(sprite);
         
         const bluredSpriteWithMask = this.getBluredSpriteWithMask(renderer, graphicsPath,
             graphicsTexture, sprite.width, sprite.height);
-        this.tile.addChild(bluredSpriteWithMask);
+        result.addChild(bluredSpriteWithMask);
         
-        this.tile.cacheAsTexture({ resolution: TileView.textureResolution });
+        result.cacheAsTexture({ resolution: TileView.textureResolution });
+
+        if (this.model instanceof RegularPolygonWithSingleLockTileModel) {
+            const hitAreaCenterPoint = new Point(
+                this.model.rotatingBoundingRectangleSize.width / 2.0,
+                this.model.rotatingBoundingRectangleSize.height / 2.0);
+            const model = this.model as RegularPolygonWithSingleLockTileModel;            
+            result.hitArea = AdditionalMath.getRegularPolygon(hitAreaCenterPoint,
+                model.hitAreaCircumscribedCircleRadius, model.hitAreaSideCount,
+                model.hitAreaInitialRotationAngle);
+        }
+
+        result.pivot.set(this.model.pivotPoint.x, this.model.pivotPoint.y);
+        result.rotation = this.model.rotationAngle;   
+        result.position.set(this.model.centerPoint.x, this.model.centerPoint.y);
+
+        return result;
     }
 
     private getBluredSpriteWithMask(renderer: Renderer,
