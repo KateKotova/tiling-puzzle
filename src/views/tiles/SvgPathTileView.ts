@@ -40,6 +40,7 @@ export class SvgPathTileView extends TileView {
             graphicsTexture, sprite.width, sprite.height);
         result.addChild(bluredSpriteWithMask);
         
+        result.cacheAsTexture({ resolution: TileView.textureResolution });
         return result;
     }
 
@@ -69,7 +70,7 @@ export class SvgPathTileView extends TileView {
 
         const maskTexture = renderer.generateTexture({
             target: maskGraphics,
-            resolution: 2,
+            resolution: TileView.textureResolution,
             width: spriteWidth,
             height: spriteHeight
         });
@@ -89,8 +90,8 @@ export class SvgPathTileView extends TileView {
         maskSprite.roundPixels = false;
         result.addChild(maskSprite);
         maskSprite.position.set(
-            (result.width - maskSprite.width) / 2,
-            (result.height - maskSprite.height) / 2
+            (result.width - maskSprite.width) / 2.0,
+            (result.height - maskSprite.height) / 2.0
         );
         result.mask = maskSprite;
 
@@ -129,7 +130,7 @@ export class SvgPathTileView extends TileView {
 
         const result =  renderer.generateTexture({
             target: graphics,
-            resolution: 2,
+            resolution: TileView.textureResolution,
             width: textureWidth,
             height: textureHeight,
             textureSourceOptions: {

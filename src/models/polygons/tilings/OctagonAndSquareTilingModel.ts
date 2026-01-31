@@ -111,7 +111,7 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
             const offset = this.tileSide + this.squareTileBoundingSide / 2.0;
             result.absoluteBoundingRectangle = new Rectangle(
                 this.octagonTileBoundingSide * columnIndex + offset,
-                this.octagonTileBoundingSide * (rowIndex - 1) / 2.0 + offset,
+                this.octagonTileBoundingSide * (rowIndex - 1) / 2.0 + offset + 0.5,
                 this.squareTileBoundingSide,
                 this.squareTileBoundingSide
             );

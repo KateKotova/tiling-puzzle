@@ -41,7 +41,7 @@ export class RegularPolygonTileView extends TileView {
 
         const graphicsTexture = renderer.generateTexture({
             target: graphics,
-            resolution: 2,
+            resolution: TileView.textureResolution,
             antialias: true,
             textureSourceOptions: {
                 scaleMode: 'linear'
@@ -49,7 +49,8 @@ export class RegularPolygonTileView extends TileView {
         });
         graphics.destroy();
 
-        const result = new Sprite(graphicsTexture);
+        const result = new Sprite(graphicsTexture)
+        result.cacheAsTexture({ resolution: TileView.textureResolution });
         return result;
     }
 }

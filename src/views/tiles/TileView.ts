@@ -3,8 +3,9 @@ import { TileModel } from "../../models/tiles/TileModel.ts";
 import { BevelFilter } from "pixi-filters";
 
 export abstract class TileView {
+    public static readonly textureResolution: number = 2;
     public model: TileModel;
-
+    
     constructor (model: TileModel) {
         this.model = model;
     }

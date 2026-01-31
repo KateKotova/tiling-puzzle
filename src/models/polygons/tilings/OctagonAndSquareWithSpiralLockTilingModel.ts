@@ -144,7 +144,7 @@ export class OctagonAndSquareWithSpiralLockTilingModel extends RectangularGridTi
             const offset = this.tileSide + this.squareTileBoundingSide / 2.0 + this.lockHeight;
             result.absoluteBoundingRectangle = new Rectangle(
                 this.octagonBoundingSide * columnIndex + offset,
-                this.octagonBoundingSide * (rowIndex - 1) / 2.0 + offset,
+                this.octagonBoundingSide * (rowIndex - 1) / 2.0 + offset + 0.5,
                 this.squareTileBoundingSide,
                 this.squareTileBoundingSide
             );
