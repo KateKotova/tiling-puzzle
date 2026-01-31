@@ -69,9 +69,11 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
 
     protected initializeImageTileInfo(): void {
         this.tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
-        this.tileWidth = this.textureTileWidth * this.imageContainerModel.sideToTextureSideRatio;
-        this.tileHeight = this.textureTileHeight * this.imageContainerModel.sideToTextureSideRatio;
-        this.tileCircumscribedCircleRadius = this.tileSide;
+        this.tileWidth = this.textureTileWidth
+            * this.imageContainerModel.sideToTextureSideRatio;
+        this.tileHeight = this.textureTileHeight
+            * this.imageContainerModel.sideToTextureSideRatio;
+        this.tileCircumscribedCircleRadius = Math.ceil(this.tileSide);
     }
 
     protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
@@ -91,8 +93,9 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
         );
         result.rotatingBoundingRectangleSize = new Size(this.tileWidth, this.tileHeight);
         result.circumscribedCircleRadius = this.tileCircumscribedCircleRadius;
-        result.centerPoint = new Point(result.absoluteBoundingRectangle.x + this.tileWidth / 2.0,
-            result.absoluteBoundingRectangle.y + this.tileHeight / 2.0);
+        result.pivotPoint = new Point(this.tileWidth / 2.0, this.tileHeight / 2.0);
+        result.centerPoint = new Point(result.absoluteBoundingRectangle.x + result.pivotPoint.x,
+            result.absoluteBoundingRectangle.y + result.pivotPoint.y);        
         return result;
     }
 }

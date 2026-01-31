@@ -75,8 +75,9 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
         this.squareTileBoundingSide = this.textureSquareTileBoundingSide
             * this.imageContainerModel.sideToTextureSideRatio;
         const sqrt2 = Math.sqrt(2);
-        this.octagonTileCircumscribedCircleRadius = this.tileSide / Math.sqrt(2 - sqrt2);
-        this.squareTileCircumscribedCircleRadius = sqrt2 / 2.0 * this.tileSide;
+        this.octagonTileCircumscribedCircleRadius = Math.ceil(
+            this.tileSide / Math.sqrt(2 - sqrt2));
+        this.squareTileCircumscribedCircleRadius = Math.ceil(sqrt2 / 2.0 * this.tileSide);
     }
 
     public getGridIndicesAreCorrect(rowIndex: number, columnIndex: number): boolean {
@@ -110,7 +111,7 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
             const offset = this.tileSide + this.squareTileBoundingSide / 2.0;
             result.absoluteBoundingRectangle = new Rectangle(
                 this.octagonTileBoundingSide * columnIndex + offset,
-                this.octagonTileBoundingSide * (rowIndex - 1) / 2.0 + offset,
+                this.octagonTileBoundingSide * (rowIndex - 1) / 2.0 + offset + 0.5,
                 this.squareTileBoundingSide,
                 this.squareTileBoundingSide
             );
@@ -119,9 +120,10 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
 
         result.rotatingBoundingRectangleSize = new Size(result.absoluteBoundingRectangle.width,
             result.absoluteBoundingRectangle.height);
-        result.centerPoint = new Point(
-            result.absoluteBoundingRectangle.x + result.absoluteBoundingRectangle.width / 2.0,
-            result.absoluteBoundingRectangle.y + result.absoluteBoundingRectangle.height / 2.0);
+        result.pivotPoint = new Point(result.absoluteBoundingRectangle.width / 2.0,
+            result.absoluteBoundingRectangle.height / 2.0);
+        result.centerPoint = new Point(result.absoluteBoundingRectangle.x + result.pivotPoint.x,
+            result.absoluteBoundingRectangle.y + result.pivotPoint.y);
         return result;
     }
 }

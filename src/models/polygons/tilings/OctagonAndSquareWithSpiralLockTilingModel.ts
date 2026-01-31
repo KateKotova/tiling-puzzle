@@ -65,11 +65,13 @@ export class OctagonAndSquareWithSpiralLockTilingModel extends RectangularGridTi
 
         if (this.textureModel.widthToHeightRatio <= 1) {
             this.textureTileColumnCount = this.textureMinSideOctagonTileCount;
-            this.textureTileRowCount = 2 * Math.trunc(this.textureModel.height / this.textureTileSide
-                / sqrt2PlusOne) - 1;
+            this.textureTileRowCount = 2 * Math.trunc(
+                (this.textureModel.height - 2 * this.textureLockHeight)
+                / this.textureTileSide / sqrt2PlusOne) - 1;
         } else {
             this.textureTileColumnCount = Math.trunc(
-                this.textureModel.width / this.textureTileSide / sqrt2PlusOne);
+                (this.textureModel.width - 2 * this.textureLockHeight)
+                / this.textureTileSide / sqrt2PlusOne);
             this.textureTileRowCount = 2 * this.textureMinSideOctagonTileCount - 1;
         }
 
@@ -112,6 +114,7 @@ export class OctagonAndSquareWithSpiralLockTilingModel extends RectangularGridTi
         const result = new RegularPolygonWithSingleLockTileModel();
         result.position = new RectangularGridTilePosition(rowIndex, columnIndex);
         result.side = this.tileSide;
+        const sqrt2 = Math.sqrt(2);
 
         if (rowIndex % 2 == 0) {
             result.tileType = TileType.OctagonWithSingleLock;
@@ -134,6 +137,10 @@ export class OctagonAndSquareWithSpiralLockTilingModel extends RectangularGridTi
             }
             result.rotatingBoundingRectangleSize = new Size(this.octagonTileBoundingSide,
                 this.octagonTileBoundingSide);
+
+            result.hitAreaSideCount = 8;
+            result.hitAreaCircumscribedCircleRadius = this.tileSide / Math.sqrt(2 - sqrt2);
+            result.hitAreaInitialRotationAngle = 3 / 8.0 * Math.PI;
         } else {
             result.tileType = TileType.SquareWithSingleLock;
             result.rotationAngle = ((rowIndex - 1) / 2 + columnIndex) % 2 == 0
@@ -142,14 +149,20 @@ export class OctagonAndSquareWithSpiralLockTilingModel extends RectangularGridTi
             const offset = this.tileSide + this.squareTileBoundingSide / 2.0 + this.lockHeight;
             result.absoluteBoundingRectangle = new Rectangle(
                 this.octagonBoundingSide * columnIndex + offset,
-                this.octagonBoundingSide * (rowIndex - 1) / 2.0 + offset,
+                this.octagonBoundingSide * (rowIndex - 1) / 2.0 + offset + 0.5,
                 this.squareTileBoundingSide,
                 this.squareTileBoundingSide
             );
             result.rotatingBoundingRectangleSize = new Size(this.tileSide,
                 this.tileSide + 2 * this.lockHeight);
+
+            result.hitAreaSideCount = 4;
+            result.hitAreaCircumscribedCircleRadius = sqrt2 / 2.0 * this.tileSide;
+            result.hitAreaInitialRotationAngle = 0;
         }
 
+        result.pivotPoint = new Point(result.rotatingBoundingRectangleSize.width / 2.0,
+            result.rotatingBoundingRectangleSize.height / 2.0);
         result.centerPoint = new Point(
             result.absoluteBoundingRectangle.x + result.absoluteBoundingRectangle.width / 2.0,
             result.absoluteBoundingRectangle.y + result.absoluteBoundingRectangle.height / 2.0);

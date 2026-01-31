@@ -1,4 +1,4 @@
-import { Application, Assets, Container, Graphics } from "pixi.js";
+import { Application, Assets, Container, Graphics, RenderLayer } from "pixi.js";
 import { TilingTextureModel } from "./models/TilingTextureModel.ts";
 import { ImageContainerModel } from "./models/ImageContainerModel.ts";
 import { TilingType } from "./models/tilings/TilingType.ts";
@@ -26,7 +26,11 @@ async function main(): Promise<void> {
     // @ts-expect-error PixiJS DevTools
     globalThis.__PIXI_APP__ = app;
 
-    await app.init({ background: "#1099bb", resizeTo: window });
+    await app.init({
+      background: "#1099bb",
+      resizeTo: window,
+      //antialias: true
+    });
     document.getElementById("pixi-container")!.appendChild(app.canvas);
 
     await Assets.load({
@@ -88,8 +92,11 @@ async function main(): Promise<void> {
       });
     imageContainer.addChild(image);
 
-    const tilingView = new RectangularGridTilingView(tilingModel);
-    tilingView.setExampleTiling();
+    const selectedTileLayer = new RenderLayer();
+    app.stage.addChild(selectedTileLayer);
+
+    const tilingView = new RectangularGridTilingView(tilingModel, selectedTileLayer);
+    tilingView.setExampleTiling(app.renderer, app.ticker);
     imageContainer.addChild(tilingView.tilingContainer);
 
     /*
