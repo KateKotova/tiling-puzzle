@@ -1,4 +1,4 @@
-import { Color, Container, Renderer, RenderLayer, Texture, Ticker } from "pixi.js";
+import { Color, Container, FederatedPointerEvent, Point, Renderer, RenderLayer, Texture, Ticker } from "pixi.js";
 import { TileModel } from "../../models/tiles/TileModel.ts";
 import { BevelFilter } from "pixi-filters";
 import { ViewSettings } from "../ViewSettings.ts";
@@ -13,9 +13,11 @@ export abstract class TileView {
     private selectedTileLayer: RenderLayer;
     private rotationAngleDifference: number = 0;
     private ticker: Ticker;
-    private isSelected: boolean = false;
+    private isDragging: boolean = false;
+    private dragOffset: Point = new Point();
+    private dragStartPosition: Point = new Point();
+    private dragStartTime: number = 0;
 
-    private boundOnPointerTap: (event: PointerEvent) => void = this.onPointerTap.bind(this);
     private boundOnRotationTicker: (ticker: Ticker) => void = this.onRotationTicker.bind(this);
     
     constructor (parameters: TileViewParameters) {
@@ -31,7 +33,7 @@ export abstract class TileView {
         if (this.texture) {
             this.tile.eventMode = "static";
             this.tile.cursor = "pointer";
-            this.tile.on("pointertap", this.boundOnPointerTap);
+            this.tile.on('pointerdown', this.onPointerDown, this);
         }
     }
 
@@ -67,7 +69,7 @@ export abstract class TileView {
             return;
         }
 
-        this.tile.off("pointertap", this.boundOnPointerTap);
+        this.tile.off('pointerdown', this.onPointerDown, this);
         const rotationAngleDifference = this.model.getSamePositionNextAngleMinAngleDifference();
         this.prepareToRotation(rotationAngleDifference);
         this.ticker.add(this.boundOnRotationTicker);
@@ -78,8 +80,68 @@ export abstract class TileView {
         if (this.model.getRotaionIsCompleted()) {
             this.completeRotation();
             this.ticker.remove(this.boundOnRotationTicker);
-            this.tile.on("pointertap", this.boundOnPointerTap);
+            this.tile.on('pointerdown', this.onPointerDown, this);
         }        
+    }
+
+    private onPointerDown(event: FederatedPointerEvent): void {
+        this.isDragging = true;
+
+        this.tile.off('pointerdown', this.onPointerDown, this);
+        this.tile.on('globalpointermove', this.onPointerMoveOnDrag, this);
+        this.tile.on('pointerup', this.onPointerUpOnDrag, this);
+        this.tile.on('pointerupoutside', this.onPointerUpOnDrag, this);
+
+        this.dragStartPosition = new Point(this.tile.position.x, this.tile.position.y);
+        this.dragStartTime = event.timeStamp;
+        
+        const parent = this.tile.parent ?? this.tile;
+        const parentEventPosition = parent.toLocal(event.global);
+        this.dragOffset.set(parentEventPosition.x - this.tile.position.x,
+            parentEventPosition.y - this.tile.position.y);
+        
+        this.selectedTileLayer.attach(this.tile);
+        this.addSelectedTileGlowFilter();
+    }
+
+    private onPointerMoveOnDrag(event: FederatedPointerEvent): void {
+        if (!this.isDragging) {
+            return;
+        }
+        
+        const parent = this.tile.parent ?? this.tile;
+        const parentEventPosition = parent.toLocal(event.global);
+        this.tile.position.set(parentEventPosition.x - this.dragOffset.x,
+            parentEventPosition.y - this.dragOffset.y);
+    }
+
+    private onPointerUpOnDrag(event: FederatedPointerEvent): void {
+        if (!this.isDragging) {
+            return;
+        }
+
+        this.selectedTileLayer.detach(this.tile);
+        this.removeSelectedTileGlowFilter();
+
+        this.tile.off('globalpointermove', this.onPointerMoveOnDrag, this);
+        this.tile.off('pointerup', this.onPointerUpOnDrag, this);
+        this.tile.off('pointerupoutside', this.onPointerUpOnDrag, this);
+        
+        this.isDragging = false;
+
+        const tapWasExecuted
+            = event.timeStamp - this.dragStartTime <= this.viewSettings.tapMaxDuration
+            && Math.abs(this.tile.position.x - this.dragStartPosition.x)
+                <= this.viewSettings.tapMaxDistance
+            && Math.abs(this.tile.position.y - this.dragStartPosition.y)
+                <= this.viewSettings.tapMaxDistance;
+
+        if (tapWasExecuted) {
+            this.tile.position.set(this.dragStartPosition.x, this.dragStartPosition.y);
+            this.onPointerTap(event);
+        } else {
+            this.tile.on('pointerdown', this.onPointerDown, this);
+        }
     }
 
     private prepareToRotation(rotationAngleDifference: number): void {
@@ -87,7 +149,7 @@ export abstract class TileView {
         this.model.prepareToRotation(this.rotationAngleDifference);
         this.selectedTileLayer.attach(this.tile);
         
-        if (!this.isSelected) {
+        if (!this.isDragging) {
             this.addSelectedTileGlowFilter();
         }
     }
@@ -98,7 +160,7 @@ export abstract class TileView {
     }
 
     private completeRotation(): void {
-        if (!this.isSelected) {
+        if (!this.isDragging) {
             this.removeSelectedTileGlowFilter();
         }
 
@@ -122,5 +184,14 @@ export abstract class TileView {
                 item !== this.viewSettings.selectedTileGlowFilter);
             this.tile.updateCacheTexture();
         }
+    }
+
+    public destroy(): void {
+        this.ticker.remove(this.boundOnRotationTicker);
+        this.tile.off('pointerdown', this.onPointerDown, this);
+        this.tile.off('globalpointermove', this.onPointerMoveOnDrag, this);
+        this.tile.off('pointerup', this.onPointerUpOnDrag, this);
+        this.tile.off('pointerupoutside', this.onPointerUpOnDrag, this);
+        this.tile.destroy();
     }
 }

@@ -20,4 +20,6 @@ export class ViewSettings {
         quality: 0.5,
         knockout: false
     });
+    public tapMaxDuration: number = 200;
+    public tapMaxDistance: number = 3;
 }
