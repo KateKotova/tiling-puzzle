@@ -64,27 +64,18 @@ export abstract class RectangularGridTilingModel implements TilingModel {
             && columnIndex < this.textureTileColumnCount;
     }
 
-    protected abstract getTileModelWithoutTexture(rowIndex: number, columnIndex: number): TileModel;
+    protected abstract getProtectedTileModel(rowIndex: number, columnIndex: number): TileModel;
 
-    public getTileModel(rowIndex: number,
-        columnIndex: number,
-        shouldGetTexture: boolean = true): TileModel | undefined {
-
+    public getTileModel(rowIndex: number, columnIndex: number): TileModel | undefined {
         rowIndex = Math.floor(rowIndex);
         columnIndex = Math.floor(columnIndex);
         if (!this.getGridIndicesAreCorrect(rowIndex, columnIndex)) {
             return undefined;
-        }
-        
-        const result = this.getTileModelWithoutTexture(rowIndex, columnIndex);
-        if (shouldGetTexture) {
-            result.texture = this.getImageTileTexture(result);
-        }
-
-        return result;
+        }        
+        return this.getProtectedTileModel(rowIndex, columnIndex);
     }
 
-    public getImageTileTexture(tileModel: TileModel): Texture {
+    public getTileTexture(tileModel: TileModel): Texture {
         const sideToTextureSideRatio = this.imageContainerModel.sideToTextureSideRatio;
         const boundingRectangleCenterPointX = (tileModel.absoluteBoundingRectangle.x
             + tileModel.absoluteBoundingRectangle.width / 2.0)

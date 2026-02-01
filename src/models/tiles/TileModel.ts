@@ -1,4 +1,4 @@
-import { Point, Rectangle, Texture } from "pixi.js";
+import { Point, Rectangle } from "pixi.js";
 import { TilePosition } from "./TilePosition.ts";
 import { TileType } from "./TileType.ts";
 import { TileLockType } from "./TileLockType.ts";
@@ -14,7 +14,6 @@ export abstract class TileModel {
     private static readonly rotationTime: number = 300;
     public tileType: TileType = TileType.Unknown;
     public tileLockType: TileLockType = TileLockType.None;
-    public texture: Texture | undefined;
     public pivotPoint: Point = new Point();
     public positionPoint: Point = new Point();
     public rotationAngle: number = 0;

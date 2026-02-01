@@ -108,8 +108,8 @@ export class OctagonAndSquareWithSpiralLockTilingModel extends RectangularGridTi
             && columnIndex < this.textureTileColumnCount - (rowIndex % 2);
     }
 
-    protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
-            : RegularPolygonWithSingleLockTileModel {
+    protected getProtectedTileModel(rowIndex: number, columnIndex: number)
+        : RegularPolygonWithSingleLockTileModel {
             
         const result = new RegularPolygonWithSingleLockTileModel();
         result.position = new RectangularGridTilePosition(rowIndex, columnIndex);

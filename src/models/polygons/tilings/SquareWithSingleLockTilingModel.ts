@@ -79,8 +79,8 @@ export class SquareWithSingleLockTilingModel extends RectangularGridTilingModel 
         this.tileMaxSide = this.textureTileMaxSide * this.imageContainerModel.sideToTextureSideRatio;
     }
 
-    protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
-            : RegularPolygonWithSingleLockTileModel {
+    protected getProtectedTileModel(rowIndex: number, columnIndex: number)
+        : RegularPolygonWithSingleLockTileModel {
             
         const result = new RegularPolygonWithSingleLockTileModel();
         result.tileType = TileType.SquareWithSingleLock;

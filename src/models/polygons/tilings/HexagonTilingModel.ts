@@ -76,8 +76,8 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
         this.tileCircumscribedCircleRadius = Math.ceil(this.tileSide);
     }
 
-    protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
-            : RegularPolygonTileModel {
+    protected getProtectedTileModel(rowIndex: number, columnIndex: number)
+        : RegularPolygonTileModel {
             
         const result = new RegularPolygonTileModel();
         result.position = new RectangularGridTilePosition(rowIndex, columnIndex);

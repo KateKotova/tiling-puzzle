@@ -1,11 +1,13 @@
-import { Color, Container, Renderer, RenderLayer, Ticker } from "pixi.js";
+import { Color, Container, Renderer, RenderLayer, Texture, Ticker } from "pixi.js";
 import { TileModel } from "../../models/tiles/TileModel.ts";
 import { BevelFilter } from "pixi-filters";
 import { ViewSettings } from "../ViewSettings.ts";
+import { TileViewParameters } from "./TileViewParameters.ts";
 
 export abstract class TileView {
     protected viewSettings: ViewSettings;
     public model: TileModel;
+    public texture: Texture | null;
     public tile: Container;
     public content: Container;
     private selectedTileLayer: RenderLayer;
@@ -16,22 +18,17 @@ export abstract class TileView {
     private boundOnPointerTap: (event: PointerEvent) => void = this.onPointerTap.bind(this);
     private boundOnRotationTicker: (ticker: Ticker) => void = this.onRotationTicker.bind(this);
     
-    constructor (
-        viewSettings: ViewSettings,
-        model: TileModel,
-        renderer: Renderer,
-        ticker: Ticker,
-        replacingTextureFillColor: Color,
-        selectedTileLayer: RenderLayer) {
-
-        this.viewSettings = viewSettings;
-        this.model = model;
-        this.content = this.createContent(renderer, replacingTextureFillColor);
+    constructor (parameters: TileViewParameters) {
+        this.viewSettings = parameters.viewSettings;
+        this.model = parameters.model;
+        this.texture = parameters.texture;
+        this.content = this.createContent(parameters.renderer,
+            parameters.replacingTextureFillColor);
         this.tile = this.createTile();
-        this.selectedTileLayer = selectedTileLayer;
-        this.ticker = ticker;
+        this.selectedTileLayer = parameters.selectedTileLayer;
+        this.ticker = parameters.ticker;
 
-        if (this.model.texture) {
+        if (this.texture) {
             this.tile.eventMode = "static";
             this.tile.cursor = "pointer";
             this.tile.on("pointertap", this.boundOnPointerTap);
@@ -55,7 +52,7 @@ export abstract class TileView {
         const options = this.viewSettings.bevelFilterOptions;
         return new BevelFilter({ 
             rotation: (options.rotation ?? 0)
-                + (this.model.texture ? 0 : 180)
+                + (this.texture ? 0 : 180)
                 - this.model.rotationAngle * 180 / Math.PI,
             thickness: (options.thickness ?? 0) * graphicsSideToSpriteSideRatio,
             lightColor: options.lightColor,

@@ -10,5 +10,5 @@ export interface TilingModel {
     isInitialized: boolean;
     initialize(): void;
     getTilingType(): TilingType;
-    getImageTileTexture(tileModel: TileModel): Texture;
+    getTileTexture(tileModel: TileModel): Texture;
 }

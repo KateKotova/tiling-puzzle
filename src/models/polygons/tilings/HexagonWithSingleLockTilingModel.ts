@@ -87,8 +87,8 @@ export class HexagonWithSingleLockTilingModel extends RectangularGridTilingModel
         this.tileHeight = this.textureTileHeight * this.imageContainerModel.sideToTextureSideRatio;
     }
 
-    protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
-            : RegularPolygonWithSingleLockTileModel {
+    protected getProtectedTileModel(rowIndex: number, columnIndex: number)
+        : RegularPolygonWithSingleLockTileModel {
             
         const result = new RegularPolygonWithSingleLockTileModel();
         result.tileType = TileType.HexagonWithSingleLock;

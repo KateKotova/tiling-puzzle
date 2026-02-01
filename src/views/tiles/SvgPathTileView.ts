@@ -6,34 +6,24 @@ import {
     GraphicsPath,
     Point,
     Renderer,
-    RenderLayer,
     Sprite,
-    Texture,
-    Ticker
+    Texture
 } from "pixi.js";
 import { TileView } from "./TileView.ts";
-import { TileModel } from "../../models/tiles/TileModel.ts";
 import { RegularPolygonTileModel } from "../../models/polygons/tiles/RegularPolygonTileModel.ts";
 import { Size } from "../../models/geometry/Size.ts";
 import { RegularPolygonWithSingleLockTileModel } from "../../models/polygons/tiles/RegularPolygonWithSingleLockTileModel.ts";
 import { AdditionalMath } from "../../models/geometry/AdditionalMath.ts";
-import { ViewSettings } from "../ViewSettings.ts";
+import { TileViewParameters } from "./TileViewParameters.ts";
 
 export class SvgPathTileView extends TileView {
     private spriteBoundingSize: Size = new Size();
 
-    constructor (
-        viewSettings: ViewSettings,
-        model: TileModel,
-        renderer: Renderer,
-        ticker: Ticker,
-        replacingTextureFillColor: Color,
-        selectedTileLayer: RenderLayer) {
-
-        if (model instanceof RegularPolygonTileModel) {
+    constructor (parameters: TileViewParameters) {
+        if (parameters.model instanceof RegularPolygonTileModel) {
             throw new Error("The tile must not be an instance of RegularPolygonTileModel");
         }
-        super(viewSettings, model, renderer, ticker, replacingTextureFillColor, selectedTileLayer);
+        super(parameters);
     }
 
    protected createContent(renderer: Renderer, replacingTextureFillColor: Color): Container {
@@ -146,9 +136,9 @@ export class SvgPathTileView extends TileView {
         graphics.roundPixels = false;
         graphics.path(graphicsPath);
         
-        if (this.model.texture) {
+        if (this.texture) {
             graphics.fill({
-                texture: this.model.texture,
+                texture: this.texture,
                 textureSpace: "local"
             });
         } else {

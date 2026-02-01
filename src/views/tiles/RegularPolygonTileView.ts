@@ -1,23 +1,15 @@
-import { Color, Container, Graphics, Point, Renderer, RenderLayer, Sprite, Ticker } from "pixi.js";
+import { Color, Container, Graphics, Point, Renderer, Sprite } from "pixi.js";
 import { TileView } from "./TileView.ts";
-import { TileModel } from "../../models/tiles/TileModel.ts";
 import { RegularPolygonTileModel } from "../../models/polygons/tiles/RegularPolygonTileModel.ts";
 import { AdditionalMath } from "../../models/geometry/AdditionalMath.ts";
-import { ViewSettings } from "../ViewSettings.ts";
+import { TileViewParameters } from "./TileViewParameters.ts";
 
 export class RegularPolygonTileView extends TileView {
-    constructor (
-        viewSettings: ViewSettings,
-        model: TileModel,
-        renderer: Renderer,
-        ticker: Ticker,
-        replacingTextureFillColor: Color,
-        selectedTileLayer: RenderLayer) {
-
-        if (!(model instanceof RegularPolygonTileModel)) {
+    constructor (parameters: TileViewParameters) {
+        if (!(parameters.model instanceof RegularPolygonTileModel)) {
             throw new Error("The tile is not an instance of RegularPolygonTileModel");
         }
-        super(viewSettings, model, renderer, ticker, replacingTextureFillColor, selectedTileLayer);
+        super(parameters);
     }
 
     protected createContent(renderer: Renderer, replacingTextureFillColor: Color): Container {
@@ -31,9 +23,9 @@ export class RegularPolygonTileView extends TileView {
                 model.regularPolygonInitialRotationAngle
             );
 
-        if (model.texture) {
+        if (this.texture) {
             graphics.fill({
-                texture: model.texture,
+                texture: this.texture,
                 textureSpace: "local"
             });
         } else {

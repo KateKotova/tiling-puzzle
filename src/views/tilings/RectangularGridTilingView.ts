@@ -1,16 +1,17 @@
-import { Renderer, RenderLayer, Ticker } from "pixi.js";
+import { Renderer, Ticker } from "pixi.js";
 import { TilingView } from "./TilingView.ts";
 import { RectangularGridTilingModel } from "../../models/tilings/RectangularGridTilingModel.ts";
 import { TilingModel } from "../../models/tilings/TilingModel.ts";
 import { TileViewFactory } from "../tiles/TileViewFactory.ts";
 import { ViewSettings } from "../ViewSettings.ts";
+import { TileViewParameters } from "../tiles/TileViewParameters.ts";
 
 export class RectangularGridTilingView extends TilingView {
-    constructor(viewSettings: ViewSettings, model: TilingModel, selectedTileLayer: RenderLayer) {
+    constructor(viewSettings: ViewSettings, model: TilingModel) {
         if (!(model instanceof RectangularGridTilingModel)) {
             throw new Error("The tiling model is not an instance of RectangularGridTilingModel");
         }
-        super(viewSettings, model, selectedTileLayer);
+        super(viewSettings, model);
     }
 
     public setExampleTiling(renderer: Renderer, ticker: Ticker): void {
@@ -25,29 +26,31 @@ export class RectangularGridTilingView extends TilingView {
                     continue;
                 }
 
-                const shouldFillByTexture = Math.random() >= 0.5;
-                const tileModel = model.getTileModel(rowIndex, columnIndex, shouldFillByTexture);
+                const tileModel = model.getTileModel(rowIndex, columnIndex);
                 if (!tileModel) {
                     continue;
                 }
                 tileModel.currentRotationAngle = tileModel.rotationAngle;
 
-                const tileView = tileViewFactory.getView(
-                    this.viewSettings,
-                    tileModel,
+                const tileViewParameters: TileViewParameters = {
+                    viewSettings: this.viewSettings,
+                    model: tileModel,
+                    texture: null,
                     renderer,
                     ticker,
-                    this.emptyTileFillColor,
-                    this.selectedTileLayer
-                );
+                    replacingTextureFillColor: this.emptyTileFillColor,
+                    selectedTileLayer: this.selectedTileLayer
+                };
+                const emptyTileView = tileViewFactory.getView(tileViewParameters);
+                emptyTileView.content.alpha = 0.7;
+                this.emptyTilesContainer.addChild(emptyTileView.tile);
 
-                if (shouldFillByTexture) {
-                    //tile.filters = [this.selectedTileGlowFilter];
-                } else {
-                    tileView.content.alpha = 0.7;
+                const shouldCreateTexturedTile = Math.random() >= 0.5;
+                if (shouldCreateTexturedTile) {
+                    tileViewParameters.texture = model.getTileTexture(tileModel);
+                    const tileView = tileViewFactory.getView(tileViewParameters);
+                    this.tilesContainer.addChild(tileView.tile);
                 }
-
-                this.tilingContainer.addChild(tileView.tile);
             }
         }
     }

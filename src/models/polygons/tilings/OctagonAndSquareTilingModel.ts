@@ -87,8 +87,8 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
             && columnIndex < this.textureTileColumnCount - (rowIndex % 2);
     }
 
-    protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
-            : RegularPolygonTileModel {
+    protected getProtectedTileModel(rowIndex: number, columnIndex: number)
+        : RegularPolygonTileModel {
             
         const result = new RegularPolygonTileModel();
         result.position = new RectangularGridTilePosition(rowIndex, columnIndex);
