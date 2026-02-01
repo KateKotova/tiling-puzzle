@@ -1,6 +1,7 @@
-import { Color, Container, Renderer, RenderLayer, Ticker } from "pixi.js";
+import { Color, Container, Renderer, Ticker } from "pixi.js";
 import { TilingModel } from "../../models/tilings/TilingModel.ts";
 import { ViewSettings } from "../ViewSettings.ts";
+import { DraggingTileData } from "../tiles/DraggingTileData.ts";
 
 export abstract class TilingView {
     protected viewSettings: ViewSettings;
@@ -9,8 +10,8 @@ export abstract class TilingView {
     public emptyTilesContainer: Container;
     public tilesContainer: Container;
     protected emptyTileFillColor: Color = new Color(0x00AA00);
-    protected selectedEmptyTileLayer: RenderLayer;
-    protected selectedTileLayer: RenderLayer;
+    protected selectedTileContainer: Container;
+    protected draggingTileData: DraggingTileData = { view: null };
 
     constructor(viewSettings: ViewSettings, model: TilingModel) {
         if (!model.isInitialized) {
@@ -24,10 +25,8 @@ export abstract class TilingView {
         this.tilingContainer.addChild(this.emptyTilesContainer);
         this.tilesContainer = new Container();
         this.tilingContainer.addChild(this.tilesContainer);
-        this.selectedEmptyTileLayer = new RenderLayer();
-        this.tilingContainer.addChild(this.selectedEmptyTileLayer);
-        this.selectedTileLayer = new RenderLayer();
-        this.tilingContainer.addChild(this.selectedTileLayer);
+        this.selectedTileContainer = new Container();
+        this.tilingContainer.addChild(this.selectedTileContainer);
     }
 
     private createTilingContainer(): Container {

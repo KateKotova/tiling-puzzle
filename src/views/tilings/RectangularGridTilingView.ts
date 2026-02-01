@@ -39,7 +39,8 @@ export class RectangularGridTilingView extends TilingView {
                     renderer,
                     ticker,
                     replacingTextureFillColor: this.emptyTileFillColor,
-                    selectedTileLayer: this.selectedTileLayer
+                    selectedTileContainer: this.selectedTileContainer,
+                    draggingTileData: this.draggingTileData
                 };
                 const emptyTileView = tileViewFactory.getView(tileViewParameters);
                 emptyTileView.content.alpha = 0.7;
@@ -50,6 +51,7 @@ export class RectangularGridTilingView extends TilingView {
                     tileViewParameters.texture = model.getTileTexture(tileModel);
                     const tileView = tileViewFactory.getView(tileViewParameters);
                     this.tilesContainer.addChild(tileView.tile);
+                    tileView.dragStartEmptyTileView = emptyTileView;
                 }
             }
         }

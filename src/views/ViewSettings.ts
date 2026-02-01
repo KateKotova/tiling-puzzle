@@ -11,6 +11,7 @@ export class ViewSettings {
         shadowColor: 0x000000,
         shadowAlpha: 0.6
     };
+    public selectedTileZIndex = 99999;
     public selectedTileGlowFilterColor: Color = new Color(0x00FFFF);
     public selectedTileGlowFilter: GlowFilter = new GlowFilter({
         distance: 5,
@@ -22,4 +23,13 @@ export class ViewSettings {
     });
     public tapMaxDuration: number = 200;
     public tapMaxDistance: number = 3;
+    public targetEmptyTileGlowFilterColor: Color = new Color(0xFF00FF);
+    public targetEmptyTileGlowFilter: GlowFilter = new GlowFilter({
+        distance: 5,
+        outerStrength: 1,
+        innerStrength: 5,
+        color: this.targetEmptyTileGlowFilterColor,
+        quality: 0.5,
+        knockout: false
+    });
 }
