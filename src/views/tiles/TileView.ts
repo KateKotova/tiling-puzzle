@@ -1,18 +1,10 @@
 import { Color, Container, Renderer, RenderLayer, Ticker } from "pixi.js";
 import { TileModel } from "../../models/tiles/TileModel.ts";
-import { BevelFilter, GlowFilter } from "pixi-filters";
+import { BevelFilter } from "pixi-filters";
+import { ViewSettings } from "../ViewSettings.ts";
 
 export abstract class TileView {
-    public static readonly textureResolution: number = 2;
-    private static readonly selectedTileGlowFilterColor: Color = new Color(0x00FFFF);
-    private static readonly selectedTileGlowFilter: GlowFilter = new GlowFilter({
-        distance: 5,
-        outerStrength: 2,
-        innerStrength: 1,
-        color: TileView.selectedTileGlowFilterColor,
-        quality: 0.5,
-        knockout: false
-    });
+    protected viewSettings: ViewSettings;
     public model: TileModel;
     public tile: Container;
     public content: Container;
@@ -24,12 +16,15 @@ export abstract class TileView {
     private boundOnPointerTap: (event: PointerEvent) => void = this.onPointerTap.bind(this);
     private boundOnRotationTicker: (ticker: Ticker) => void = this.onRotationTicker.bind(this);
     
-    constructor (model: TileModel,
+    constructor (
+        viewSettings: ViewSettings,
+        model: TileModel,
         renderer: Renderer,
         ticker: Ticker,
         replacingTextureFillColor: Color,
         selectedTileLayer: RenderLayer) {
 
+        this.viewSettings = viewSettings;
         this.model = model;
         this.content = this.createContent(renderer, replacingTextureFillColor);
         this.tile = this.createTile();
@@ -49,7 +44,7 @@ export abstract class TileView {
     private createTile(): Container {
         const result = new Container();        
         result.addChild(this.content);
-        result.cacheAsTexture({ resolution: TileView.textureResolution });
+        result.cacheAsTexture({ resolution: this.viewSettings.tileTextureResolution });
         result.pivot.set(this.model.pivotPoint.x, this.model.pivotPoint.y);
         result.rotation = this.model.rotationAngle;   
         result.position.set(this.model.positionPoint.x, this.model.positionPoint.y);
@@ -57,15 +52,16 @@ export abstract class TileView {
     }
 
     protected getBevelFilter(graphicsSideToSpriteSideRatio: number): BevelFilter {
+        const options = this.viewSettings.bevelFilterOptions;
         return new BevelFilter({ 
-            rotation: 45
+            rotation: (options.rotation ?? 0)
                 + (this.model.texture ? 0 : 180)
                 - this.model.rotationAngle * 180 / Math.PI,
-            thickness: 1.8 * graphicsSideToSpriteSideRatio,
-            lightColor: 0xFFFFFF,
-            lightAlpha: 0.8,
-            shadowColor: 0x000000,
-            shadowAlpha: 0.8
+            thickness: (options.thickness ?? 0) * graphicsSideToSpriteSideRatio,
+            lightColor: options.lightColor,
+            lightAlpha: options.lightAlpha,
+            shadowColor: options.shadowColor,
+            shadowAlpha: options.shadowAlpha
         });
     }
 
@@ -116,9 +112,9 @@ export abstract class TileView {
 
     private addSelectedTileGlowFilter(): void {
         if (this.tile.filters) {
-            this.tile.filters = [...this.tile.filters, TileView.selectedTileGlowFilter];
+            this.tile.filters = [...this.tile.filters, this.viewSettings.selectedTileGlowFilter];
         } else {
-            this.tile.filters = [TileView.selectedTileGlowFilter];
+            this.tile.filters = [this.viewSettings.selectedTileGlowFilter];
         }
         this.tile.updateCacheTexture();
     }
@@ -126,7 +122,7 @@ export abstract class TileView {
     private removeSelectedTileGlowFilter(): void {
         if (this.tile.filters) {
             this.tile.filters = this.tile.filters.filter(item =>
-                item !== TileView.selectedTileGlowFilter);
+                item !== this.viewSettings.selectedTileGlowFilter);
             this.tile.updateCacheTexture();
         }
     }

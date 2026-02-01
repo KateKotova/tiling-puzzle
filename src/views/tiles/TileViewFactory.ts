@@ -4,18 +4,31 @@ import { TileType } from "../../models/tiles/TileType.ts";
 import { RegularPolygonTileView } from "./RegularPolygonTileView.ts";
 import { SvgPathTileView } from "./SvgPathTileView.ts";
 import { TileView } from "./TileView.ts";
+import { ViewSettings } from "../ViewSettings.ts";
 
 export class TileViewFactory {
-    public getView(model: TileModel,
+    public getView(
+        viewSettings: ViewSettings,
+        model: TileModel,
         renderer: Renderer,
         ticker: Ticker,
         replacingTextureFillColor: Color,
         selectedTileLayer: RenderLayer): TileView {
 
         return model.tileType == TileType.RegularPolygon
-            ? new RegularPolygonTileView(model, renderer, ticker, replacingTextureFillColor,
+            ? new RegularPolygonTileView(
+                viewSettings,
+                model,
+                renderer,
+                ticker,
+                replacingTextureFillColor,
                 selectedTileLayer)
-            : new SvgPathTileView(model, renderer, ticker, replacingTextureFillColor,
+            : new SvgPathTileView(
+                viewSettings,
+                model,
+                renderer,
+                ticker,
+                replacingTextureFillColor,
                 selectedTileLayer);
     }
 }

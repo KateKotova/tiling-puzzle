@@ -3,9 +3,12 @@ import { TileView } from "./TileView.ts";
 import { TileModel } from "../../models/tiles/TileModel.ts";
 import { RegularPolygonTileModel } from "../../models/polygons/tiles/RegularPolygonTileModel.ts";
 import { AdditionalMath } from "../../models/geometry/AdditionalMath.ts";
+import { ViewSettings } from "../ViewSettings.ts";
 
 export class RegularPolygonTileView extends TileView {
-    constructor (model: TileModel,
+    constructor (
+        viewSettings: ViewSettings,
+        model: TileModel,
         renderer: Renderer,
         ticker: Ticker,
         replacingTextureFillColor: Color,
@@ -14,7 +17,7 @@ export class RegularPolygonTileView extends TileView {
         if (!(model instanceof RegularPolygonTileModel)) {
             throw new Error("The tile is not an instance of RegularPolygonTileModel");
         }
-        super(model, renderer, ticker, replacingTextureFillColor, selectedTileLayer);
+        super(viewSettings, model, renderer, ticker, replacingTextureFillColor, selectedTileLayer);
     }
 
     protected createContent(renderer: Renderer, replacingTextureFillColor: Color): Container {
@@ -47,16 +50,15 @@ export class RegularPolygonTileView extends TileView {
 
         const graphicsTexture = renderer.generateTexture({
             target: graphics,
-            resolution: TileView.textureResolution,
-            antialias: true,
+            resolution: this.viewSettings.tileTextureResolution,
             textureSourceOptions: {
-                scaleMode: 'linear'
+                scaleMode: "nearest"
             }
         });
         graphics.destroy();
 
         const result = new Sprite(graphicsTexture);
-        result.cacheAsTexture({ resolution: TileView.textureResolution });
+        result.cacheAsTexture({ resolution: this.viewSettings.tileTextureResolution });
 
         const hitAreaCenterPoint = new Point(model.rotatingBoundingRectangleSize.width / 2.0,
             model.rotatingBoundingRectangleSize.height / 2.0);

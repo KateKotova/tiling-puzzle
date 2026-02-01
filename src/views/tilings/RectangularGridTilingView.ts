@@ -3,13 +3,14 @@ import { TilingView } from "./TilingView.ts";
 import { RectangularGridTilingModel } from "../../models/tilings/RectangularGridTilingModel.ts";
 import { TilingModel } from "../../models/tilings/TilingModel.ts";
 import { TileViewFactory } from "../tiles/TileViewFactory.ts";
+import { ViewSettings } from "../ViewSettings.ts";
 
 export class RectangularGridTilingView extends TilingView {
-    constructor(model: TilingModel, selectedTileLayer: RenderLayer) {
+    constructor(viewSettings: ViewSettings, model: TilingModel, selectedTileLayer: RenderLayer) {
         if (!(model instanceof RectangularGridTilingModel)) {
             throw new Error("The tiling model is not an instance of RectangularGridTilingModel");
         }
-        super(model, selectedTileLayer);
+        super(viewSettings, model, selectedTileLayer);
     }
 
     public setExampleTiling(renderer: Renderer, ticker: Ticker): void {
@@ -31,8 +32,14 @@ export class RectangularGridTilingView extends TilingView {
                 }
                 tileModel.currentRotationAngle = tileModel.rotationAngle;
 
-                const tileView = tileViewFactory.getView(tileModel, renderer, ticker,
-                    this.emptyTileFillColor, this.selectedTileLayer);
+                const tileView = tileViewFactory.getView(
+                    this.viewSettings,
+                    tileModel,
+                    renderer,
+                    ticker,
+                    this.emptyTileFillColor,
+                    this.selectedTileLayer
+                );
 
                 if (shouldFillByTexture) {
                     //tile.filters = [this.selectedTileGlowFilter];

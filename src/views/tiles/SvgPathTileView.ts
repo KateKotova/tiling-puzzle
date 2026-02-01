@@ -17,20 +17,23 @@ import { RegularPolygonTileModel } from "../../models/polygons/tiles/RegularPoly
 import { Size } from "../../models/geometry/Size.ts";
 import { RegularPolygonWithSingleLockTileModel } from "../../models/polygons/tiles/RegularPolygonWithSingleLockTileModel.ts";
 import { AdditionalMath } from "../../models/geometry/AdditionalMath.ts";
+import { ViewSettings } from "../ViewSettings.ts";
 
 export class SvgPathTileView extends TileView {
     private spriteBoundingSize: Size = new Size();
 
-    constructor (model: TileModel,
-            renderer: Renderer,
-            ticker: Ticker,
-            replacingTextureFillColor: Color,
-            selectedTileLayer: RenderLayer) {
+    constructor (
+        viewSettings: ViewSettings,
+        model: TileModel,
+        renderer: Renderer,
+        ticker: Ticker,
+        replacingTextureFillColor: Color,
+        selectedTileLayer: RenderLayer) {
 
         if (model instanceof RegularPolygonTileModel) {
             throw new Error("The tile must not be an instance of RegularPolygonTileModel");
         }
-        super(model, renderer, ticker, replacingTextureFillColor, selectedTileLayer);
+        super(viewSettings, model, renderer, ticker, replacingTextureFillColor, selectedTileLayer);
     }
 
    protected createContent(renderer: Renderer, replacingTextureFillColor: Color): Container {
@@ -60,7 +63,7 @@ export class SvgPathTileView extends TileView {
             graphicsTexture, sprite.width, sprite.height);
         result.addChild(bluredSpriteWithMask);
         
-        result.cacheAsTexture({ resolution: TileView.textureResolution });
+        result.cacheAsTexture({ resolution: this.viewSettings.tileTextureResolution });
 
         if (this.model instanceof RegularPolygonWithSingleLockTileModel) {
             const hitAreaCenterPoint = new Point(
@@ -101,9 +104,12 @@ export class SvgPathTileView extends TileView {
 
         const maskTexture = renderer.generateTexture({
             target: maskGraphics,
-            resolution: TileView.textureResolution,
+            resolution: this.viewSettings.tileTextureResolution,
             width: spriteWidth,
-            height: spriteHeight
+            height: spriteHeight,
+            textureSourceOptions: {
+                scaleMode: "linear"
+            }
         });
         maskGraphics.destroy();
         
@@ -161,11 +167,11 @@ export class SvgPathTileView extends TileView {
 
         const result =  renderer.generateTexture({
             target: graphics,
-            resolution: TileView.textureResolution,
+            resolution: this.viewSettings.tileTextureResolution,
             width: textureWidth,
             height: textureHeight,
             textureSourceOptions: {
-                scaleMode: 'linear'
+                scaleMode: "nearest"
             }
         });
         graphics.destroy();
