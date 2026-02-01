@@ -15,8 +15,8 @@ export abstract class TileModel {
     public tileType: TileType = TileType.Unknown;
     public tileLockType: TileLockType = TileLockType.None;
     public texture: Texture | undefined;
-    public centerPoint: Point = new Point();
     public pivotPoint: Point = new Point();
+    public positionPoint: Point = new Point();
     public rotationAngle: number = 0;
     public currentRotationAngle: number = 0;
     public currentTargetRotationAngle: number = 0;

@@ -33,20 +33,14 @@ export class RectangularGridTilingView extends TilingView {
 
                 const tileView = tileViewFactory.getView(tileModel, renderer, ticker,
                     this.emptyTileFillColor, this.selectedTileLayer);
-                const tile = tileView.tile;
-
-                // tile.pivot.set(tileModel.rotatingBoundingRectangleSize.width / 2.0 / tile.scale.x,
-                //     tileModel.rotatingBoundingRectangleSize.height / 2.0 / tile.scale.y);                
-                // tile.rotation = tileModel.rotationAngle;   
-                // tile.position.set(tileModel.centerPoint.x, tileModel.centerPoint.y);
 
                 if (shouldFillByTexture) {
                     //tile.filters = [this.selectedTileGlowFilter];
                 } else {
-                    tile.alpha = 0.5;
+                    tileView.content.alpha = 0.7;
                 }
 
-                this.tilingContainer.addChild(tile);
+                this.tilingContainer.addChild(tileView.tile);
             }
         }
     }

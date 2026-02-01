@@ -15,6 +15,7 @@ export abstract class TileView {
     });
     public model: TileModel;
     public tile: Container;
+    public content: Container;
     private selectedTileLayer: RenderLayer;
     private rotationAngleDifference: number = 0;
     private ticker: Ticker;
@@ -30,7 +31,8 @@ export abstract class TileView {
         selectedTileLayer: RenderLayer) {
 
         this.model = model;
-        this.tile = this.createTile(renderer, replacingTextureFillColor);
+        this.content = this.createContent(renderer, replacingTextureFillColor);
+        this.tile = this.createTile();
         this.selectedTileLayer = selectedTileLayer;
         this.ticker = ticker;
 
@@ -41,7 +43,18 @@ export abstract class TileView {
         }
     }
 
-    protected abstract createTile(renderer: Renderer, replacingTextureFillColor: Color): Container;
+    protected abstract createContent(renderer: Renderer, replacingTextureFillColor: Color)
+        : Container;
+
+    private createTile(): Container {
+        const result = new Container();        
+        result.addChild(this.content);
+        result.cacheAsTexture({ resolution: TileView.textureResolution });
+        result.pivot.set(this.model.pivotPoint.x, this.model.pivotPoint.y);
+        result.rotation = this.model.rotationAngle;   
+        result.position.set(this.model.positionPoint.x, this.model.positionPoint.y);
+        return result;
+    }
 
     protected getBevelFilter(graphicsSideToSpriteSideRatio: number): BevelFilter {
         return new BevelFilter({ 
@@ -50,9 +63,9 @@ export abstract class TileView {
                 - this.model.rotationAngle * 180 / Math.PI,
             thickness: 1.8 * graphicsSideToSpriteSideRatio,
             lightColor: 0xFFFFFF,
-            lightAlpha: 0.5,
+            lightAlpha: 0.8,
             shadowColor: 0x000000,
-            shadowAlpha: 0.5
+            shadowAlpha: 0.8
         });
     }
 

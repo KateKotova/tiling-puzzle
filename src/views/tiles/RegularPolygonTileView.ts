@@ -17,7 +17,7 @@ export class RegularPolygonTileView extends TileView {
         super(model, renderer, ticker, replacingTextureFillColor, selectedTileLayer);
     }
 
-    protected createTile(renderer: Renderer, replacingTextureFillColor: Color): Container {
+    protected createContent(renderer: Renderer, replacingTextureFillColor: Color): Container {
         const model = this.model as RegularPolygonTileModel;
         const graphics = new Graphics()
             .regularPoly(
@@ -63,11 +63,6 @@ export class RegularPolygonTileView extends TileView {
         result.hitArea = AdditionalMath.getRegularPolygon(hitAreaCenterPoint,
             model.circumscribedCircleRadius, model.sideCount,
             model.regularPolygonInitialRotationAngle);
-
-        result.pivot.set(model.pivotPoint.x, model.pivotPoint.y);
-        result.rotation = model.rotationAngle;   
-        result.position.set(model.centerPoint.x, model.centerPoint.y);
-
         return result;
     }
 }

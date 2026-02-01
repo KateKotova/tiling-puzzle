@@ -33,7 +33,7 @@ export class SvgPathTileView extends TileView {
         super(model, renderer, ticker, replacingTextureFillColor, selectedTileLayer);
     }
 
-   protected createTile(renderer: Renderer, replacingTextureFillColor: Color): Container {
+   protected createContent(renderer: Renderer, replacingTextureFillColor: Color): Container {
         const svgData = this.model.getSvgData();
         if (!svgData) {
             throw new Error("The svg data of the tile should not be null");
@@ -71,10 +71,6 @@ export class SvgPathTileView extends TileView {
                 model.hitAreaCircumscribedCircleRadius, model.hitAreaSideCount,
                 model.hitAreaInitialRotationAngle);
         }
-
-        result.pivot.set(this.model.pivotPoint.x, this.model.pivotPoint.y);
-        result.rotation = this.model.rotationAngle;   
-        result.position.set(this.model.centerPoint.x, this.model.centerPoint.y);
 
         return result;
     }

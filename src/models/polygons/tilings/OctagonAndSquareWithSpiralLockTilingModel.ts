@@ -163,7 +163,7 @@ export class OctagonAndSquareWithSpiralLockTilingModel extends RectangularGridTi
 
         result.pivotPoint = new Point(result.rotatingBoundingRectangleSize.width / 2.0,
             result.rotatingBoundingRectangleSize.height / 2.0);
-        result.centerPoint = new Point(
+        result.positionPoint = new Point(
             result.absoluteBoundingRectangle.x + result.absoluteBoundingRectangle.width / 2.0,
             result.absoluteBoundingRectangle.y + result.absoluteBoundingRectangle.height / 2.0);
         return result;

@@ -94,7 +94,7 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
 
         result.pivotPoint = new Point(tileSideHalf,
             this.tileHeight * (tileIsRotated ? 1 : 2) / 3.0);
-        result.centerPoint = new Point(result.absoluteBoundingRectangle.x + result.pivotPoint.x,
+        result.positionPoint = new Point(result.absoluteBoundingRectangle.x + result.pivotPoint.x,
             result.absoluteBoundingRectangle.y + result.pivotPoint.y);
 
         return result;

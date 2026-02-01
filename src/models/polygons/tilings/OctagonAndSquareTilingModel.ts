@@ -122,7 +122,7 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
             result.absoluteBoundingRectangle.height);
         result.pivotPoint = new Point(result.absoluteBoundingRectangle.width / 2.0,
             result.absoluteBoundingRectangle.height / 2.0);
-        result.centerPoint = new Point(result.absoluteBoundingRectangle.x + result.pivotPoint.x,
+        result.positionPoint = new Point(result.absoluteBoundingRectangle.x + result.pivotPoint.x,
             result.absoluteBoundingRectangle.y + result.pivotPoint.y);
         return result;
     }

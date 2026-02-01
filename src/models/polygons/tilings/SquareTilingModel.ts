@@ -74,7 +74,7 @@ export class SquareTilingModel extends RectangularGridTilingModel {
         result.circumscribedCircleRadius = this.tileCircumscribedCircleRadius;
         const tileHalfSide = this.tileSide / 2.0;
         result.pivotPoint = new Point(tileHalfSide, tileHalfSide);
-        result.centerPoint = new Point(result.absoluteBoundingRectangle.x + result.pivotPoint.x,
+        result.positionPoint = new Point(result.absoluteBoundingRectangle.x + result.pivotPoint.x,
             result.absoluteBoundingRectangle.y + result.pivotPoint.y);
         return result;
     }

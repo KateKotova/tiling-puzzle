@@ -18,7 +18,7 @@ async function main(): Promise<void> {
     const containerHeight = 400;
 
     const textureMinSideTileCount = 4;
-    const tilingType = TilingType.OctagonAndSquareWithSingleLock;
+    const tilingType = TilingType.OctagonAndSquare;
 
     //#endregion test data end
 
@@ -88,7 +88,7 @@ async function main(): Promise<void> {
       .fill({
         texture,
         textureSpace: "local",
-        alpha: 0.5
+        alpha: 1
       });
     imageContainer.addChild(image);
 
