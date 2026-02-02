@@ -174,7 +174,7 @@ export class DragableTileView implements TileView {
         this.view.removeFilters();
         this.addTileToParentContainer();
         this.view.model.completeMove();
-        //this.view.tile.position = this.view.model.currentPositionPoint.clone();
+        this.view.tile.position = this.view.model.currentPositionPoint.clone();
     }
 
     private onPointerDown(event: FederatedPointerEvent): void {

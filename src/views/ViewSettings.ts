@@ -23,7 +23,7 @@ export class ViewSettings {
     });
     public tapMaxDuration: number = 200;
     public tapMaxDistance: number = 3;
-    public targetEmptyTileGlowFilterColor: Color = new Color(0xFF00FF);
+    public targetEmptyTileGlowFilterColor: Color = new Color(0x3F00FF);
     public targetEmptyTileGlowFilter: GlowFilter = new GlowFilter({
         distance: 5,
         outerStrength: 1,
