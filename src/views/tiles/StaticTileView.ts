@@ -1,4 +1,4 @@
-import { Texture, Container, Filter } from "pixi.js";
+import { Texture, Container, Filter, FederatedPointerEvent } from "pixi.js";
 import { TileModel } from "../../models/tiles/TileModel.ts";
 import { TileView } from "./TileView.ts";
 import { DraggingTileData } from "./DraggingTileData.ts";
@@ -71,6 +71,7 @@ export class StaticTileView implements TileView {
 
         this.isDragTarget = true;
         if (this.draggingTileData.view) {
+            this.draggingTileData.view.dragTarget?.onPointerLeave();
             this.draggingTileData.view.dragTarget = this;
         }        
         this.view.setFilter(this.viewSettings.targetEmptyTileGlowFilter);
@@ -98,13 +99,17 @@ export class StaticTileView implements TileView {
         this.view.tile.off('pointerup', this.onPointerUp, this);
     }
 
-    public onPointerUp(): void {
+    public onPointerUp(event: FederatedPointerEvent): void {
         if (!this.isDragTarget) {
             return;
         }
 
         this.isDragTarget = false;
         this.view.removeFilters();
+
+        if (this.draggingTileData.view) {
+            this.draggingTileData.view.onGlobalPointerUp(event);
+        }
 
         this.view.tile.on('pointerenter', this.onPointerEnter, this);
         this.view.tile.off('pointerleave', this.onPointerLeave, this);

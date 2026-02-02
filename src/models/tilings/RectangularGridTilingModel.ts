@@ -1,61 +1,29 @@
 import { Graphics, Matrix, Renderer, Texture } from "pixi.js";
-import { TilingType } from "./TilingType.ts";
 import { TilingModel } from "./TilingModel.ts";
 import { TilingTextureModel } from "../TilingTextureModel.ts";
 import { ImageContainerModel } from "../ImageContainerModel.ts";
-import { TilingContainerModel } from "../TilingContainerModel.ts";
 import { TileModel } from "../tiles/TileModel.ts";
-import { TileLockType } from "../tiles/TileLockType.ts";
-import { TileLockHeightToSideRatios } from "../tiles/TileLockHeightToSideRatios.ts";
+import { ModelSettings } from "../ModelSettings.ts";
 
-export abstract class RectangularGridTilingModel implements TilingModel {
-    public static readonly tilingType: TilingType = TilingType.Unknown;
-    public static readonly lockType: TileLockType = TileLockType.None;
+export abstract class RectangularGridTilingModel extends TilingModel {
 
     //#region Texture tile info
 
-    public textureModel: TilingTextureModel;
     public textureTileColumnCount: number = 0;
     public textureTileRowCount: number = 0;
-    protected textureXTilingOffset: number = 0;
-    protected textureYTilingOffset: number = 0;
 
     //#endregion Texture tile info
 
-    public isInitialized: boolean = false;
-    protected imageContainerModel: ImageContainerModel;
-    public tilingContainerModel: TilingContainerModel | undefined;
-
     private renderer: Renderer;
 
-    constructor(textureModel: TilingTextureModel,
+    constructor(modelSettings: ModelSettings,
+        textureModel: TilingTextureModel,
         imageContainerModel: ImageContainerModel,
         renderer: Renderer) {
 
-        this.textureModel = textureModel;
-        this.imageContainerModel = imageContainerModel;
+        super(modelSettings, textureModel, imageContainerModel);
         this.renderer = renderer;
     }
-
-    public getTilingType(): TilingType {
-        return RectangularGridTilingModel.tilingType;
-    }
-
-    public getLockHeightToSideRatio(): number {
-        return TileLockHeightToSideRatios[RectangularGridTilingModel.lockType];
-    }
-
-    public initialize(): void {
-        this.initializeTextureTileInfo();        
-        this.tilingContainerModel = new TilingContainerModel(this.imageContainerModel,
-            this.textureXTilingOffset, this.textureYTilingOffset);
-        this.initializeImageTileInfo();
-        this.isInitialized = true;
-    }
-
-    protected abstract initializeTextureTileInfo(): void;
-
-    protected abstract initializeImageTileInfo(): void;
 
     public getGridIndicesAreCorrect(rowIndex: number, columnIndex: number): boolean {
         return rowIndex >= 0

@@ -1,7 +1,7 @@
 import { Color, Container, Graphics, Point, Renderer, Sprite } from "pixi.js";
 import { BaseTileView } from "./BaseTileView.ts";
 import { RegularPolygonTileModel } from "../../models/polygons/tiles/RegularPolygonTileModel.ts";
-import { AdditionalMath } from "../../models/geometry/AdditionalMath.ts";
+import { AdditionalMath } from "../../models/math/AdditionalMath.ts";
 import { TileViewParameters } from "./TileViewParameters.ts";
 
 export class RegularPolygonTileView extends BaseTileView {

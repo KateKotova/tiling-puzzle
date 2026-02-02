@@ -5,7 +5,8 @@ import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { RegularPolygonTileModel } from "../tiles/RegularPolygonTileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
-import { Size } from "../../geometry/Size.ts";
+import { Size } from "../../math/Size.ts";
+import { ModelSettings } from "../../ModelSettings.ts";
 
 export class HexagonTilingModel extends RectangularGridTilingModel {
     public static readonly tilingType: TilingType = TilingType.Hexagon;
@@ -26,12 +27,13 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
     public tileHeight: number = 0;
     public tileCircumscribedCircleRadius: number = 0;
 
-    constructor(textureModel: TilingTextureModel,
+    constructor(modelSettings: ModelSettings,
+        textureModel: TilingTextureModel,
         textureMinSideTilePairCount: number,
         imageContainerModel: ImageContainerModel,
         renderer: Renderer) {
 
-        super(textureModel, imageContainerModel, renderer);
+        super(modelSettings, textureModel, imageContainerModel, renderer);
         this.textureMinSideTilePairCount
             = textureMinSideTilePairCount < HexagonTilingModel.textureMinSideMinTilePairCount
                 ? HexagonTilingModel.textureMinSideMinTilePairCount
@@ -79,7 +81,7 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
     protected getProtectedTileModel(rowIndex: number, columnIndex: number)
         : RegularPolygonTileModel {
             
-        const result = new RegularPolygonTileModel();
+        const result = new RegularPolygonTileModel(this.modelSettings);
         result.position = new RectangularGridTilePosition(rowIndex, columnIndex);
         result.side = this.tileSide;
         result.sideCount = 6;

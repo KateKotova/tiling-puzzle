@@ -28,20 +28,21 @@ export class RectangularGridTilingView extends TilingView {
                     continue;
                 }
 
-                const tileModel = model.getTileModel(rowIndex, columnIndex);
-                if (!tileModel) {
+                const filledTileModel = model.getTileModel(rowIndex, columnIndex);
+                if (!filledTileModel) {
                     continue;
                 }
-                tileModel.currentRotationAngle = tileModel.rotationAngle;
+                filledTileModel.currentRotationAngle = filledTileModel.rotationAngle;
+                filledTileModel.currentPositionPoint = filledTileModel.positionPoint.clone();
 
-                const tileViewParameters: TileViewParameters = {
+                const filledTileViewParameters: TileViewParameters = {
                     viewSettings: this.viewSettings,
-                    model: tileModel,
+                    model: filledTileModel,
                     texture: null,
                     renderer,
                     replacingTextureFillColor: this.staticTileFillColor
                 };
-                const filledTileView = tileViewFactory.getView(tileViewParameters);
+                const filledTileView = tileViewFactory.getView(filledTileViewParameters);
                 filledTileView.content.alpha = 0.7;
                 this.staticTilesContainer.addChild(filledTileView.tile);
                 const staticTileView = new StaticTileView(this.viewSettings,
@@ -49,8 +50,18 @@ export class RectangularGridTilingView extends TilingView {
 
                 const shouldCreateTexturedTile = Math.random() >= 0.5;
                 if (shouldCreateTexturedTile) {
-                    tileViewParameters.texture = model.getTileTexture(tileModel);
-                    const texturedTileView = tileViewFactory.getView(tileViewParameters);
+                    const texturedTileModel = filledTileModel.clone();
+                    texturedTileModel.currentRotationAngle = texturedTileModel.rotationAngle;
+                    texturedTileModel.currentPositionPoint
+                        = texturedTileModel.positionPoint.clone();
+                    const texturedTileViewParameters: TileViewParameters = {
+                        viewSettings: this.viewSettings,
+                        model: texturedTileModel,
+                        texture: model.getTileTexture(texturedTileModel),
+                        renderer,
+                        replacingTextureFillColor: this.staticTileFillColor
+                    };
+                    const texturedTileView = tileViewFactory.getView(texturedTileViewParameters);
                     this.tilesContainer.addChild(texturedTileView.tile);
                     const dragableTileView = new DragableTileView(
                         this.viewSettings,

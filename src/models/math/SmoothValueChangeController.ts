@@ -1,51 +1,51 @@
-import { RotationResult } from "./RotationResult";
+import { ChangeResult } from "./ChangeResult";
 
-export class SmoothRotationController {
-    private startAngle: number;
-    private targetAngle: number;
+export class SmoothValueChangeController {
+    private startValue: number;
+    private targetValue: number;
     private totalTime: number;
     private accelerationTimeToTotalTimeRatio: number;
     private currentTime: number = 0;
-    private currentAngle: number;
+    private currentValue: number;
     private isCompleted: boolean = false;
     
-    constructor(startAngle: number,
-        targetAngle: number,
+    constructor(startValue: number,
+        targetValue: number,
         totalTime: number,
         accelerationTimeToTotalTimeRatio: number = 0.3) {
 
-        this.startAngle = startAngle;
-        this.targetAngle = targetAngle;
+        this.startValue = startValue;
+        this.targetValue = targetValue;
         this.totalTime = totalTime;
         this.accelerationTimeToTotalTimeRatio = accelerationTimeToTotalTimeRatio;
-        this.currentAngle = startAngle;
+        this.currentValue = startValue;
     }
 
-    public reset(newStartAngle: number, newTargetAngle: number): void {
+    public reset(newStartValue: number, newTargetValue: number): void {
         this.currentTime = 0;
-        this.currentAngle = newStartAngle;
+        this.currentValue = newStartValue;
         this.isCompleted = false;
-        this.startAngle = newStartAngle;
-        this.targetAngle = newTargetAngle;
+        this.startValue = newStartValue;
+        this.targetValue = newTargetValue;
     }
     
-    public getRotationAngleIncrement(deltaTime: number): number {
+    public getIncrement(deltaTime: number): number {
         if (this.isCompleted) {
             return 0;
         }
         
-        const result = this.getRotationAngleResult(deltaTime);        
+        const result = this.getChangeResult(deltaTime);        
         this.currentTime = result.newCurrentTime;
-        this.currentAngle += result.rotationAngleIncrement;
+        this.currentValue += result.increment;
         this.isCompleted = result.isCompleted;
         
-        return result.rotationAngleIncrement;
+        return result.increment;
     }
 
-    private getRotationAngleResult(deltaTime: number): RotationResult {
-        const totalAngleDifference = this.targetAngle - this.startAngle;        
-        const direction = totalAngleDifference >= 0 ? 1 : -1;
-        const totalAngleDistance = Math.abs(totalAngleDifference);
+    private getChangeResult(deltaTime: number): ChangeResult<number> {
+        const totalValueDifference = this.targetValue - this.startValue;        
+        const direction = totalValueDifference >= 0 ? 1 : -1;
+        const totalValueDistance = Math.abs(totalValueDifference);
         
         const accelerationTimeToTotalTimeRatio = Math.min(
             this.accelerationTimeToTotalTimeRatio, 0.5);
@@ -63,10 +63,10 @@ export class SmoothRotationController {
         let maxSpeed: number;
         let acceleration: number;                
         if (constantTime > 0) {
-            maxSpeed = totalAngleDistance / (accelerationTime + constantTime);
+            maxSpeed = totalValueDistance / (accelerationTime + constantTime);
             acceleration = maxSpeed / accelerationTime;
         } else {
-            acceleration = 4 * totalAngleDistance / (this.totalTime * this.totalTime);
+            acceleration = 4 * totalValueDistance / (this.totalTime * this.totalTime);
             maxSpeed = acceleration * (this.totalTime / 2.0);
         }
         
@@ -76,10 +76,10 @@ export class SmoothRotationController {
         const newTimeDistance = this.getDistanceAtTime(newTime,
             accelerationTime, acceleration, constantTime);
         
-        const rotationAngleIncrement = (newTimeDistance - currentTimeDistance) * direction;
+        const valueIncrement = (newTimeDistance - currentTimeDistance) * direction;
 
         return {
-            rotationAngleIncrement,
+            increment: valueIncrement,
             newCurrentTime: newTime,
             isCompleted: newTime >= this.totalTime
         };
@@ -100,17 +100,17 @@ export class SmoothRotationController {
         const maxVelocity = acceleration * accelerationTime;
 
         if (clampedTime <= accelerationTime + constantTime) {
-            const constatntVelosityTime = clampedTime - accelerationTime;
-            return accelerationDistance + maxVelocity * constatntVelosityTime;
+            const constatntVeloсityTime = clampedTime - accelerationTime;
+            return accelerationDistance + maxVelocity * constatntVeloсityTime;
         }
         
-        const constatntVelosityTime = maxVelocity * constantTime;
+        const constatntVeloсityDistance = maxVelocity * constantTime;
         
         const decelerationTime = clampedTime - (accelerationTime + constantTime);
         const decelerationDistance = maxVelocity * decelerationTime
             - 0.5 * acceleration * decelerationTime * decelerationTime;
         
-        return accelerationDistance + constatntVelosityTime + decelerationDistance;
+        return accelerationDistance + constatntVeloсityDistance + decelerationDistance;
     }
     
     public getIsCompleted(): boolean {

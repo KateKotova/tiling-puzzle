@@ -10,9 +10,12 @@ import { OctagonAndSquareTilingModel } from "../polygons/tilings/OctagonAndSquar
 import { SquareWithSingleLockTilingModel } from "../polygons/tilings/SquareWithSingleLockTilingModel.ts";
 import { HexagonWithSingleLockTilingModel } from "../polygons/tilings/HexagonWithSingleLockTilingModel.ts";
 import { OctagonAndSquareWithSpiralLockTilingModel } from "../polygons/tilings/OctagonAndSquareWithSpiralLockTilingModel.ts";
+import { ModelSettings } from "../ModelSettings.ts";
 
 export class RectangularGridTilingModelFactory {
-    public getTilingModel(tilingType: TilingType,
+    public getTilingModel(
+        modelSettings: ModelSettings,
+        tilingType: TilingType,
         textureMinSideTileCount: number,
         textureModel: TilingTextureModel,
         imageContainerModel: ImageContainerModel,
@@ -22,31 +25,31 @@ export class RectangularGridTilingModelFactory {
         const textureMinSideTilePairCount = Math.trunc(textureMinSideTileCount / 2);
         switch (tilingType) {
             case TilingType.Square:
-                model = new SquareTilingModel(textureModel, textureMinSideTileCount,
+                model = new SquareTilingModel(modelSettings, textureModel, textureMinSideTileCount,
                     imageContainerModel, renderer);
                 break;
             case TilingType.Triangle:
-                model = new TriangleTilingModel(textureModel, textureMinSideTilePairCount,
-                    imageContainerModel, renderer);
+                model = new TriangleTilingModel(modelSettings, textureModel,
+                    textureMinSideTilePairCount, imageContainerModel, renderer);
                 break;
             case TilingType.Hexagon:
-                model = new HexagonTilingModel(textureModel, textureMinSideTilePairCount,
-                    imageContainerModel, renderer);
+                model = new HexagonTilingModel(modelSettings, textureModel,
+                    textureMinSideTilePairCount, imageContainerModel, renderer);
                 break;
             case TilingType.OctagonAndSquare:
-                model = new OctagonAndSquareTilingModel(textureModel, textureMinSideTileCount,
-                    imageContainerModel, renderer);
+                model = new OctagonAndSquareTilingModel(modelSettings, textureModel,
+                    textureMinSideTileCount, imageContainerModel, renderer);
                 break;
             case TilingType.SquareWithSingleLock:
-                model = new SquareWithSingleLockTilingModel(textureModel,
+                model = new SquareWithSingleLockTilingModel(modelSettings, textureModel,
                     textureMinSideTilePairCount, imageContainerModel, renderer);
                 break;
             case TilingType.HexagonWithSingleLock:
-                model = new HexagonWithSingleLockTilingModel(textureModel,
+                model = new HexagonWithSingleLockTilingModel(modelSettings, textureModel,
                     textureMinSideTilePairCount, imageContainerModel, renderer);
                 break;
             case TilingType.OctagonAndSquareWithSingleLock:
-                model = new OctagonAndSquareWithSpiralLockTilingModel(textureModel,
+                model = new OctagonAndSquareWithSpiralLockTilingModel(modelSettings, textureModel,
                     textureMinSideTileCount, imageContainerModel, renderer);
                 break;
             default:

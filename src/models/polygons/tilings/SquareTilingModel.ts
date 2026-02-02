@@ -5,7 +5,8 @@ import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { RegularPolygonTileModel } from "../tiles/RegularPolygonTileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
-import { Size } from "../../geometry/Size.ts";
+import { Size } from "../../math/Size.ts";
+import { ModelSettings } from "../../ModelSettings.ts";
 
 export class SquareTilingModel extends RectangularGridTilingModel {
     public static readonly tilingType: TilingType = TilingType.Square;
@@ -22,12 +23,13 @@ export class SquareTilingModel extends RectangularGridTilingModel {
     public tileSide: number = 0;
     public tileCircumscribedCircleRadius: number = 0;
 
-    constructor(textureModel: TilingTextureModel,
+    constructor(modelSettings: ModelSettings,
+        textureModel: TilingTextureModel,
         textureMinSideTileCount: number,
         imageContainerModel: ImageContainerModel,
         renderer: Renderer) {
 
-        super(textureModel, imageContainerModel, renderer);
+        super(modelSettings, textureModel, imageContainerModel, renderer);
         this.textureMinSideTileCount
             = textureMinSideTileCount < SquareTilingModel.textureMinSideMinTileCount
                 ? SquareTilingModel.textureMinSideMinTileCount
@@ -58,7 +60,7 @@ export class SquareTilingModel extends RectangularGridTilingModel {
     protected getProtectedTileModel(rowIndex: number, columnIndex: number)
         : RegularPolygonTileModel {
             
-        const result = new RegularPolygonTileModel();
+        const result = new RegularPolygonTileModel(this.modelSettings);
         result.position = new RectangularGridTilePosition(rowIndex, columnIndex);
         result.side = this.tileSide;
         result.sideCount = 4;

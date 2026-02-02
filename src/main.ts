@@ -7,6 +7,7 @@ import { RectangularGridTilingModelFactory }
 import { RectangularGridTilingModel } from "./models/tilings/RectangularGridTilingModel.ts";
 import { RectangularGridTilingView } from "./views/tilings/RectangularGridTilingView.ts";
 import { ViewSettings } from "./views/ViewSettings.ts";
+import { ModelSettings } from "./models/ModelSettings.ts";
 
 async function main(): Promise<void> {
   try {
@@ -19,7 +20,7 @@ async function main(): Promise<void> {
     const containerHeight = 400;
 
     const textureMinSideTileCount = 4;
-    const tilingType = TilingType.Hexagon;
+    const tilingType = TilingType.OctagonAndSquareWithSingleLock;
 
     //#endregion test data end
 
@@ -39,8 +40,9 @@ async function main(): Promise<void> {
       src: exampleImageSrc,
     });
 
+    const modelSettings = new ModelSettings();
     const viewSettings = new ViewSettings();
-
+  
     const texture = Assets.get("example-image");
     const textureModel = new TilingTextureModel(texture);
 
@@ -50,6 +52,7 @@ async function main(): Promise<void> {
     const rectangularGridTilingModelFactory = new RectangularGridTilingModelFactory();
     const tilingModel: RectangularGridTilingModel | null
       = rectangularGridTilingModelFactory.getTilingModel(
+        modelSettings,
         tilingType,
         textureMinSideTileCount,
         textureModel,

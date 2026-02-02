@@ -17,6 +17,7 @@ export abstract class TilingView {
         if (!model.isInitialized) {
             throw new Error('The tiling model is not initialized');
         }
+
         this.viewSettings = viewSettings;
         this.model = model;
         this.tilingContainer = this.createTilingContainer();

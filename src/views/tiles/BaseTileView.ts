@@ -29,8 +29,8 @@ export abstract class BaseTileView implements TileView {
         result.addChild(this.content);        
         result.cacheAsTexture({ resolution: this.viewSettings.tileTextureResolution });
         result.pivot.set(this.model.pivotPoint.x, this.model.pivotPoint.y);
-        result.rotation = this.model.rotationAngle;   
-        result.position.set(this.model.positionPoint.x, this.model.positionPoint.y);
+        result.rotation = this.model.currentRotationAngle;   
+        result.position = this.model.currentPositionPoint.clone();
         return result;
     }
 

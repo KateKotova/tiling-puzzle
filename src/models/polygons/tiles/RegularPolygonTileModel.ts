@@ -13,4 +13,19 @@ export class RegularPolygonTileModel extends TileModel {
     public getFreedomDegreeCount(): number {
         return this.sideCount;
     }
+
+    public clone(): TileModel {
+        const result = new RegularPolygonTileModel(this.modelSettings);
+        this.updateClone(result);
+        return result;
+    }
+
+    protected updateClone(clone: TileModel) {
+        super.updateClone(clone);
+        const thisClone = clone as RegularPolygonTileModel;
+        thisClone.side = this.side;
+        thisClone.sideCount = this.sideCount;
+        thisClone.circumscribedCircleRadius = this.circumscribedCircleRadius;
+        thisClone.regularPolygonInitialRotationAngle = this.regularPolygonInitialRotationAngle;
+    }
 }

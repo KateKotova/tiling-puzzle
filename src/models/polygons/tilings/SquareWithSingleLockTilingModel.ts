@@ -6,9 +6,10 @@ import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { TileLockType } from "../../tiles/TileLockType.ts";
 import { RegularPolygonWithSingleLockTileModel } from "../tiles/RegularPolygonWithSingleLockTileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
-import { Size } from "../../geometry/Size.ts";
+import { Size } from "../../math/Size.ts";
 import { TileType } from "../../tiles/TileType.ts";
 import { TileLockHeightToSideRatios } from "../../tiles/TileLockHeightToSideRatios.ts";
+import { ModelSettings } from "../../ModelSettings.ts";
 
 export class SquareWithSingleLockTilingModel extends RectangularGridTilingModel {
     public static readonly tilingType: TilingType = TilingType.SquareWithSingleLock;
@@ -31,12 +32,13 @@ export class SquareWithSingleLockTilingModel extends RectangularGridTilingModel 
     public tileMinSide: number = 0;
     public tileMaxSide: number = 0;
 
-    constructor(textureModel: TilingTextureModel,
+    constructor(modelSettings: ModelSettings,
+        textureModel: TilingTextureModel,
         textureMinSideTilePairCount: number,
         imageContainerModel: ImageContainerModel,
         renderer: Renderer) {
 
-        super(textureModel, imageContainerModel, renderer);
+        super(modelSettings, textureModel, imageContainerModel, renderer);
         this.textureMinSideTilePairCount
             = textureMinSideTilePairCount
             < SquareWithSingleLockTilingModel.textureMinSideMinTilePairCount
@@ -82,7 +84,7 @@ export class SquareWithSingleLockTilingModel extends RectangularGridTilingModel 
     protected getProtectedTileModel(rowIndex: number, columnIndex: number)
         : RegularPolygonWithSingleLockTileModel {
             
-        const result = new RegularPolygonWithSingleLockTileModel();
+        const result = new RegularPolygonWithSingleLockTileModel(this.modelSettings);
         result.tileType = TileType.SquareWithSingleLock;
         result.position = new RectangularGridTilePosition(rowIndex, columnIndex);
         result.side = this.tileSide;

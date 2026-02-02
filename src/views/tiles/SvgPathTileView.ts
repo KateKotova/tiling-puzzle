@@ -11,9 +11,9 @@ import {
 } from "pixi.js";
 import { BaseTileView } from "./BaseTileView.ts";
 import { RegularPolygonTileModel } from "../../models/polygons/tiles/RegularPolygonTileModel.ts";
-import { Size } from "../../models/geometry/Size.ts";
+import { Size } from "../../models/math/Size.ts";
 import { RegularPolygonWithSingleLockTileModel } from "../../models/polygons/tiles/RegularPolygonWithSingleLockTileModel.ts";
-import { AdditionalMath } from "../../models/geometry/AdditionalMath.ts";
+import { AdditionalMath } from "../../models/math/AdditionalMath.ts";
 import { TileViewParameters } from "./TileViewParameters.ts";
 
 export class SvgPathTileView extends BaseTileView {
@@ -116,10 +116,8 @@ export class SvgPathTileView extends BaseTileView {
         const maskSprite = new Sprite(maskTexture);
         maskSprite.roundPixels = false;
         result.addChild(maskSprite);
-        maskSprite.position.set(
-            (result.width - maskSprite.width) / 2.0,
-            (result.height - maskSprite.height) / 2.0
-        );
+        maskSprite.position.set((result.width - maskSprite.width) / 2.0,
+            (result.height - maskSprite.height) / 2.0);
         result.mask = maskSprite;
 
         result.width = spriteWidth;
