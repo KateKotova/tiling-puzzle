@@ -1,10 +1,10 @@
 import { Color, Container, Graphics, Point, Renderer, Sprite } from "pixi.js";
-import { TileView } from "./TileView.ts";
+import { BaseTileView } from "./BaseTileView.ts";
 import { RegularPolygonTileModel } from "../../models/polygons/tiles/RegularPolygonTileModel.ts";
 import { AdditionalMath } from "../../models/geometry/AdditionalMath.ts";
 import { TileViewParameters } from "./TileViewParameters.ts";
 
-export class RegularPolygonTileView extends TileView {
+export class RegularPolygonTileView extends BaseTileView {
     constructor (parameters: TileViewParameters) {
         if (!(parameters.model instanceof RegularPolygonTileModel)) {
             throw new Error("The tile is not an instance of RegularPolygonTileModel");
@@ -49,7 +49,11 @@ export class RegularPolygonTileView extends TileView {
         });
         graphics.destroy();
 
-        const result = new Sprite(graphicsTexture);
+        const sprite = new Sprite(graphicsTexture);
+        sprite.cacheAsTexture({ resolution: this.viewSettings.tileTextureResolution });
+
+        const result = new Container();        
+        result.addChild(sprite);        
         result.cacheAsTexture({ resolution: this.viewSettings.tileTextureResolution });
 
         const hitAreaCenterPoint = new Point(model.rotatingBoundingRectangleSize.width / 2.0,
@@ -57,6 +61,7 @@ export class RegularPolygonTileView extends TileView {
         result.hitArea = AdditionalMath.getRegularPolygon(hitAreaCenterPoint,
             model.circumscribedCircleRadius, model.sideCount,
             model.regularPolygonInitialRotationAngle);
+
         return result;
     }
 }

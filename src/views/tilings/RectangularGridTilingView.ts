@@ -5,6 +5,8 @@ import { TilingModel } from "../../models/tilings/TilingModel.ts";
 import { TileViewFactory } from "../tiles/TileViewFactory.ts";
 import { ViewSettings } from "../ViewSettings.ts";
 import { TileViewParameters } from "../tiles/TileViewParameters.ts";
+import { StaticTileView } from "../tiles/StaticTileView.ts";
+import { DragableTileView } from "../tiles/DragableTileView.ts";
 
 export class RectangularGridTilingView extends TilingView {
     constructor(viewSettings: ViewSettings, model: TilingModel) {
@@ -37,21 +39,26 @@ export class RectangularGridTilingView extends TilingView {
                     model: tileModel,
                     texture: null,
                     renderer,
-                    ticker,
-                    replacingTextureFillColor: this.emptyTileFillColor,
-                    selectedTileContainer: this.selectedTileContainer,
-                    draggingTileData: this.draggingTileData
+                    replacingTextureFillColor: this.staticTileFillColor
                 };
-                const emptyTileView = tileViewFactory.getView(tileViewParameters);
-                emptyTileView.content.alpha = 0.7;
-                this.emptyTilesContainer.addChild(emptyTileView.tile);
+                const filledTileView = tileViewFactory.getView(tileViewParameters);
+                filledTileView.content.alpha = 0.7;
+                this.staticTilesContainer.addChild(filledTileView.tile);
+                const staticTileView = new StaticTileView(this.viewSettings,
+                    filledTileView, this.draggingTileData);
 
                 const shouldCreateTexturedTile = Math.random() >= 0.5;
                 if (shouldCreateTexturedTile) {
                     tileViewParameters.texture = model.getTileTexture(tileModel);
-                    const tileView = tileViewFactory.getView(tileViewParameters);
-                    this.tilesContainer.addChild(tileView.tile);
-                    tileView.dragStartEmptyTileView = emptyTileView;
+                    const texturedTileView = tileViewFactory.getView(tileViewParameters);
+                    this.tilesContainer.addChild(texturedTileView.tile);
+                    const dragableTileView = new DragableTileView(
+                        this.viewSettings,
+                        texturedTileView,
+                        this.selectedTileContainer,
+                        ticker,
+                        this.draggingTileData);
+                    dragableTileView.dragSource = staticTileView;
                 }
             }
         }

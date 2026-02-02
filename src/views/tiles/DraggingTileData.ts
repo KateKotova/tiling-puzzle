@@ -1,5 +1,5 @@
-import { TileView } from "./TileView.ts";
+import { DragableTileView } from "./DragableTileView.ts";
 
 export interface DraggingTileData {
-    view: TileView | null;
+    view: DragableTileView | null;
 }

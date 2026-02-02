@@ -9,14 +9,14 @@ import {
     Sprite,
     Texture
 } from "pixi.js";
-import { TileView } from "./TileView.ts";
+import { BaseTileView } from "./BaseTileView.ts";
 import { RegularPolygonTileModel } from "../../models/polygons/tiles/RegularPolygonTileModel.ts";
 import { Size } from "../../models/geometry/Size.ts";
 import { RegularPolygonWithSingleLockTileModel } from "../../models/polygons/tiles/RegularPolygonWithSingleLockTileModel.ts";
 import { AdditionalMath } from "../../models/geometry/AdditionalMath.ts";
 import { TileViewParameters } from "./TileViewParameters.ts";
 
-export class SvgPathTileView extends TileView {
+export class SvgPathTileView extends BaseTileView {
     private spriteBoundingSize: Size = new Size();
 
     constructor (parameters: TileViewParameters) {

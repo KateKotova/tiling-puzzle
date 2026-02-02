@@ -7,9 +7,9 @@ export abstract class TilingView {
     protected viewSettings: ViewSettings;
     public model: TilingModel;
     public tilingContainer: Container;
-    public emptyTilesContainer: Container;
+    public staticTilesContainer: Container;
     public tilesContainer: Container;
-    protected emptyTileFillColor: Color = new Color(0x00AA00);
+    protected staticTileFillColor: Color = new Color(0x00AA00);
     protected selectedTileContainer: Container;
     protected draggingTileData: DraggingTileData = { view: null };
 
@@ -21,8 +21,8 @@ export abstract class TilingView {
         this.model = model;
         this.tilingContainer = this.createTilingContainer();
 
-        this.emptyTilesContainer = new Container();
-        this.tilingContainer.addChild(this.emptyTilesContainer);
+        this.staticTilesContainer = new Container();
+        this.tilingContainer.addChild(this.staticTilesContainer);
         this.tilesContainer = new Container();
         this.tilingContainer.addChild(this.tilesContainer);
         this.selectedTileContainer = new Container();

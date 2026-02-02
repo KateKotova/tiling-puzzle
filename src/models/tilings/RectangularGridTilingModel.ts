@@ -109,7 +109,14 @@ export abstract class RectangularGridTilingModel implements TilingModel {
                 matrix: textureMatrix
             });
 
-        const result = this.renderer.generateTexture(globalTile);
+        const result = this.renderer.generateTexture({
+            target: globalTile,
+            resolution: 1,
+            textureSourceOptions: {
+                scaleMode: "nearest"
+            }
+        });
+
         globalTile.destroy();
         return result;
     }
