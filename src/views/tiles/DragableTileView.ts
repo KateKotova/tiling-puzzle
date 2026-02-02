@@ -114,13 +114,9 @@ export class DragableTileView implements TileView {
     }
 
     public moveToStaticTile(staticTileModel: TileModel): void {
-        //this.view.model.currentPositionPoint.x += -this.dragOffset.x - this.view.model.pivotPoint.x;
-        //this.view.model.currentPositionPoint.y += -this.dragOffset.y - this.view.model.pivotPoint.y;
         const moveDifference = new Point(
-            staticTileModel.currentPositionPoint.x
-                - this.view.model.currentPositionPoint.x,
-            staticTileModel.currentPositionPoint.y
-                - this.view.model.currentPositionPoint.y);
+            staticTileModel.currentPositionPoint.x - this.view.model.currentPositionPoint.x,
+            staticTileModel.currentPositionPoint.y - this.view.model.currentPositionPoint.y);
         this.startMove(moveDifference);
     }
 
