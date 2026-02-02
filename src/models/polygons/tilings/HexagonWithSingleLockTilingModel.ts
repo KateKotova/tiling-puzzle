@@ -4,11 +4,12 @@ import { RectangularGridTilingModel } from "../../tilings/RectangularGridTilingM
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
-import { Size } from "../../geometry/Size.ts";
+import { Size } from "../../math/Size.ts";
 import { TileLockHeightToSideRatios } from "../../tiles/TileLockHeightToSideRatios.ts";
 import { TileLockType } from "../../tiles/TileLockType.ts";
 import { RegularPolygonWithSingleLockTileModel } from "../tiles/RegularPolygonWithSingleLockTileModel.ts";
 import { TileType } from "../../tiles/TileType.ts";
+import { ModelSettings } from "../../ModelSettings.ts";
 
 export class HexagonWithSingleLockTilingModel extends RectangularGridTilingModel {
     public static readonly tilingType: TilingType = TilingType.HexagonWithSingleLock;
@@ -31,12 +32,13 @@ export class HexagonWithSingleLockTilingModel extends RectangularGridTilingModel
     public tileWidth: number = 0;
     public tileHeight: number = 0;
 
-    constructor(textureModel: TilingTextureModel,
+    constructor(modelSettings: ModelSettings,
+        textureModel: TilingTextureModel,
         textureMinSideTilePairCount: number,
         imageContainerModel: ImageContainerModel,
         renderer: Renderer) {
 
-        super(textureModel, imageContainerModel, renderer);
+        super(modelSettings, textureModel, imageContainerModel, renderer);
         this.textureMinSideTilePairCount
             = textureMinSideTilePairCount
                 < HexagonWithSingleLockTilingModel.textureMinSideMinTilePairCount
@@ -87,10 +89,10 @@ export class HexagonWithSingleLockTilingModel extends RectangularGridTilingModel
         this.tileHeight = this.textureTileHeight * this.imageContainerModel.sideToTextureSideRatio;
     }
 
-    protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
-            : RegularPolygonWithSingleLockTileModel {
+    protected getProtectedTileModel(rowIndex: number, columnIndex: number)
+        : RegularPolygonWithSingleLockTileModel {
             
-        const result = new RegularPolygonWithSingleLockTileModel();
+        const result = new RegularPolygonWithSingleLockTileModel(this.modelSettings);
         result.tileType = TileType.HexagonWithSingleLock;
         result.position = new RectangularGridTilePosition(rowIndex, columnIndex);
         result.side = this.tileSide;
@@ -106,7 +108,7 @@ export class HexagonWithSingleLockTilingModel extends RectangularGridTilingModel
         result.rotatingBoundingRectangleSize = new Size(this.tileWidth, this.tileHeight);
         result.pivotPoint = new Point(this.tileWidth / 2.0,
             (this.tileHeight + this.lockHeight) / 2.0);
-        result.centerPoint = new Point(result.absoluteBoundingRectangle.x + result.pivotPoint.x,
+        result.positionPoint = new Point(result.absoluteBoundingRectangle.x + result.pivotPoint.x,
             result.absoluteBoundingRectangle.y + result.pivotPoint.y);        
 
         result.hitAreaSideCount = 6;

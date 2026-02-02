@@ -1,4 +1,4 @@
-import { Application, Assets, Container, Graphics, RenderLayer } from "pixi.js";
+import { Application, Assets, Container, Graphics } from "pixi.js";
 import { TilingTextureModel } from "./models/TilingTextureModel.ts";
 import { ImageContainerModel } from "./models/ImageContainerModel.ts";
 import { TilingType } from "./models/tilings/TilingType.ts";
@@ -6,6 +6,8 @@ import { RectangularGridTilingModelFactory }
   from "./models/tilings/RectangularGridTilingModelFactory.ts";
 import { RectangularGridTilingModel } from "./models/tilings/RectangularGridTilingModel.ts";
 import { RectangularGridTilingView } from "./views/tilings/RectangularGridTilingView.ts";
+import { ViewSettings } from "./views/ViewSettings.ts";
+import { ModelSettings } from "./models/ModelSettings.ts";
 
 async function main(): Promise<void> {
   try {
@@ -38,6 +40,9 @@ async function main(): Promise<void> {
       src: exampleImageSrc,
     });
 
+    const modelSettings = new ModelSettings();
+    const viewSettings = new ViewSettings();
+  
     const texture = Assets.get("example-image");
     const textureModel = new TilingTextureModel(texture);
 
@@ -47,6 +52,7 @@ async function main(): Promise<void> {
     const rectangularGridTilingModelFactory = new RectangularGridTilingModelFactory();
     const tilingModel: RectangularGridTilingModel | null
       = rectangularGridTilingModelFactory.getTilingModel(
+        modelSettings,
         tilingType,
         textureMinSideTileCount,
         textureModel,
@@ -88,14 +94,11 @@ async function main(): Promise<void> {
       .fill({
         texture,
         textureSpace: "local",
-        alpha: 0.5
+        alpha: 1
       });
     imageContainer.addChild(image);
 
-    const selectedTileLayer = new RenderLayer();
-    app.stage.addChild(selectedTileLayer);
-
-    const tilingView = new RectangularGridTilingView(tilingModel, selectedTileLayer);
+    const tilingView = new RectangularGridTilingView(viewSettings, tilingModel);
     tilingView.setExampleTiling(app.renderer, app.ticker);
     imageContainer.addChild(tilingView.tilingContainer);
 

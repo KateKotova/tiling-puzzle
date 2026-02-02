@@ -6,34 +6,27 @@ import {
     GraphicsPath,
     Point,
     Renderer,
-    RenderLayer,
     Sprite,
-    Texture,
-    Ticker
+    Texture
 } from "pixi.js";
-import { TileView } from "./TileView.ts";
-import { TileModel } from "../../models/tiles/TileModel.ts";
+import { BaseTileView } from "./BaseTileView.ts";
 import { RegularPolygonTileModel } from "../../models/polygons/tiles/RegularPolygonTileModel.ts";
-import { Size } from "../../models/geometry/Size.ts";
+import { Size } from "../../models/math/Size.ts";
 import { RegularPolygonWithSingleLockTileModel } from "../../models/polygons/tiles/RegularPolygonWithSingleLockTileModel.ts";
-import { AdditionalMath } from "../../models/geometry/AdditionalMath.ts";
+import { AdditionalMath } from "../../models/math/AdditionalMath.ts";
+import { TileViewParameters } from "./TileViewParameters.ts";
 
-export class SvgPathTileView extends TileView {
+export class SvgPathTileView extends BaseTileView {
     private spriteBoundingSize: Size = new Size();
 
-    constructor (model: TileModel,
-            renderer: Renderer,
-            ticker: Ticker,
-            replacingTextureFillColor: Color,
-            selectedTileLayer: RenderLayer) {
-
-        if (model instanceof RegularPolygonTileModel) {
+    constructor (parameters: TileViewParameters) {
+        if (parameters.model instanceof RegularPolygonTileModel) {
             throw new Error("The tile must not be an instance of RegularPolygonTileModel");
         }
-        super(model, renderer, ticker, replacingTextureFillColor, selectedTileLayer);
+        super(parameters);
     }
 
-   protected createTile(renderer: Renderer, replacingTextureFillColor: Color): Container {
+   protected createContent(renderer: Renderer, replacingTextureFillColor: Color): Container {
         const svgData = this.model.getSvgData();
         if (!svgData) {
             throw new Error("The svg data of the tile should not be null");
@@ -60,7 +53,7 @@ export class SvgPathTileView extends TileView {
             graphicsTexture, sprite.width, sprite.height);
         result.addChild(bluredSpriteWithMask);
         
-        result.cacheAsTexture({ resolution: TileView.textureResolution });
+        result.cacheAsTexture({ resolution: this.viewSettings.tileTextureResolution });
 
         if (this.model instanceof RegularPolygonWithSingleLockTileModel) {
             const hitAreaCenterPoint = new Point(
@@ -71,10 +64,6 @@ export class SvgPathTileView extends TileView {
                 model.hitAreaCircumscribedCircleRadius, model.hitAreaSideCount,
                 model.hitAreaInitialRotationAngle);
         }
-
-        result.pivot.set(this.model.pivotPoint.x, this.model.pivotPoint.y);
-        result.rotation = this.model.rotationAngle;   
-        result.position.set(this.model.centerPoint.x, this.model.centerPoint.y);
 
         return result;
     }
@@ -105,9 +94,12 @@ export class SvgPathTileView extends TileView {
 
         const maskTexture = renderer.generateTexture({
             target: maskGraphics,
-            resolution: TileView.textureResolution,
+            resolution: this.viewSettings.tileTextureResolution,
             width: spriteWidth,
-            height: spriteHeight
+            height: spriteHeight,
+            textureSourceOptions: {
+                scaleMode: "linear"
+            }
         });
         maskGraphics.destroy();
         
@@ -124,10 +116,8 @@ export class SvgPathTileView extends TileView {
         const maskSprite = new Sprite(maskTexture);
         maskSprite.roundPixels = false;
         result.addChild(maskSprite);
-        maskSprite.position.set(
-            (result.width - maskSprite.width) / 2.0,
-            (result.height - maskSprite.height) / 2.0
-        );
+        maskSprite.position.set((result.width - maskSprite.width) / 2.0,
+            (result.height - maskSprite.height) / 2.0);
         result.mask = maskSprite;
 
         result.width = spriteWidth;
@@ -144,9 +134,9 @@ export class SvgPathTileView extends TileView {
         graphics.roundPixels = false;
         graphics.path(graphicsPath);
         
-        if (this.model.texture) {
+        if (this.texture) {
             graphics.fill({
-                texture: this.model.texture,
+                texture: this.texture,
                 textureSpace: "local"
             });
         } else {
@@ -165,11 +155,11 @@ export class SvgPathTileView extends TileView {
 
         const result =  renderer.generateTexture({
             target: graphics,
-            resolution: TileView.textureResolution,
+            resolution: this.viewSettings.tileTextureResolution,
             width: textureWidth,
             height: textureHeight,
             textureSourceOptions: {
-                scaleMode: 'linear'
+                scaleMode: "nearest"
             }
         });
         graphics.destroy();

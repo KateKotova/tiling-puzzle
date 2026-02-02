@@ -5,7 +5,8 @@ import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { RegularPolygonTileModel } from "../tiles/RegularPolygonTileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
-import { Size } from "../../geometry/Size.ts";
+import { Size } from "../../math/Size.ts";
+import { ModelSettings } from "../../ModelSettings.ts";
 
 export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
     public static readonly tilingType: TilingType = TilingType.OctagonAndSquare;
@@ -27,12 +28,13 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
     public octagonTileCircumscribedCircleRadius: number = 0;
     public squareTileCircumscribedCircleRadius: number = 0;
 
-    constructor(textureModel: TilingTextureModel,
+    constructor(modelSettings: ModelSettings,
+        textureModel: TilingTextureModel,
         textureMinSideOctagonTileCount: number,
         imageContainerModel: ImageContainerModel,
         renderer: Renderer) {
 
-        super(textureModel, imageContainerModel, renderer);
+        super(modelSettings, textureModel, imageContainerModel, renderer);
         this.textureMinSideOctagonTileCount
             = textureMinSideOctagonTileCount
                 < OctagonAndSquareTilingModel.textureMinSideMinOctagonTileCount
@@ -87,10 +89,10 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
             && columnIndex < this.textureTileColumnCount - (rowIndex % 2);
     }
 
-    protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
-            : RegularPolygonTileModel {
+    protected getProtectedTileModel(rowIndex: number, columnIndex: number)
+        : RegularPolygonTileModel {
             
-        const result = new RegularPolygonTileModel();
+        const result = new RegularPolygonTileModel(this.modelSettings);
         result.position = new RectangularGridTilePosition(rowIndex, columnIndex);
         result.side = this.tileSide;
         result.rotationAngle = 0;
@@ -122,7 +124,7 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
             result.absoluteBoundingRectangle.height);
         result.pivotPoint = new Point(result.absoluteBoundingRectangle.width / 2.0,
             result.absoluteBoundingRectangle.height / 2.0);
-        result.centerPoint = new Point(result.absoluteBoundingRectangle.x + result.pivotPoint.x,
+        result.positionPoint = new Point(result.absoluteBoundingRectangle.x + result.pivotPoint.x,
             result.absoluteBoundingRectangle.y + result.pivotPoint.y);
         return result;
     }

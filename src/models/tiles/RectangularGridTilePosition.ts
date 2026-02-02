@@ -9,4 +9,8 @@ export class RectangularGridTilePosition extends TilePosition {
         this.rowIndex = rowIndex;
         this.columnIndex = columnIndex;
     }
+
+    public clone(): TilePosition {
+        return new RectangularGridTilePosition(this.rowIndex, this.columnIndex);
+    }
 }

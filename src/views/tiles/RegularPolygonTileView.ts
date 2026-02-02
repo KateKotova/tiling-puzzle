@@ -1,23 +1,18 @@
-import { Color, Container, Graphics, Point, Renderer, RenderLayer, Sprite, Ticker } from "pixi.js";
-import { TileView } from "./TileView.ts";
-import { TileModel } from "../../models/tiles/TileModel.ts";
+import { Color, Container, Graphics, Point, Renderer, Sprite } from "pixi.js";
+import { BaseTileView } from "./BaseTileView.ts";
 import { RegularPolygonTileModel } from "../../models/polygons/tiles/RegularPolygonTileModel.ts";
-import { AdditionalMath } from "../../models/geometry/AdditionalMath.ts";
+import { AdditionalMath } from "../../models/math/AdditionalMath.ts";
+import { TileViewParameters } from "./TileViewParameters.ts";
 
-export class RegularPolygonTileView extends TileView {
-    constructor (model: TileModel,
-        renderer: Renderer,
-        ticker: Ticker,
-        replacingTextureFillColor: Color,
-        selectedTileLayer: RenderLayer) {
-
-        if (!(model instanceof RegularPolygonTileModel)) {
+export class RegularPolygonTileView extends BaseTileView {
+    constructor (parameters: TileViewParameters) {
+        if (!(parameters.model instanceof RegularPolygonTileModel)) {
             throw new Error("The tile is not an instance of RegularPolygonTileModel");
         }
-        super(model, renderer, ticker, replacingTextureFillColor, selectedTileLayer);
+        super(parameters);
     }
 
-    protected createTile(renderer: Renderer, replacingTextureFillColor: Color): Container {
+    protected createContent(renderer: Renderer, replacingTextureFillColor: Color): Container {
         const model = this.model as RegularPolygonTileModel;
         const graphics = new Graphics()
             .regularPoly(
@@ -28,9 +23,9 @@ export class RegularPolygonTileView extends TileView {
                 model.regularPolygonInitialRotationAngle
             );
 
-        if (model.texture) {
+        if (this.texture) {
             graphics.fill({
-                texture: model.texture,
+                texture: this.texture,
                 textureSpace: "local"
             });
         } else {
@@ -47,26 +42,25 @@ export class RegularPolygonTileView extends TileView {
 
         const graphicsTexture = renderer.generateTexture({
             target: graphics,
-            resolution: TileView.textureResolution,
-            antialias: true,
+            resolution: this.viewSettings.tileTextureResolution,
             textureSourceOptions: {
-                scaleMode: 'linear'
+                scaleMode: "nearest"
             }
         });
         graphics.destroy();
 
-        const result = new Sprite(graphicsTexture);
-        result.cacheAsTexture({ resolution: TileView.textureResolution });
+        const sprite = new Sprite(graphicsTexture);
+        sprite.cacheAsTexture({ resolution: this.viewSettings.tileTextureResolution });
+
+        const result = new Container();        
+        result.addChild(sprite);        
+        result.cacheAsTexture({ resolution: this.viewSettings.tileTextureResolution });
 
         const hitAreaCenterPoint = new Point(model.rotatingBoundingRectangleSize.width / 2.0,
             model.rotatingBoundingRectangleSize.height / 2.0);
         result.hitArea = AdditionalMath.getRegularPolygon(hitAreaCenterPoint,
             model.circumscribedCircleRadius, model.sideCount,
             model.regularPolygonInitialRotationAngle);
-
-        result.pivot.set(model.pivotPoint.x, model.pivotPoint.y);
-        result.rotation = model.rotationAngle;   
-        result.position.set(model.centerPoint.x, model.centerPoint.y);
 
         return result;
     }

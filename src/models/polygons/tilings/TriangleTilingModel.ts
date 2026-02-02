@@ -5,7 +5,8 @@ import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { RegularPolygonTileModel } from "../tiles/RegularPolygonTileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
-import { Size } from "../../geometry/Size.ts";
+import { Size } from "../../math/Size.ts";
+import { ModelSettings } from "../../ModelSettings.ts";
 
 export class TriangleTilingModel extends RectangularGridTilingModel {
     public static readonly tilingType: TilingType = TilingType.Triangle;
@@ -24,12 +25,13 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
     public tileHeight: number = 0;
     public tileCircumscribedCircleRadius: number = 0;
 
-    constructor(textureModel: TilingTextureModel,
+    constructor(modelSettings: ModelSettings,
+        textureModel: TilingTextureModel,
         textureMinSideTilePairCount: number,
         imageContainerModel: ImageContainerModel,
         renderer: Renderer) {
 
-        super(textureModel, imageContainerModel, renderer);
+        super(modelSettings, textureModel, imageContainerModel, renderer);
         this.textureMinSideTilePairCount
             = textureMinSideTilePairCount < TriangleTilingModel.textureMinSideMinTilePairCount
                 ? TriangleTilingModel.textureMinSideMinTilePairCount
@@ -67,10 +69,10 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
         this.tileCircumscribedCircleRadius = Math.ceil(this.tileHeight * 2 / 3.0);
     }
 
-    protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
-            : RegularPolygonTileModel {
+    protected getProtectedTileModel(rowIndex: number, columnIndex: number)
+        : RegularPolygonTileModel {
             
-        const result = new RegularPolygonTileModel();
+        const result = new RegularPolygonTileModel(this.modelSettings);
         result.position = new RectangularGridTilePosition(rowIndex, columnIndex);
         const tileSideHalf = this.tileSide / 2.0;
         result.side = this.tileSide;
@@ -94,7 +96,7 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
 
         result.pivotPoint = new Point(tileSideHalf,
             this.tileHeight * (tileIsRotated ? 1 : 2) / 3.0);
-        result.centerPoint = new Point(result.absoluteBoundingRectangle.x + result.pivotPoint.x,
+        result.positionPoint = new Point(result.absoluteBoundingRectangle.x + result.pivotPoint.x,
             result.absoluteBoundingRectangle.y + result.pivotPoint.y);
 
         return result;

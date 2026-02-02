@@ -4,11 +4,12 @@ import { RectangularGridTilingModel } from "../../tilings/RectangularGridTilingM
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
-import { Size } from "../../geometry/Size.ts";
+import { Size } from "../../math/Size.ts";
 import { TileLockType } from "../../tiles/TileLockType.ts";
 import { TileLockHeightToSideRatios } from "../../tiles/TileLockHeightToSideRatios.ts";
 import { RegularPolygonWithSingleLockTileModel } from "../tiles/RegularPolygonWithSingleLockTileModel.ts";
 import { TileType } from "../../tiles/TileType.ts";
+import { ModelSettings } from "../../ModelSettings.ts";
 
 export class OctagonAndSquareWithSpiralLockTilingModel extends RectangularGridTilingModel {
     public static readonly tilingType: TilingType = TilingType.OctagonAndSquareWithSingleLock;
@@ -34,12 +35,13 @@ export class OctagonAndSquareWithSpiralLockTilingModel extends RectangularGridTi
     public rotatedOctagonTileBoundingSide: number = 0;
     public squareTileBoundingSide: number = 0;
 
-    constructor(textureModel: TilingTextureModel,
+    constructor(modelSettings: ModelSettings,
+        textureModel: TilingTextureModel,
         textureMinSideOctagonTileCount: number,
         imageContainerModel: ImageContainerModel,
         renderer: Renderer) {
 
-        super(textureModel, imageContainerModel, renderer);
+        super(modelSettings, textureModel, imageContainerModel, renderer);
         this.textureMinSideOctagonTileCount
             = textureMinSideOctagonTileCount
                 < OctagonAndSquareWithSpiralLockTilingModel.textureMinSideMinOctagonTileCount
@@ -108,10 +110,10 @@ export class OctagonAndSquareWithSpiralLockTilingModel extends RectangularGridTi
             && columnIndex < this.textureTileColumnCount - (rowIndex % 2);
     }
 
-    protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
-            : RegularPolygonWithSingleLockTileModel {
+    protected getProtectedTileModel(rowIndex: number, columnIndex: number)
+        : RegularPolygonWithSingleLockTileModel {
             
-        const result = new RegularPolygonWithSingleLockTileModel();
+        const result = new RegularPolygonWithSingleLockTileModel(this.modelSettings);
         result.position = new RectangularGridTilePosition(rowIndex, columnIndex);
         result.side = this.tileSide;
         const sqrt2 = Math.sqrt(2);
@@ -163,7 +165,7 @@ export class OctagonAndSquareWithSpiralLockTilingModel extends RectangularGridTi
 
         result.pivotPoint = new Point(result.rotatingBoundingRectangleSize.width / 2.0,
             result.rotatingBoundingRectangleSize.height / 2.0);
-        result.centerPoint = new Point(
+        result.positionPoint = new Point(
             result.absoluteBoundingRectangle.x + result.absoluteBoundingRectangle.width / 2.0,
             result.absoluteBoundingRectangle.y + result.absoluteBoundingRectangle.height / 2.0);
         return result;

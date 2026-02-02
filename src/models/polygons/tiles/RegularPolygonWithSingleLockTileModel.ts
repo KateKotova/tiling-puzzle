@@ -13,4 +13,19 @@ export class RegularPolygonWithSingleLockTileModel extends TileModel {
     public getFreedomDegreeCount(): number {
         return this.getSvgData()!.freedomDegreeCount;
     }
+
+    public clone(): TileModel {
+        const result = new RegularPolygonWithSingleLockTileModel(this.modelSettings);
+        this.updateClone(result);
+        return result;
+    }
+
+    protected updateClone(clone: TileModel) {
+        super.updateClone(clone);
+        const thisClone = clone as RegularPolygonWithSingleLockTileModel;
+        thisClone.side = this.side;
+        thisClone.hitAreaSideCount = this.hitAreaSideCount;
+        thisClone.hitAreaCircumscribedCircleRadius = this.hitAreaCircumscribedCircleRadius;
+        thisClone.hitAreaInitialRotationAngle = this.hitAreaInitialRotationAngle;
+    }
 }

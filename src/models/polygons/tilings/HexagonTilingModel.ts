@@ -5,7 +5,8 @@ import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { RegularPolygonTileModel } from "../tiles/RegularPolygonTileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
-import { Size } from "../../geometry/Size.ts";
+import { Size } from "../../math/Size.ts";
+import { ModelSettings } from "../../ModelSettings.ts";
 
 export class HexagonTilingModel extends RectangularGridTilingModel {
     public static readonly tilingType: TilingType = TilingType.Hexagon;
@@ -26,12 +27,13 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
     public tileHeight: number = 0;
     public tileCircumscribedCircleRadius: number = 0;
 
-    constructor(textureModel: TilingTextureModel,
+    constructor(modelSettings: ModelSettings,
+        textureModel: TilingTextureModel,
         textureMinSideTilePairCount: number,
         imageContainerModel: ImageContainerModel,
         renderer: Renderer) {
 
-        super(textureModel, imageContainerModel, renderer);
+        super(modelSettings, textureModel, imageContainerModel, renderer);
         this.textureMinSideTilePairCount
             = textureMinSideTilePairCount < HexagonTilingModel.textureMinSideMinTilePairCount
                 ? HexagonTilingModel.textureMinSideMinTilePairCount
@@ -76,10 +78,10 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
         this.tileCircumscribedCircleRadius = Math.ceil(this.tileSide);
     }
 
-    protected getTileModelWithoutTexture(rowIndex: number, columnIndex: number)
-            : RegularPolygonTileModel {
+    protected getProtectedTileModel(rowIndex: number, columnIndex: number)
+        : RegularPolygonTileModel {
             
-        const result = new RegularPolygonTileModel();
+        const result = new RegularPolygonTileModel(this.modelSettings);
         result.position = new RectangularGridTilePosition(rowIndex, columnIndex);
         result.side = this.tileSide;
         result.sideCount = 6;
@@ -94,7 +96,7 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
         result.rotatingBoundingRectangleSize = new Size(this.tileWidth, this.tileHeight);
         result.circumscribedCircleRadius = this.tileCircumscribedCircleRadius;
         result.pivotPoint = new Point(this.tileWidth / 2.0, this.tileHeight / 2.0);
-        result.centerPoint = new Point(result.absoluteBoundingRectangle.x + result.pivotPoint.x,
+        result.positionPoint = new Point(result.absoluteBoundingRectangle.x + result.pivotPoint.x,
             result.absoluteBoundingRectangle.y + result.pivotPoint.y);        
         return result;
     }

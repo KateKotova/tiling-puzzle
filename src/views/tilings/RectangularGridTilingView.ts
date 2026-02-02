@@ -1,15 +1,19 @@
-import { Renderer, RenderLayer, Ticker } from "pixi.js";
+import { Renderer, Ticker } from "pixi.js";
 import { TilingView } from "./TilingView.ts";
 import { RectangularGridTilingModel } from "../../models/tilings/RectangularGridTilingModel.ts";
 import { TilingModel } from "../../models/tilings/TilingModel.ts";
 import { TileViewFactory } from "../tiles/TileViewFactory.ts";
+import { ViewSettings } from "../ViewSettings.ts";
+import { TileViewParameters } from "../tiles/TileViewParameters.ts";
+import { StaticTileView } from "../tiles/StaticTileView.ts";
+import { DragableTileView } from "../tiles/DragableTileView.ts";
 
 export class RectangularGridTilingView extends TilingView {
-    constructor(model: TilingModel, selectedTileLayer: RenderLayer) {
+    constructor(viewSettings: ViewSettings, model: TilingModel) {
         if (!(model instanceof RectangularGridTilingModel)) {
             throw new Error("The tiling model is not an instance of RectangularGridTilingModel");
         }
-        super(model, selectedTileLayer);
+        super(viewSettings, model);
     }
 
     public setExampleTiling(renderer: Renderer, ticker: Ticker): void {
@@ -24,29 +28,49 @@ export class RectangularGridTilingView extends TilingView {
                     continue;
                 }
 
-                const shouldFillByTexture = Math.random() >= 0.5;
-                const tileModel = model.getTileModel(rowIndex, columnIndex, shouldFillByTexture);
-                if (!tileModel) {
+                const filledTileModel = model.getTileModel(rowIndex, columnIndex);
+                if (!filledTileModel) {
                     continue;
                 }
-                tileModel.currentRotationAngle = tileModel.rotationAngle;
+                filledTileModel.currentRotationAngle = filledTileModel.rotationAngle;
+                filledTileModel.currentPositionPoint = filledTileModel.positionPoint.clone();
 
-                const tileView = tileViewFactory.getView(tileModel, renderer, ticker,
-                    this.emptyTileFillColor, this.selectedTileLayer);
-                const tile = tileView.tile;
+                const filledTileViewParameters: TileViewParameters = {
+                    viewSettings: this.viewSettings,
+                    model: filledTileModel,
+                    texture: null,
+                    renderer,
+                    replacingTextureFillColor: this.staticTileFillColor
+                };
+                const filledTileView = tileViewFactory.getView(filledTileViewParameters);
+                filledTileView.content.alpha = 0.7;
+                this.staticTilesContainer.addChild(filledTileView.tile);
+                const staticTileView = new StaticTileView(this.viewSettings,
+                    filledTileView, this.draggingTileData);
 
-                // tile.pivot.set(tileModel.rotatingBoundingRectangleSize.width / 2.0 / tile.scale.x,
-                //     tileModel.rotatingBoundingRectangleSize.height / 2.0 / tile.scale.y);                
-                // tile.rotation = tileModel.rotationAngle;   
-                // tile.position.set(tileModel.centerPoint.x, tileModel.centerPoint.y);
-
-                if (shouldFillByTexture) {
-                    //tile.filters = [this.selectedTileGlowFilter];
-                } else {
-                    tile.alpha = 0.5;
+                const shouldCreateTexturedTile = Math.random() >= 0.5;
+                if (shouldCreateTexturedTile) {
+                    const texturedTileModel = filledTileModel.clone();
+                    texturedTileModel.currentRotationAngle = texturedTileModel.rotationAngle;
+                    texturedTileModel.currentPositionPoint
+                        = texturedTileModel.positionPoint.clone();
+                    const texturedTileViewParameters: TileViewParameters = {
+                        viewSettings: this.viewSettings,
+                        model: texturedTileModel,
+                        texture: model.getTileTexture(texturedTileModel),
+                        renderer,
+                        replacingTextureFillColor: this.staticTileFillColor
+                    };
+                    const texturedTileView = tileViewFactory.getView(texturedTileViewParameters);
+                    this.tilesContainer.addChild(texturedTileView.tile);
+                    const dragableTileView = new DragableTileView(
+                        this.viewSettings,
+                        texturedTileView,
+                        this.selectedTileContainer,
+                        ticker,
+                        this.draggingTileData);
+                    dragableTileView.dragSource = staticTileView;
                 }
-
-                this.tilingContainer.addChild(tile);
             }
         }
     }

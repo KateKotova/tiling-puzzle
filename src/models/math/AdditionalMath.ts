@@ -1,4 +1,4 @@
-import { Point, Polygon } from "pixi.js";
+import { Point, Polygon, Rectangle } from "pixi.js";
 
 export class AdditionalMath {
     public static getNormalizedAngle(angleInRadians: number): number {
@@ -47,5 +47,39 @@ export class AdditionalMath {
         }
         
         return new Polygon(points);
+    }
+
+    public static getPointIsInsideRectangle(point: Point, rectangle: Rectangle): boolean {
+        return point.x >= rectangle.x
+            && point.y >= rectangle.y
+            && point.x <= rectangle.x + rectangle.width
+            && point.y <= rectangle.y + rectangle.height;
+    }
+
+    public static getPointIsInsidePolygon(point: Point, polygon: Polygon): boolean {
+        const points = polygon.points;
+        if (points.length < 3) {
+            return false;
+        }
+        
+        const x = point.x;
+        const y = point.y;
+        let result = false;
+        
+        for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+            const xi = points[i * 2];
+            const yi = points[i * 2 + 1];
+            const xj = points[j * 2];
+            const yj = points[j * 2 + 1];
+            
+            const intersects = ((yi > y) !== (yj > y))
+                && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+            
+            if (intersects) {
+                result = !result;
+            }
+        }
+        
+        return result;
     }
 }
