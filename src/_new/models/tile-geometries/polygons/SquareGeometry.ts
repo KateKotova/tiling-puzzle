@@ -1,7 +1,7 @@
 import { Point, Polygon } from "pixi.js";
-import { RegularPolygonTileGeometry } from "./RegularPolygonTileGeometry.ts";
-import { TileGeometryType } from "./TileGeometryType.ts";
-import { Size } from "../../math/Size.ts";
+import { RegularPolygonTileGeometry } from "../RegularPolygonTileGeometry.ts";
+import { TileGeometryType } from "../TileGeometryType.ts";
+import { Size } from "../../../math/Size.ts";
 
 /**
  * Класс геометрии квадрата.
@@ -10,6 +10,7 @@ import { Size } from "../../math/Size.ts";
  * и две стороны параллельны оси OY.
  * Локальная система координат: начало координат - в левом верхнем углу,
  * ось OX направлена вправо, ось OY направлена вниз.
+ * Потом начало координат переместится в точку опоры.
  */
 export class SquareGeometry extends RegularPolygonTileGeometry {
     /**
@@ -29,8 +30,7 @@ export class SquareGeometry extends RegularPolygonTileGeometry {
         this.diagonal = this.side * SquareGeometry.diagonalToSideRatio;
 
         const halfSide = this.side / 2.0;
-        this.pivotPoint = new Point(halfSide, halfSide);
-        
+        this.pivotPoint = new Point(halfSide, halfSide);        
         this.defaultBoundingRectangleSize = new Size(this.side, this.side);
         this.hitArea = new Polygon([
             new Point(-halfSide, -halfSide),

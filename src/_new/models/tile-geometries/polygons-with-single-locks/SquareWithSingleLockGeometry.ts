@@ -37,6 +37,7 @@ export class SquareWithSingleLockGeometry extends SquareGeometry {
         this.freedomDegree = 2;
         this.freedomDegreeRotationAngle = this.getFreedomDegreeRotationAngle();
 
+        this.pivotPoint.y += this.lockHeight;
         this.defaultBoundingRectangleSize.height += this.lockHeight * 2;
         const halfSide = this.side / 2.0;
         const halfWidth = halfSide;
