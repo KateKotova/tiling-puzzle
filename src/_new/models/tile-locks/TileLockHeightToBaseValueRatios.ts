@@ -5,7 +5,9 @@ import { TileLockType } from "./TileLockType.ts";
  * а каждое значение - отношение высоты замка к некоторой базовой величине,
  * на основе которой производятся все расчёты.
  */
-export const TileLockHeightToBaseValueRatios = {
+export const TileLockHeightToBaseValueRatios: {
+    readonly [key in TileLockType]: number;
+} = {
     [TileLockType.None]: 0,
     [TileLockType.Single]: 13.5926405 / 50.0
 } as const;

@@ -12,6 +12,14 @@ export class TilingContainerModel {
      */
     public readonly boundingRectangle: Rectangle;
 
+    /**
+     * Создание модели контейнера для элементов замощения.
+     * @param imageContainerModel Модель контейнера изображения, куда помещается текстура
+     * @param textureXTilingOffset Отступ по оси OX для контейнера замощения
+     * в масштабе и координатах исходной текстуры
+     * @param textureYTilingOffset Отступ по оси OY для контейнера замощения
+     * в масштабе и координатах исходной текстуры
+     */
     constructor(
         imageContainerModel: ImageContainerModel,
         textureXTilingOffset: number,

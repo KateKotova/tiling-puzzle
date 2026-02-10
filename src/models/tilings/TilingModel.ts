@@ -7,6 +7,7 @@ import { ModelSettings } from "../ModelSettings.ts";
 import { ImageContainerModel } from "../ImageContainerModel.ts";
 import { TileLockType } from "../tiles/TileLockType.ts";
 import { TileLockHeightToSideRatios } from "../tiles/TileLockHeightToSideRatios.ts";
+import { TilePosition } from "../tiles/TilePosition.ts";
 
 export abstract class TilingModel {
     public static readonly tilingType: TilingType = TilingType.Unknown;
@@ -55,4 +56,10 @@ export abstract class TilingModel {
     protected abstract initializeImageTileInfo(): void;
 
     public abstract getTileTexture(tileModel: TileModel): Texture;
+
+    /**
+     * Получение модели фигуры по её целевому положению в замощении
+     * @param targetTilePosition 
+     */
+    public abstract getTileModel(targetTilePosition: TilePosition): TileModel | undefined;
 }
