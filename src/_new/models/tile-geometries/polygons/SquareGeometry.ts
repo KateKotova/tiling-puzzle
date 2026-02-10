@@ -29,14 +29,14 @@ export class SquareGeometry extends RegularPolygonTileGeometry {
 
         this.diagonal = this.side * SquareGeometry.diagonalToSideRatio;
 
-        const halfSide = this.side / 2.0;
-        this.pivotPoint = new Point(halfSide, halfSide);        
+        const sideHalf = this.side / 2.0;
+        this.pivotPoint = new Point(sideHalf, sideHalf);        
         this.defaultBoundingRectangleSize = new Size(this.side, this.side);
         this.hitArea = new Polygon([
-            new Point(-halfSide, -halfSide),
-            new Point(halfSide, -halfSide),
-            new Point(halfSide, halfSide),
-            new Point(-halfSide, halfSide)
+            new Point(-sideHalf, -sideHalf),
+            new Point(sideHalf, -sideHalf),
+            new Point(sideHalf, sideHalf),
+            new Point(-sideHalf, sideHalf)
         ]);
 
         this.circumscribedCircleRadius = this.diagonal / 2.0;

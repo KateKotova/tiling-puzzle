@@ -1,4 +1,3 @@
-import { Point, Polygon } from "pixi.js";
 import { TileLockType } from "../../tile-locks/TileLockType.ts";
 import { SquareGeometry } from "../polygons/SquareGeometry.ts";
 import { TileGeometryType } from "../TileGeometryType.ts";
@@ -39,14 +38,5 @@ export class SquareWithSingleLockGeometry extends SquareGeometry {
 
         this.pivotPoint.y += this.lockHeight;
         this.defaultBoundingRectangleSize.height += this.lockHeight * 2;
-        const halfSide = this.side / 2.0;
-        const halfWidth = halfSide;
-        const halfHeight = halfSide + this.lockHeight;
-        this.hitArea = new Polygon([
-            new Point(-halfWidth, -halfHeight),
-            new Point(halfWidth, -halfHeight),
-            new Point(halfWidth, halfHeight),
-            new Point(-halfWidth, halfHeight)
-        ]);
     }
 }
