@@ -87,9 +87,10 @@ export class SquareTilingModel extends RectangularGridTilingModel {
         const result = new TileModel(this.modelSettings, this.tileGeometry);
         result.targetTilePosition = targetPosition.clone();
         result.targetRotationAngle = 0;
+        const sideHalf = this.tileGeometry.side / 2.0;
         result.targetPositionPoint = new Point(
-           targetPosition.columnIndex * this.tileGeometry.side + this.tileGeometry.pivotPoint.x,
-           targetPosition.rowIndex * this.tileGeometry.side + this.tileGeometry.pivotPoint.y
+           targetPosition.columnIndex * this.tileGeometry.side + sideHalf,
+           targetPosition.rowIndex * this.tileGeometry.side + sideHalf
         );
         return result;
     }

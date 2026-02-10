@@ -16,7 +16,7 @@ import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosi
  * где в строках и столбцах размещаются квадраты с одинарными замками.
  * Там, где сумма индексов строки и столбца - чётная,
  * выпуклые замки располагаются вертикально, а вогнутые - горизонтально.
- * Там, где сумма индексов строки и столбца - не чётная,
+ * Там, где сумма индексов строки и столбца - нечётная,
  * выпуклые замки располагаются горизонтально, а вогнутые - вертикально.
  * То есть расположение фигурок в положении по умолчанию и в повёрнутом на 90 градусов положении
  * происходит в шахматном порядке.
@@ -56,7 +56,7 @@ export class SquareWithSingleLockTilingModel extends RectangularGridTilingModel 
      * Создание замощения квадратами c одинарными замками
      * @param modelSettings Модель настроек
      * @param textureModel Модель текстуры
-     * @param textureMinSideTileCount Количество пар элементов замощения,
+     * @param textureMinSideTilePairCount Количество пар элементов замощения,
      * укладывающихся в минимальную сторону текстуры, в ширину или в высоту,
      * в зависимости от того, что из них минимально
      * @param imageContainerModel Модель контейнера изображения
@@ -110,22 +110,14 @@ export class SquareWithSingleLockTilingModel extends RectangularGridTilingModel 
 
         const tileIsRotated = (targetPosition.rowIndex + targetPosition.columnIndex) % 2 == 1;
         result.targetRotationAngle = tileIsRotated ? Math.PI / 2 : 0;
-        result.targetPositionPoint = tileIsRotated
-            ? new Point(
-                targetPosition.columnIndex * this.tileGeometry.side
-                    // Здесь y, потому что повёрнуто!
-                    + this.tileGeometry.pivotPoint.y,
-                targetPosition.rowIndex * this.tileGeometry.side
-                    // Здесь x, потому что повёрнуто!
-                    + this.tileGeometry.pivotPoint.x
-            )
-            : new Point(
-                targetPosition.columnIndex * this.tileGeometry.side
-                    + this.tileGeometry.pivotPoint.x,
-                targetPosition.rowIndex * this.tileGeometry.side                    
-                    + this.tileGeometry.pivotPoint.y
-            );
-            
+
+        const sideHalf = this.tileGeometry.side / 2.0;
+        result.targetPositionPoint = new Point(
+            targetPosition.columnIndex * this.tileGeometry.side + sideHalf,
+            targetPosition.rowIndex * this.tileGeometry.side + sideHalf
+                + this.tileGeometry.lockHeight
+        );
+
         return result;
     }
 }

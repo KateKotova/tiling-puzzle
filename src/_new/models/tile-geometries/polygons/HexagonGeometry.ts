@@ -14,24 +14,25 @@ import { AdditionalMath } from "../../../math/AdditionalMath.ts";
  */
 export class HexagonGeometry extends RegularPolygonTileGeometry {
     /**
-     * Отношение высоты шестиугольника к его стороне.
+     * Отношение диаметра вписанной окружности шестиугольника к его стороне.
      */
-    public static readonly heightToSideRatio: number = Math.sqrt(3);
+    public static readonly inscribedCircleDiameterToSideRatio: number = Math.sqrt(3);
 
     public readonly geometryType: TileGeometryType = TileGeometryType.Hexagon;
     /**
-     * Высота шестиугольника.
+     * Диаметр вписанной окружности шестиугольника.
      */
-    public readonly height: number;
+    public readonly inscribedCircleDiameter: number;
 
     constructor(baseValue: number, sideToBaseValueRatio: number = 1) {
         super(baseValue, 6, sideToBaseValueRatio);
 
-        this.height = this.side * HexagonGeometry.heightToSideRatio;
+        this.inscribedCircleDiameter = this.side
+            * HexagonGeometry.inscribedCircleDiameterToSideRatio;
 
-        const heightHalf = this.height / 2.0;
+        const heightHalf = this.inscribedCircleDiameter / 2.0;
         this.pivotPoint = new Point(this.side, heightHalf);        
-        this.defaultBoundingRectangleSize = new Size(this.side * 2, this.height);
+        this.defaultBoundingRectangleSize = new Size(this.side * 2, this.inscribedCircleDiameter);
 
         this.circumscribedCircleRadius = this.side;
         this.regularPolygonInitialRotationAngle = Math.PI / 3.0;

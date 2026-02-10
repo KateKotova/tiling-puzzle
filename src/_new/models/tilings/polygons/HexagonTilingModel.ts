@@ -1,7 +1,7 @@
 import { Point, Renderer } from "pixi.js";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { ModelSettings } from "../../ModelSettings.ts";
-import { TriangleGeometry } from "../../tile-geometries/polygons/TriangleGeometry.ts";
+import { HexagonGeometry } from "../../tile-geometries/polygons/HexagonGeometry.ts";
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { RectangularGridTilingModel } from "../RectangularGridTilingModel.ts";
 import { TilingType } from "../TilingType.ts";
@@ -11,25 +11,21 @@ import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosi
 
 /**
  * Класс модели замощения, представляющего собой прямоугольную сетку,
- * где в строках и столбцах размещаются правильные треугольники.
- * Там, где сумма индексов строки и столбца - чётная,
- * треугольник перевёрнут относительно положения по умолчанию,
- * то есть вверху находится горизонтальная сторона.
- * Там, где сумма индексов строки и столбца - нечётная,
- * треугольник - в положении по умолчанию, первой вершиной вверх,
- * а внизу - горизонтальная сторона.
- * То есть расположение фигурок в повёрнутом на 180 градусов положении и в положении по умолчанию
- * происходит в шахматном порядке.
+ * где в строках и столбцах размещаются правильные шестиугольники.
+ * Там, где индекс столбца - нечётный,
+ * шестиугольник располагается ниже предыдущего (с чётным индексом) наполовину.
+ * Таким образом, расположение фигур - сотовидное.
  */
-export class TriangleTilingModel extends RectangularGridTilingModel {
-    public readonly tilingType: TilingType = TilingType.Triangle;
+export class HexagonTilingModel extends RectangularGridTilingModel {
+    public readonly tilingType: TilingType = TilingType.Hexagon;
 
     /**
      * Количество пар элементов замощения, укладывающихся в минимальную сторону текстуры,
      * в ширину или в высоту, в зависимости от того, что из них минимально.
      * Выбрано именно количество пар, то есть идущих последовательно фигурок,
      * а не количество фигурок, потому что при шахматном замощении в паре будет
-     * как фигура повёрнутая, так и в положении по умолчанию.
+     * как фигура с чётным индексом столбца на обычном уровне строки,
+     * так и фигура с нечётным индексом столбца, расположенная ниже обычного уровня строки.
      * Так будет проще просчитать замощение.
      */
     public textureMinSideTilePairCount: number;
@@ -38,20 +34,20 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
     //#region Texture tile info
 
     /**
-     * Сторона треугольника в масштабе и координатах исходной текстуры
+     * Сторона шестиугольника в масштабе и координатах исходной текстуры
      */
     private textureTileSide: number = 0;
 
     //#endregion Texture tile info
 
     /**
-     * Инструменты для геометрических построений правильного треугольника,
+     * Инструменты для геометрических построений правильного шестиугольника,
      * один экземпляр на все элементы мозаики
      */
-    private tileGeometry?: TriangleGeometry;
+    private tileGeometry?: HexagonGeometry;
 
     /**
-     * Создание замощения правильными треугольниками
+     * Создание замощения правильными шестиугольниками
      * @param modelSettings Модель настроек
      * @param textureModel Модель текстуры
      * @param textureMinSideTilePairCount Количество пар элементов замощения,
@@ -69,36 +65,36 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
     ) {
         super(modelSettings, textureModel, imageContainerModel, renderer);
         this.textureMinSideTilePairCount
-            = textureMinSideTilePairCount < TriangleTilingModel.textureMinSideMinTilePairCount
-                ? TriangleTilingModel.textureMinSideMinTilePairCount
+            = textureMinSideTilePairCount < HexagonTilingModel.textureMinSideMinTilePairCount
+                ? HexagonTilingModel.textureMinSideMinTilePairCount
                 : Math.floor(textureMinSideTilePairCount);
     }
 
     protected initializeTextureTileInfo(): void {
         const sqrt3 = Math.sqrt(3);
-        let textureTileHeight: number;
         if (this.textureModel.widthToHeightRatio <= 1) {
             this.textureTileSide = this.textureModel.minSide
-                / (this.textureMinSideTilePairCount + 0.5);
-            textureTileHeight = sqrt3 / 2.0 * this.textureTileSide;
+                / (0.5 + 3 * this.textureMinSideTilePairCount);
+            this.tileColumnCount = 2 * this.textureMinSideTilePairCount;
+            this.tileRowCount = Math.trunc(this.textureModel.height
+                / this.textureTileSide / sqrt3 - 0.5);
         } else {
-            textureTileHeight = this.textureModel.minSide / this.textureMinSideTilePairCount / 2;
-            this.textureTileSide = 2 / sqrt3 * textureTileHeight;
+            this.textureTileSide = this.textureModel.minSide / sqrt3
+                / (this.textureMinSideTilePairCount * 2 + 0.5);
+            this.tileColumnCount = 2 * Math.trunc((this.textureModel.width
+                / this.textureTileSide - 0.5) / 3.0);
+            this.tileRowCount = 2 * this.textureMinSideTilePairCount;
         }
 
-        this.tileColumnCount = 2 * Math.trunc(
-            (this.textureModel.width - this.textureTileSide / 2.0) / this.textureTileSide);
-        this.tileRowCount = Math.trunc(this.textureModel.height / textureTileHeight);
-
         this.textureXTilingOffset = (this.textureModel.width
-            - this.textureTileSide / 2.0 * (this.tileColumnCount + 1)) / 2.0;
+            - this.textureTileSide * (0.5 + 3 / 2.0 * this.tileColumnCount)) / 2.0;
         this.textureYTilingOffset = (this.textureModel.height
-            - textureTileHeight * this.tileRowCount) / 2.0;
+            - sqrt3 * this.textureTileSide * (this.tileRowCount + 0.5)) / 2.0;
     }
 
     protected initializeImageTileInfo(): void {
         const tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
-        this.tileGeometry = new TriangleGeometry(tileSide);
+        this.tileGeometry = new HexagonGeometry(tileSide);
     }
 
     protected getProtectedTileModel(targetTilePosition: TilePosition): TileModel {
@@ -109,17 +105,15 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
         const targetPosition = targetTilePosition as RectangularGridTilePosition;
         const result = new TileModel(this.modelSettings, this.tileGeometry);
         result.targetTilePosition = targetPosition.clone();
-
-        const tileIsRotated = (targetPosition.rowIndex + targetPosition.columnIndex) % 2 == 1;
-        result.targetRotationAngle = tileIsRotated ? Math.PI : 0;
-
-        const sideHalf = this.tileGeometry.side / 2.0;
+        result.targetRotationAngle = 0;
+        const inscribedCircleRadius = this.tileGeometry.inscribedCircleDiameter / 2.0;
         result.targetPositionPoint = new Point(
-            targetPosition.columnIndex * this.tileGeometry.side + sideHalf,
-            targetPosition.rowIndex * this.tileGeometry.side
-                + this.tileGeometry.height * (tileIsRotated ? 1 : 2) / 3.0
-        );
-        
+            targetPosition.columnIndex * this.tileGeometry.side / 2.0 * 3
+                + this.tileGeometry.side,
+            targetPosition.rowIndex * this.tileGeometry.inscribedCircleDiameter
+                + (targetPosition.columnIndex % 2 == 1 ? inscribedCircleRadius / 2.0 : 0)
+                + inscribedCircleRadius
+        );     
         return result;
     }
 }
