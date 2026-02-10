@@ -59,7 +59,7 @@ export abstract class TilingModel {
 
     /**
      * Получение модели фигуры по её целевому положению в замощении
-     * @param targetTilePosition 
+     * @param targetTilePosition Целевая позиция фигуры в замощении
      */
     public abstract getTileModel(targetTilePosition: TilePosition): TileModel | undefined;
 }

@@ -1,4 +1,4 @@
-import { Point, Rectangle } from "pixi.js";
+import { Point } from "pixi.js";
 import { ModelSettings } from "../ModelSettings";
 import { TileGeometry } from "../tile-geometries/TileGeometry";
 import { TilePosition } from "./TilePosition";
@@ -16,11 +16,6 @@ import { AdditionalMath } from "../../math/AdditionalMath";
 export class TileModel {
     private modelSettings: ModelSettings;
     public geometry: TileGeometry;
-    /**
-     * Внешние границы элемента замощения относительно родительского контейнера замощения
-     * в целевом положении.
-     */
-    public targetAbsoluteBoundingRectangle: Rectangle = new Rectangle();
     /**
      * Целевая позиция элемента замощения в замощении
      */
@@ -80,7 +75,6 @@ export class TileModel {
     public clone(): TileModel {
         const result = new TileModel(this.modelSettings, this.geometry);
 
-        result.targetAbsoluteBoundingRectangle = this.targetAbsoluteBoundingRectangle.clone();
         result.targetTilePosition = this.targetTilePosition.clone();
         result.targetPositionPoint = this.targetPositionPoint.clone();
 
