@@ -1,13 +1,13 @@
 import { Point, Renderer } from "pixi.js";
-import { ImageContainerModel } from "../../ImageContainerModel";
-import { ModelSettings } from "../../ModelSettings";
-import { TilingTextureModel } from "../../TilingTextureModel";
-import { RectangularGridTilingModel } from "../RectangularGridTilingModel";
-import { TilingType } from "../TilingType";
-import { SquareGeometry } from "../../tile-geometries/polygons/SquareGeometry";
-import { TilePosition } from "../../tiles/TilePosition";
-import { TileModel } from "../../tiles/TileModel";
-import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition";
+import { ImageContainerModel } from "../../ImageContainerModel.ts";
+import { ModelSettings } from "../../ModelSettings.ts";
+import { TilingTextureModel } from "../../TilingTextureModel.ts";
+import { RectangularGridTilingModel } from "../RectangularGridTilingModel.ts";
+import { TilingType } from "../TilingType.ts";
+import { SquareGeometry } from "../../tile-geometries/polygons/SquareGeometry.ts";
+import { TilePosition } from "../../tiles/TilePosition.ts";
+import { TileModel } from "../../tiles/TileModel.ts";
+import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
 
 /**
  * Класс модели замощения, представляющего собой прямоугольную сетку,
@@ -16,13 +16,17 @@ import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosi
 export class SquareTilingModel extends RectangularGridTilingModel {
     public readonly tilingType: TilingType = TilingType.Square;
 
+    /**
+     * Количество элементов замощения, укладывающихся в минимальную сторону текстуры,
+     * в ширину или в высоту, в зависимости от того, что из них минимально
+     */
     public textureMinSideTileCount: number;
     public static readonly textureMinSideMinTileCount = 2;
 
     //#region Texture tile info
 
     /**
-     * Сторона квадрата  в масштабе и координатах исходной текстуры
+     * Сторона квадрата в масштабе и координатах исходной текстуры
      */
     private textureTileSide: number = 0;
 
@@ -81,7 +85,7 @@ export class SquareTilingModel extends RectangularGridTilingModel {
 
         const targetPosition = targetTilePosition as RectangularGridTilePosition;
         const result = new TileModel(this.modelSettings, this.tileGeometry);
-        result.targetTilePosition = targetTilePosition.clone();
+        result.targetTilePosition = targetPosition.clone();
         result.targetRotationAngle = 0;
         result.targetPositionPoint = new Point(
            targetPosition.columnIndex * this.tileGeometry.side + this.tileGeometry.pivotPoint.x,
