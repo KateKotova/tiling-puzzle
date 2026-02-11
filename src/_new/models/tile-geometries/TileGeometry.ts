@@ -19,8 +19,8 @@ export abstract class TileGeometry {
     public readonly baseValue: number;
     public readonly geometryType: TileGeometryType = TileGeometryType.Unknown;
     public readonly lockType: TileLockType = TileLockType.None;
-    public readonly lockHeightToBaseValueRatio: number;
-    public readonly lockHeight: number;
+    public lockHeightToBaseValueRatio: number= 0;
+    public lockHeight: number = 0;
     /**
      * Точка опоры для выполнения поворотов и перемещения фигуры
      * в локальной системе координат элемента замощения.
@@ -65,9 +65,12 @@ export abstract class TileGeometry {
 
     constructor(baseValue: number) {
         this.baseValue = baseValue;
+    }
+
+    protected setLockHeight() {
         this.lockHeightToBaseValueRatio = TileLockHeightToBaseValueRatios[this.lockType];
         this.lockHeight = this.baseValue * this.lockHeightToBaseValueRatio;
-    }
+    } 
 
     protected getFreedomDegreeRotationAngle() {
         return 2 * Math.PI / this.freedomDegree;

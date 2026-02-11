@@ -41,6 +41,8 @@ export class OctagonWithSingleLockGeometry extends OctagonGeometry {
     constructor(baseValue: number, sideToBaseValueRatio: number = 1) {
         super(baseValue, sideToBaseValueRatio);
 
+        this.setLockHeight();
+
         this.freedomDegree = 4;
         this.freedomDegreeRotationAngle = this.getFreedomDegreeRotationAngle();
 

@@ -37,6 +37,8 @@ export class HexagonWithSingleLockGeometry extends HexagonGeometry {
     constructor(baseValue: number, sideToBaseValueRatio: number = 1) {
         super(baseValue, sideToBaseValueRatio);
 
+        this.setLockHeight();
+
         this.freedomDegree = 3;
         this.freedomDegreeRotationAngle = this.getFreedomDegreeRotationAngle();
 

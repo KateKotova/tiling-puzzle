@@ -25,7 +25,7 @@ export class SvgPathTileView extends BaseTileView {
         super(parameters);
     }
 
-   protected createContent(renderer: Renderer, replacingTextureFillColor: Color): Container {
+    protected createContent(renderer: Renderer, replacingTextureFillColor: Color): Container {
         this.spriteBoundingSize = this.model.geometry.defaultBoundingRectangleSize.clone();
 
         const graphicsPath = new GraphicsPath(this.model.geometry.svgPath);
@@ -33,8 +33,10 @@ export class SvgPathTileView extends BaseTileView {
             replacingTextureFillColor);
 
         const sprite = new Sprite(graphicsTexture);
-        sprite.width = this.spriteBoundingSize.width;
-        sprite.height = this.spriteBoundingSize.height;
+        // +0.5 - чтобы избежать зазоров
+        sprite.width = this.spriteBoundingSize.width + 0.5;
+        // +0.5 - чтобы избежать зазоров
+        sprite.height = this.spriteBoundingSize.height + 0.5;
         sprite.roundPixels = false;
 
         const result = new Container();        

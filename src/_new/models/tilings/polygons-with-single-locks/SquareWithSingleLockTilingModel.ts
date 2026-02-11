@@ -113,7 +113,8 @@ export class SquareWithSingleLockTilingModel extends RectangularGridTilingModel 
 
         const sideHalf = this.tileGeometry.side / 2.0;
         result.targetPositionPoint = new Point(
-            targetPosition.columnIndex * this.tileGeometry.side + sideHalf,
+            targetPosition.columnIndex * this.tileGeometry.side + sideHalf
+                + this.tileGeometry.lockHeight,
             targetPosition.rowIndex * this.tileGeometry.side + sideHalf
                 + this.tileGeometry.lockHeight
         );

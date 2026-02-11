@@ -48,7 +48,7 @@ export class RectangularGridTilingView extends TilingView {
                     replacingTextureFillColor: this.staticTileFillColor
                 };
                 const staticTileView = tileViewFactory.getView(staticTileViewParameters);
-                staticTileView.content.alpha = 0.7;
+                //staticTileView.content.alpha = 0.7;
                 this.staticTilesContainer.addChild(staticTileView.tile);
                 const decoratedStaticTileView = new StaticTileView(this.viewSettings,
                     staticTileView, this.draggingTileData);
