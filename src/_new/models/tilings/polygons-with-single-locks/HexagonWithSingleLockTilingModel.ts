@@ -10,6 +10,7 @@ import { TilingType } from "../TilingType.ts";
 import { TilePosition } from "../../tiles/TilePosition.ts";
 import { TileModel } from "../../tiles/TileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
+import { HexagonGeometry } from "../../tile-geometries/polygons/HexagonGeometry.ts";
 
 /**
  * Класс модели замощения, представляющего собой прямоугольную сетку,
@@ -81,7 +82,6 @@ export class HexagonWithSingleLockTilingModel extends RectangularGridTilingModel
 
     protected initializeTextureTileInfo(): void {
         const lockHeightToSideRatio = this.getLockHeightToSideRatio();
-        const sqrt3 = Math.sqrt(3);
         let textureLockHeight: number;
         if (this.textureModel.widthToHeightRatio <= 1) {
             this.textureTileSide = this.textureModel.minSide
@@ -89,9 +89,11 @@ export class HexagonWithSingleLockTilingModel extends RectangularGridTilingModel
             textureLockHeight = this.textureTileSide * lockHeightToSideRatio;
             this.tileColumnCount = 2 * this.textureMinSideTilePairCount;
             this.tileRowCount = Math.trunc((this.textureModel.height - textureLockHeight)
-                / this.textureTileSide / sqrt3 - 0.5);
+                / this.textureTileSide / HexagonGeometry.inscribedCircleDiameterToSideRatio
+                - 0.5);
         } else {
-            this.textureTileSide = this.textureModel.minSide / sqrt3
+            this.textureTileSide = this.textureModel.minSide
+                / HexagonGeometry.inscribedCircleDiameterToSideRatio
                 / (this.textureMinSideTilePairCount * 2 + 0.5 + lockHeightToSideRatio / 2);
             textureLockHeight = this.textureTileSide * lockHeightToSideRatio;
             this.tileColumnCount = 2 * Math.trunc((this.textureModel.width
@@ -102,7 +104,8 @@ export class HexagonWithSingleLockTilingModel extends RectangularGridTilingModel
         this.textureXTilingOffset = (this.textureModel.width
             - this.textureTileSide * (0.5 + 3 / 2.0 * this.tileColumnCount)) / 2.0;
         this.textureYTilingOffset = (this.textureModel.height - textureLockHeight
-            - sqrt3 * this.textureTileSide * (this.tileRowCount + 0.5)) / 2.0;
+            - HexagonGeometry.inscribedCircleDiameterToSideRatio * this.textureTileSide
+            * (this.tileRowCount + 0.5)) / 2.0;
     }
 
     protected initializeImageTileInfo(): void {

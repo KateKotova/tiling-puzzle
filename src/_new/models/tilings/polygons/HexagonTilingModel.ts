@@ -71,15 +71,16 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
     }
 
     protected initializeTextureTileInfo(): void {
-        const sqrt3 = Math.sqrt(3);
         if (this.textureModel.widthToHeightRatio <= 1) {
             this.textureTileSide = this.textureModel.minSide
                 / (0.5 + 3 * this.textureMinSideTilePairCount);
             this.tileColumnCount = 2 * this.textureMinSideTilePairCount;
             this.tileRowCount = Math.trunc(this.textureModel.height
-                / this.textureTileSide / sqrt3 - 0.5);
+                / this.textureTileSide / HexagonGeometry.inscribedCircleDiameterToSideRatio
+                - 0.5);
         } else {
-            this.textureTileSide = this.textureModel.minSide / sqrt3
+            this.textureTileSide = this.textureModel.minSide
+                / HexagonGeometry.inscribedCircleDiameterToSideRatio
                 / (this.textureMinSideTilePairCount * 2 + 0.5);
             this.tileColumnCount = 2 * Math.trunc((this.textureModel.width
                 / this.textureTileSide - 0.5) / 3.0);
@@ -89,7 +90,8 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
         this.textureXTilingOffset = (this.textureModel.width
             - this.textureTileSide * (0.5 + 3 / 2.0 * this.tileColumnCount)) / 2.0;
         this.textureYTilingOffset = (this.textureModel.height
-            - sqrt3 * this.textureTileSide * (this.tileRowCount + 0.5)) / 2.0;
+            - HexagonGeometry.inscribedCircleDiameterToSideRatio * this.textureTileSide
+            * (this.tileRowCount + 0.5)) / 2.0;
     }
 
     protected initializeImageTileInfo(): void {

@@ -75,15 +75,14 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
     }
 
     protected initializeTextureTileInfo(): void {
-        const sqrt3 = Math.sqrt(3);
         let textureTileHeight: number;
         if (this.textureModel.widthToHeightRatio <= 1) {
             this.textureTileSide = this.textureModel.minSide
                 / (this.textureMinSideTilePairCount + 0.5);
-            textureTileHeight = sqrt3 / 2.0 * this.textureTileSide;
+            textureTileHeight = TriangleGeometry.heightToSideRatio * this.textureTileSide;
         } else {
             textureTileHeight = this.textureModel.minSide / this.textureMinSideTilePairCount / 2;
-            this.textureTileSide = 2 / sqrt3 * textureTileHeight;
+            this.textureTileSide = textureTileHeight / TriangleGeometry.heightToSideRatio;
         }
 
         this.tileColumnCount = 2 * Math.trunc(
@@ -117,7 +116,9 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
         result.targetPositionPoint = new Point(
             targetPosition.columnIndex * this.tileGeometry.side + sideHalf,
             targetPosition.rowIndex * this.tileGeometry.side
-                + this.tileGeometry.height * (tileIsRotated ? 1 : 2) / 3.0
+                + (tileIsRotated
+                    ? this.tileGeometry.inscribedCircleDiameter
+                    : this.tileGeometry.circumscribedCircleRadius)
         );
         
         return result;

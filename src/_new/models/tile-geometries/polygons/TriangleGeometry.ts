@@ -23,6 +23,10 @@ export class TriangleGeometry extends RegularPolygonTileGeometry {
      * Высота треугольника.
      */
     public readonly height: number;
+    /**
+     * Диаметр вписанной окружности треугольника.
+     */
+    public readonly inscribedCircleDiameter: number;
 
     constructor(baseValue: number, sideToBaseValueRatio: number = 1) {
         super(baseValue, 3, sideToBaseValueRatio);
@@ -41,6 +45,7 @@ export class TriangleGeometry extends RegularPolygonTileGeometry {
         ]);
 
         this.circumscribedCircleRadius = heightTwoThirds;
+        this.inscribedCircleDiameter = heightThird;
         this.regularPolygonInitialRotationAngle = 0;
     }
 }
