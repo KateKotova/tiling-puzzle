@@ -1,7 +1,8 @@
-import { Size } from "../../../math/Size";
-import { TileLockType } from "../../tile-locks/TileLockType";
-import { OctagonGeometry } from "../polygons/OctagonGeometry";
-import { TileGeometryType } from "../TileGeometryType";
+import { AdditionalMath } from "../../../math/AdditionalMath.ts";
+import { Size } from "../../../math/Size.ts";
+import { TileLockType } from "../../tile-locks/TileLockType.ts";
+import { OctagonGeometry } from "../polygons/OctagonGeometry.ts";
+import { TileGeometryType } from "../TileGeometryType.ts";
 
 /**
  * Класс геометрии правильного восьмиугольника c одинарными замками.
@@ -50,5 +51,11 @@ export class OctagonWithSingleLockGeometry extends OctagonGeometry {
         this.pivotPoint.y += this.lockHeight;
         this.defaultBoundingRectangleSize.width += this.lockHeight;
         this.defaultBoundingRectangleSize.height += this.lockHeight;
+        this.hitArea = AdditionalMath.getRegularPolygon(
+            this.pivotPoint,
+            this.circumscribedCircleRadius,
+            8,
+            this.regularPolygonInitialRotationAngle
+        );
     }
 }

@@ -1,8 +1,8 @@
 import { Point } from "pixi.js";
-import { RegularPolygonTileGeometry } from "../RegularPolygonTileGeometry";
-import { TileGeometryType } from "../TileGeometryType";
-import { Size } from "../../../math/Size";
-import { AdditionalMath } from "../../../math/AdditionalMath";
+import { RegularPolygonTileGeometry } from "../RegularPolygonTileGeometry.ts";
+import { TileGeometryType } from "../TileGeometryType.ts";
+import { Size } from "../../../math/Size.ts";
+import { AdditionalMath } from "../../../math/AdditionalMath.ts";
 
 /**
  * Класс геометрии правильного восьмиугольника.
@@ -45,7 +45,7 @@ export class OctagonGeometry extends RegularPolygonTileGeometry {
             * OctagonGeometry.circumscribedCircleRadiusToSideRatio;
         this.regularPolygonInitialRotationAngle = 3 / 8.0 * Math.PI;
         this.hitArea = AdditionalMath.getRegularPolygon(
-            new Point(0, 0),
+            this.pivotPoint,
             this.circumscribedCircleRadius,
             8,
             this.regularPolygonInitialRotationAngle

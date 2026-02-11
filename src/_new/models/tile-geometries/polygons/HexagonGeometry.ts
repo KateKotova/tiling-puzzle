@@ -35,9 +35,9 @@ export class HexagonGeometry extends RegularPolygonTileGeometry {
         this.defaultBoundingRectangleSize = new Size(this.side * 2, this.inscribedCircleDiameter);
 
         this.circumscribedCircleRadius = this.side;
-        this.regularPolygonInitialRotationAngle = Math.PI / 3.0;
+        this.regularPolygonInitialRotationAngle = Math.PI / 6.0;
         this.hitArea = AdditionalMath.getRegularPolygon(
-            new Point(0, 0),
+            this.pivotPoint,
             this.circumscribedCircleRadius,
             6,
             this.regularPolygonInitialRotationAngle

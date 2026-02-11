@@ -1,7 +1,8 @@
-import { Size } from "../../../math/Size";
-import { TileLockType } from "../../tile-locks/TileLockType";
-import { HexagonGeometry } from "../polygons/HexagonGeometry";
-import { TileGeometryType } from "../TileGeometryType";
+import { AdditionalMath } from "../../../math/AdditionalMath.ts";
+import { Size } from "../../../math/Size.ts";
+import { TileLockType } from "../../tile-locks/TileLockType.ts";
+import { HexagonGeometry } from "../polygons/HexagonGeometry.ts";
+import { TileGeometryType } from "../TileGeometryType.ts";
 
 /**
  * Класс геометрии правильного шестиугольника c одинарными замками.
@@ -44,5 +45,11 @@ export class HexagonWithSingleLockGeometry extends HexagonGeometry {
 
         this.pivotPoint.y += this.lockHeight;
         this.defaultBoundingRectangleSize.height += this.lockHeight;
+        this.hitArea = AdditionalMath.getRegularPolygon(
+            this.pivotPoint,
+            this.circumscribedCircleRadius,
+            6,
+            this.regularPolygonInitialRotationAngle
+        );
     }
 }
