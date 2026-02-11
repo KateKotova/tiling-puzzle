@@ -1,13 +1,12 @@
 import { Application, Assets, Container, Graphics } from "pixi.js";
-import { TilingTextureModel } from "./models/TilingTextureModel.ts";
-import { ImageContainerModel } from "./models/ImageContainerModel.ts";
-import { TilingType } from "./models/tilings/TilingType.ts";
-import { RectangularGridTilingModelFactory }
-  from "./models/tilings/RectangularGridTilingModelFactory.ts";
-import { RectangularGridTilingModel } from "./models/tilings/RectangularGridTilingModel.ts";
-import { RectangularGridTilingView } from "./views/tilings/RectangularGridTilingView.ts";
-import { ViewSettings } from "./views/ViewSettings.ts";
-import { ModelSettings } from "./models/ModelSettings.ts";
+import { TilingType } from "./_new/models/tilings/TilingType.ts";
+import { ModelSettings } from "./_new/models/ModelSettings.ts";
+import { ViewSettings } from "./_new/views/ViewSettings.ts";
+import { TilingTextureModel } from "./_new/models/TilingTextureModel.ts";
+import { ImageContainerModel } from "./_new/models/ImageContainerModel.ts";
+import { RectangularGridTilingModelFactory } from "./_new/models/tilings/RectangularGridTilingModelFactory.ts";
+import { RectangularGridTilingModel } from "./_new/models/tilings/RectangularGridTilingModel.ts";
+import { RectangularGridTilingView } from "./_new/views/tilings/RectangularGridTilingView.ts";
 
 async function main(): Promise<void> {
   try {
@@ -20,7 +19,7 @@ async function main(): Promise<void> {
     const containerHeight = 400;
 
     const textureMinSideTileCount = 4;
-    const tilingType = TilingType.OctagonAndSquareWithSingleLock;
+    const tilingType = TilingType.Square;
 
     //#endregion test data end
 

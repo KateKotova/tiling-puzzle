@@ -12,7 +12,7 @@ export class RegularPolygonTileView extends BaseTileView {
         if (!(parameters.model.geometry instanceof RegularPolygonTileGeometry)) {
             throw new Error("The tile geometry is not an instance of RegularPolygonTileGeometry");
         }
-        if (!(parameters.model.geometry.lockType != TileLockType.None)) {
+        if (parameters.model.geometry.lockType != TileLockType.None) {
             throw new Error("The tile lock type is not None");
         }
         super(parameters);
