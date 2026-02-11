@@ -1,4 +1,4 @@
-import { Texture, Container, Point, Ticker, FederatedPointerEvent, Filter, Polygon } from "pixi.js";
+import { Texture, Container, Point, Ticker, FederatedPointerEvent, Filter, Polygon, Matrix } from "pixi.js";
 import { TileModel } from "../../models/tiles/TileModel.ts";
 import { ViewSettings } from "../ViewSettings.ts";
 import { StaticTileView } from "./StaticTileView.ts";
@@ -318,13 +318,22 @@ export class DraggableTileView implements TileView {
 
     public setDragSource(dragSource?: StaticTileView) {
         this.dragSource = dragSource;
-        this.dragSourceAbsoluteHitArea = dragSource
-            ? AdditionalMath.getTransformedPolygon(
-                dragSource.view.model.geometry.hitArea,
-                dragSource.view.model.currentRotationAngle,
-                dragSource.view.model.currentPositionPoint
-            )
-            : undefined;
+        if (!dragSource) {
+            this.dragSourceAbsoluteHitArea = undefined;
+            return;
+        }
+
+        const matrix = new Matrix();
+        const pivotPoint = dragSource.view.model.geometry.pivotPoint;
+        const currentPositionPoint = dragSource.view.model.currentPositionPoint;
+        matrix.translate(-pivotPoint.x, -pivotPoint.y);
+        matrix.rotate(dragSource.view.model.currentRotationAngle);
+        matrix.translate(currentPositionPoint.x, currentPositionPoint.y);
+
+        this.dragSourceAbsoluteHitArea = AdditionalMath.getTransformedPolygon(
+            dragSource.view.model.geometry.hitArea,
+            matrix
+        );
     }
 
     public destroy(): void {

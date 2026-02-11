@@ -39,8 +39,7 @@ export class SquareGeometry extends RegularPolygonTileGeometry {
             new Point(0, this.side)
         ]);
 
-        // ceil - чтобы избежать зазоров
-        this.circumscribedCircleRadius = Math.ceil(this.diagonal / 2.0);
+        this.circumscribedCircleRadius = this.diagonal / 2.0;
         this.regularPolygonInitialRotationAngle = Math.PI / 4;
     }
 }

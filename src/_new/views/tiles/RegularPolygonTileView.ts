@@ -24,7 +24,8 @@ export class RegularPolygonTileView extends BaseTileView {
             .regularPoly(
                 geometry.pivotPoint.x,
                 geometry.pivotPoint.y,
-                geometry.circumscribedCircleRadius,
+                // +0.5 - чтобы избежать зазоров
+                geometry.circumscribedCircleRadius + 0.5,
                 geometry.sideCount,
                 geometry.regularPolygonInitialRotationAngle
             );

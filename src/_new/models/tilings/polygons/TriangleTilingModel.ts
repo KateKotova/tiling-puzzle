@@ -114,11 +114,13 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
 
         const sideHalf = this.tileGeometry.side / 2.0;
         result.targetPositionPoint = new Point(
-            targetPosition.columnIndex * this.tileGeometry.side + sideHalf,
-            targetPosition.rowIndex * this.tileGeometry.side
+            // ceil - чтобы избежать зазоров
+            Math.ceil((targetPosition.columnIndex + 1) * sideHalf),
+            // ceil - чтобы избежать зазоров
+            Math.ceil(targetPosition.rowIndex * this.tileGeometry.height
                 + (tileIsRotated
                     ? this.tileGeometry.inscribedCircleDiameter
-                    : this.tileGeometry.circumscribedCircleRadius)
+                    : this.tileGeometry.circumscribedCircleRadius))
         );
         
         return result;

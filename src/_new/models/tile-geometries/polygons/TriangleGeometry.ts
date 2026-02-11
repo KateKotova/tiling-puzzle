@@ -39,9 +39,9 @@ export class TriangleGeometry extends RegularPolygonTileGeometry {
         this.pivotPoint = new Point(sideHalf, heightTwoThirds);        
         this.defaultBoundingRectangleSize = new Size(this.side, this.height);
         this.hitArea = new Polygon([
-            new Point(0, -heightTwoThirds),
-            new Point(sideHalf, heightThird),
-            new Point(-sideHalf, heightThird)
+            new Point(sideHalf, 0),
+            new Point(this.side, this.height),
+            new Point(0, this.height)
         ]);
 
         this.circumscribedCircleRadius = heightTwoThirds;

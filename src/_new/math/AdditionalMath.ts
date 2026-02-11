@@ -90,18 +90,30 @@ export class AdditionalMath {
      * @param targetPoint Точка, в которую нужно переместить многоугольник после поворота.
      * @returns Новый многоугольник с преобразованными координатами
      */
-    public static getTransformedPolygon(
+    public static getRotatedAndTranslatedPolygon(
         polygon: Polygon,
         rotationAngle: number,
         targetPoint: Point
     ): Polygon {
-        const points = polygon.points;
-        const transformedPoints: number[] = [];
-        
-        const matrix = new Matrix();        
+        const matrix = new Matrix();
         matrix.rotate(rotationAngle);
         matrix.translate(targetPoint.x, targetPoint.y);
-        
+        return AdditionalMath.getTransformedPolygon(polygon, matrix);
+    }
+
+    /**
+     * Получение преобразованного многоугольника.
+     * @param polygon Исходный многоугольник
+     * @param matrix Матрица трансформации
+     * @returns Новый многоугольник с преобразованными координатами
+     */
+    public static getTransformedPolygon(
+        polygon: Polygon,
+        matrix: Matrix
+    ): Polygon {
+        const points = polygon.points;
+        const transformedPoints: number[] = [];
+
         for (let i = 0; i < points.length; i += 2) {
             const x = points[i];
             const y = points[i + 1];
