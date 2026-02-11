@@ -1,133 +1,190 @@
-import { Point, Rectangle } from "pixi.js";
-import { TilePosition } from "./TilePosition.ts";
-import { TileType } from "./TileType.ts";
-import { TileLockType } from "./TileLockType.ts";
-import { TileTypeSvgData } from "./TileTypeSvgData.ts";
-import { TileLockHeightToSideRatios } from "./TileLockHeightToSideRatios.ts";
-import { Size } from "../math/Size.ts";
-import { TileSvgData } from "./TileSvgData.ts";
-import { AdditionalMath } from "../math/AdditionalMath.ts";
-import { SmoothValueChangeController } from "../math/SmoothValueChangeController.ts";
-import { SmoothPointChangeController } from "../math/SmoothPointChangeController.ts";
-import { ModelSettings } from "../ModelSettings.ts";
+import { Point } from "pixi.js";
+import { ModelSettings } from "../ModelSettings";
+import { TileGeometry } from "../tile-geometries/TileGeometry";
+import { TilePosition } from "./TilePosition";
+import { OverTimePointChangeController }
+    from "../../math/over-time-value-changes/OverTimePointChangeController";
+import { OverTimeNumberChangeController }
+    from "../../math/over-time-value-changes/OverTimeNumberChangeController";
+import { AdditionalMath } from "../../math/AdditionalMath";
 
-export abstract class TileModel {
-    protected modelSettings: ModelSettings;
-    public tileType: TileType = TileType.Unknown;
-    public tileLockType: TileLockType = TileLockType.None;
-    public pivotPoint: Point = new Point(0, 0);
-    public rotatingBoundingRectangleSize: Size = new Size();
-    public absoluteBoundingRectangle: Rectangle = new Rectangle();
-    public position: TilePosition = new TilePosition();
+/**
+ * Класс элемента замощения.
+ * Фигура имеет 2 вида положений: текущее (то, в котором она находится в данный момент)
+ * и целевое (то, в котором она должна быть, когда мозаика собрана).
+ */
+export class TileModel {
+    private modelSettings: ModelSettings;
+    public geometry: TileGeometry;
+    /**
+     * Целевая позиция элемента замощения в замощении
+     */
+    public targetTilePosition: TilePosition = new TilePosition();
+    /**
+     * Целевая позиция элемента замощения в замощении.
+     * Это точка относительно родительского контейнера замощения.
+     * Это точка, соответствующая положению локальной системы координат фигуры
+     * (точки поворота (0; 0)) относительно системы координат родительского контейнера замощения.
+     */
+    public targetPositionPoint: Point = new Point(0, 0);
 
-    public positionPoint: Point = new Point(0, 0);
+    /**
+     * Текущая позиция-точка элемента замощения в замощении
+     */
     public currentPositionPoint: Point = new Point(0, 0);
+    /**
+     * Текущая целевая позиция-точка элемента замощения в замощении.
+     * Это точка, в которую стремится фигура в данный момент при перемещении,
+     * например, на новую ячейку мозаики.
+     */
     public currentTargetPositionPoint: Point = new Point(0, 0);
-    protected positionPointController: SmoothPointChangeController | null = null;
+    /**
+     * Контроллер перемещения текущей позиции-точки фигуры
+     */
+    private positionPointController?: OverTimePointChangeController;
 
-    public rotationAngle: number = 0;
+    /**
+     * Целевой угол вращения фигуры в радианах.
+     * Это угол, на который должна быть повёрнута фигура в целевом положении
+     * относительно положения геометрии фигуры по умолчанию.
+     */
+    public targetRotationAngle: number = 0;
+    /**
+     * Текущий угол вращения фигуры в радианах
+     */
     public currentRotationAngle: number = 0;
+    /**
+     * Текущий целевой угол вращения фигуры в радианах.
+     * Это угол, к которому стремится фигура в данный момент при повороте,
+     * например, вокруг опорной точки.
+     */
     public currentTargetRotationAngle: number = 0;
-    protected rotationController: SmoothValueChangeController | null = null;
+    /**
+     * Контроллер изменения текущего угла вращения фигуры вокруг точки опоры
+     */
+    private rotationController?: OverTimeNumberChangeController;
 
-    constructor(modelSettings: ModelSettings) {
+    constructor(
+        modelSettings: ModelSettings,
+        geometry: TileGeometry
+    ) {
         this.modelSettings = modelSettings;
+        this.geometry = geometry;
     }
 
-    public abstract clone(): TileModel;
+    public clone(): TileModel {
+        const result = new TileModel(this.modelSettings, this.geometry);
 
-    protected updateClone(clone: TileModel) {
-        clone.modelSettings = this.modelSettings;
-        clone.tileType = this.tileType;
-        clone.pivotPoint = this.pivotPoint.clone();
-        clone.rotatingBoundingRectangleSize = this.rotatingBoundingRectangleSize.clone();
-        clone.absoluteBoundingRectangle = this.absoluteBoundingRectangle.clone();
-        clone.position = this.position.clone();
+        result.targetTilePosition = this.targetTilePosition.clone();
+        result.targetPositionPoint = this.targetPositionPoint.clone();
 
-        clone.positionPoint = this.positionPoint.clone();
-        clone.currentPositionPoint = this.currentPositionPoint.clone();
-        clone.currentTargetPositionPoint = this.currentTargetPositionPoint.clone();
+        result.currentPositionPoint = this.currentPositionPoint.clone();
+        result.currentTargetPositionPoint = this.currentTargetPositionPoint.clone();
 
-        clone.rotationAngle = this.rotationAngle;
-        clone.currentRotationAngle = this.currentRotationAngle;
-        clone.currentTargetRotationAngle = this.currentTargetRotationAngle;
+        result.targetRotationAngle = this.targetRotationAngle;
+        result.currentRotationAngle = this.currentRotationAngle;
+        result.currentTargetRotationAngle = this.currentTargetRotationAngle;
+
+        return result;
     }
 
-    public getSvgData(): TileSvgData | null {
-        return TileTypeSvgData[this.tileType];
-    }
-
-    public getLockHeightToSideRatios(): number {
-        return TileLockHeightToSideRatios[this.tileLockType];
-    }
-
-    public abstract getFreedomDegreeCount(): number;
-
-    public getFreedomDegreeRotationAngle(): number {
-        return 2 * Math.PI / this.getFreedomDegreeCount();
-    }
-
+    /**
+     * Элемент замощения имеет степень свободы, то есть число вращений вокруг оси,
+     * которые он может совершить вокруг точки опоры так, чтобы оставаться в том же положении
+     * и той же формы, но текстура при этом будет поворачиваться.
+     * Ищется ближайший следующий угол, соответствующий степени свободы,
+     * и до него как таз определяется эта разница.
+     * Угол можно отложить как по часовой стрелке, так и против часовой,
+     * то есть он может быть как положительным, так и отрицательным,
+     * но разницу нужно взять именно такую, чтобы она была меньшей по модулю. 
+     * @returns Угол разности в радианах, может быть как положительным, так и отрицательным,
+     * в радианах
+     */
     public getSamePositionNextAngleMinAngleDifference(): number {
-        const freedomDegreeRotationAngle = this.getFreedomDegreeRotationAngle();
         const normalizedNextRotationAngle = AdditionalMath.getNormalizedAngle(
-            this.currentRotationAngle + freedomDegreeRotationAngle);
+            this.currentRotationAngle + this.geometry.freedomDegreeRotationAngle);
         return AdditionalMath.getMinAngleDifference(this.currentRotationAngle,
             normalizedNextRotationAngle);
     }
 
+    /**
+     * Ищется минимальный по модулю угол поворота
+     * до попадания элемента замощения в новую позицию в мозаике.
+     * @param normalizedTargetRotationAngle Нормализованный текущий целевой угол в радианах
+     * @returns Угол разности в радианах, может быть как положительным, так и отрицательным,
+     * в радианах
+     */
     public getNewPositionMinAngleDifference(normalizedTargetRotationAngle: number): number {
-        const freedomDegreeCount = this.getFreedomDegreeCount();
         let result = AdditionalMath.getMinAngleDifference(this.currentRotationAngle,
             normalizedTargetRotationAngle);
-        if (freedomDegreeCount == 1) {
+        if (this.geometry.freedomDegree == 1) {
             return result;
         }
 
-        const freedomDegreeRotationAngle = this.getFreedomDegreeRotationAngle();
-        for (let freedomDegreeIndex = 1, potentialRotationAngle = normalizedTargetRotationAngle;
-            freedomDegreeIndex < freedomDegreeCount;
-            freedomDegreeIndex++, potentialRotationAngle += freedomDegreeRotationAngle) {
-
+        for (
+            let freedomDegreeIndex = 1, potentialRotationAngle = normalizedTargetRotationAngle;
+            freedomDegreeIndex < this.geometry.freedomDegree;
+            freedomDegreeIndex++,
+            potentialRotationAngle += this.geometry.freedomDegreeRotationAngle
+        ) {
             const normalizedPotentialRotationAngle = AdditionalMath
                 .getNormalizedAngle(potentialRotationAngle);
-            const potentionalResult = AdditionalMath.getMinAngleDifference(
+            const potentialResult = AdditionalMath.getMinAngleDifference(
                 this.currentRotationAngle, normalizedPotentialRotationAngle);
-            if (Math.abs(potentionalResult) < Math.abs(result)) {
-                result = potentionalResult;
+            if (Math.abs(potentialResult) < Math.abs(result)) {
+                result = potentialResult;
             }
         }
         return result;
     }
 
+    /**
+     * Подготовка к вращению фигуры, установка параметров контроллера вращения
+     * @param rotationAngleDifference Угол-разность, на который будет произведён поворот.
+     * Угол в радианах, может быть как положительным, так и отрицательным.
+     */
     public prepareToRotation(rotationAngleDifference: number): void {
         this.currentTargetRotationAngle = this.currentRotationAngle + rotationAngleDifference;
         if (!this.rotationController) {            
-            this.rotationController = new SmoothValueChangeController(this.currentRotationAngle,
+            this.rotationController = new OverTimeNumberChangeController(
+                this.currentRotationAngle,
                 this.currentTargetRotationAngle,
-                this.modelSettings.animationTime,
-                this.modelSettings.animationAccelerationTimeToTotalTimeRatio);
+                this.modelSettings.tileAnimationTime,
+                this.modelSettings.accelerationTimeToTileAnimationTimeRatio
+            );
         } else {
             this.rotationController.reset(this.currentRotationAngle,
                 this.currentTargetRotationAngle);
         }
     }
 
+    /**
+     * Подготовка к перемещению фигуры, установка параметров контроллера перемещения
+     * @param positionPointDifference Координаты-разность,
+     * на которые будет произведено перемещение
+     */
     public prepareToMove(positionPointDifference: Point): void {
         this.currentTargetPositionPoint = new Point(
             this.currentPositionPoint.x + positionPointDifference.x,
-            this.currentPositionPoint.y + positionPointDifference.y);
+            this.currentPositionPoint.y + positionPointDifference.y
+        );
         if (!this.positionPointController) {            
-            this.positionPointController = new SmoothPointChangeController(
+            this.positionPointController = new OverTimePointChangeController(
                 this.currentPositionPoint,
                 this.currentTargetPositionPoint,
-                this.modelSettings.animationTime,
-                this.modelSettings.animationAccelerationTimeToTotalTimeRatio);
+                this.modelSettings.tileAnimationTime,
+                this.modelSettings.accelerationTimeToTileAnimationTimeRatio
+            );
         } else {
             this.positionPointController.reset(this.currentPositionPoint,
                 this.currentTargetPositionPoint);
         }
     }
 
+    /**
+     * Выполнение поворота
+     * @param deltaTime Интервал времени, прошедший с момента предыдущего поворота
+     */
     public executeRotation(deltaTime: number): void {
         const rotationAngleIncrement: number = this.rotationController?.getIsCompleted()
             ? 0
@@ -135,6 +192,10 @@ export abstract class TileModel {
         this.currentRotationAngle += rotationAngleIncrement;
     }
 
+    /**
+     * Выполнение перемещения
+     * @param deltaTime Интервал времени, прошедший с момента предыдущего перемещения
+     */
     public executeMove(deltaTime: number): void {
         const positionPointIncrement: Point = this.positionPointController?.getIsCompleted()
             ? new Point(0, 0)
@@ -143,16 +204,22 @@ export abstract class TileModel {
         this.currentPositionPoint.y += positionPointIncrement.y;
     }
 
+    /**
+     * Операции по завершению вращения
+     */
     public completeRotation(): void {
         this.currentRotationAngle = AdditionalMath.getNormalizedAngle(
             this.currentTargetRotationAngle);
     }
 
+    /**
+     * Операции по завершению перемещения
+     */
     public completeMove(): void {
         this.currentPositionPoint = this.currentTargetPositionPoint.clone();
     }
     
-    public getRotaionIsCompleted(): boolean {
+    public getRotationIsCompleted(): boolean {
         return this.rotationController?.getIsCompleted() ?? false;
     }
 

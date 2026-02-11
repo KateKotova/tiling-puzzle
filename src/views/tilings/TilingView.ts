@@ -1,14 +1,17 @@
 import { Color, Container, Renderer, Ticker } from "pixi.js";
 import { TilingModel } from "../../models/tilings/TilingModel.ts";
 import { ViewSettings } from "../ViewSettings.ts";
-import { DraggingTileData } from "../tiles/DraggingTileData.ts";
+import { DraggingTileData } from "../tile-decorators/DraggingTileData.ts";
 
+/**
+ * Класс представления замощения
+ */
 export abstract class TilingView {
     protected viewSettings: ViewSettings;
     public model: TilingModel;
     public tilingContainer: Container;
     public staticTilesContainer: Container;
-    public tilesContainer: Container;
+    public draggableTilesContainer: Container;
     protected staticTileFillColor: Color = new Color(0x00AA00);
     protected selectedTileContainer: Container;
     protected draggingTileData: DraggingTileData = { view: null };
@@ -24,8 +27,10 @@ export abstract class TilingView {
 
         this.staticTilesContainer = new Container();
         this.tilingContainer.addChild(this.staticTilesContainer);
-        this.tilesContainer = new Container();
-        this.tilingContainer.addChild(this.tilesContainer);
+
+        this.draggableTilesContainer = new Container();
+        this.tilingContainer.addChild(this.draggableTilesContainer);
+
         this.selectedTileContainer = new Container();
         this.tilingContainer.addChild(this.selectedTileContainer);
     }
@@ -40,5 +45,10 @@ export abstract class TilingView {
         });
     }
 
+    /**
+     * Создание тестового замощения для примера
+     * @param renderer Инструменты отображения
+     * @param ticker Инструменты контроля времени
+     */
     public abstract setExampleTiling(renderer: Renderer, ticker: Ticker): void;
 }

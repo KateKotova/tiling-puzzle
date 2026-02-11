@@ -1,6 +1,6 @@
 import { Point, Renderer } from "pixi.js";
-import { ImageContainerModel } from "../../ImageContainerModel";
-import { ModelSettings } from "../../ModelSettings";
+import { ImageContainerModel } from "../../ImageContainerModel.ts";
+import { ModelSettings } from "../../ModelSettings.ts";
 import { SquareWithSingleLockGeometry }
     from "../../tile-geometries/polygons-with-single-locks/SquareWithSingleLockGeometry.ts";
 import { TileLockType } from "../../tile-locks/TileLockType.ts";

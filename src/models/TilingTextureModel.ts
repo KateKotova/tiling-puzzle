@@ -1,11 +1,14 @@
 import { Texture } from "pixi.js";
 
+/**
+ * Класс модели текстуры для замощения
+ */
 export class TilingTextureModel {
-    public texture: Texture;
-    public width: number;
-    public height: number;
-    public widthToHeightRatio: number;
-    public minSide: number;
+    public readonly texture: Texture;
+    public readonly width: number;
+    public readonly height: number;
+    public readonly widthToHeightRatio: number;
+    public readonly minSide: number;
 
     constructor(texture: Texture) {
         this.texture = texture;

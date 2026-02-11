@@ -4,76 +4,62 @@ import {
     Container,
     Graphics,
     GraphicsPath,
-    Point,
     Renderer,
     Sprite,
     Texture
 } from "pixi.js";
 import { BaseTileView } from "./BaseTileView.ts";
-import { RegularPolygonTileModel } from "../../models/polygons/tiles/RegularPolygonTileModel.ts";
-import { Size } from "../../models/math/Size.ts";
-import { RegularPolygonWithSingleLockTileModel } from "../../models/polygons/tiles/RegularPolygonWithSingleLockTileModel.ts";
-import { AdditionalMath } from "../../models/math/AdditionalMath.ts";
 import { TileViewParameters } from "./TileViewParameters.ts";
+import { Size } from "../../math/Size.ts";
 
+/**
+ * Представление элемента замощения, который представляет собой svg-путь
+ */
 export class SvgPathTileView extends BaseTileView {
     private spriteBoundingSize: Size = new Size();
 
     constructor (parameters: TileViewParameters) {
-        if (parameters.model instanceof RegularPolygonTileModel) {
-            throw new Error("The tile must not be an instance of RegularPolygonTileModel");
+        if (!parameters.model.geometry.svgPath) {
+            throw new Error("The tile has no svg path");
         }
         super(parameters);
     }
 
-   protected createContent(renderer: Renderer, replacingTextureFillColor: Color): Container {
-        const svgData = this.model.getSvgData();
-        if (!svgData) {
-            throw new Error("The svg data of the tile should not be null");
-        }
+    protected createContent(renderer: Renderer, replacingTextureFillColor: Color): Container {
+        this.spriteBoundingSize = this.model.geometry.defaultBoundingRectangleSize.clone();
 
-        this.spriteBoundingSize = new Size(
-            this.model.rotatingBoundingRectangleSize.width + 0.5,
-            this.model.rotatingBoundingRectangleSize.height + 0.5
-        );
-
-        const graphicsPath = new GraphicsPath(svgData.path);
+        const graphicsPath = new GraphicsPath(this.model.geometry.svgPath);
         const graphicsTexture = this.getGraphicsTexture(renderer, graphicsPath,
             replacingTextureFillColor);
 
         const sprite = new Sprite(graphicsTexture);
-        sprite.width = this.spriteBoundingSize.width;
-        sprite.height = this.spriteBoundingSize.height;
+        // +0.5 - чтобы избежать зазоров
+        sprite.width = this.spriteBoundingSize.width + 0.5;
+        // +0.5 - чтобы избежать зазоров
+        sprite.height = this.spriteBoundingSize.height + 0.5;
         sprite.roundPixels = false;
 
         const result = new Container();        
         result.addChild(sprite);
         
-        const bluredSpriteWithMask = this.getBluredSpriteWithMask(renderer, graphicsPath,
+        const blurredSpriteWithMask = this.getBlurredSpriteWithMask(renderer, graphicsPath,
             graphicsTexture, sprite.width, sprite.height);
-        result.addChild(bluredSpriteWithMask);
+        result.addChild(blurredSpriteWithMask);
         
-        result.cacheAsTexture({ resolution: this.viewSettings.tileTextureResolution });
+        result.cacheAsTexture({ resolution: this.viewSettings.cacheTileAsTextureResolution });
 
-        if (this.model instanceof RegularPolygonWithSingleLockTileModel) {
-            const hitAreaCenterPoint = new Point(
-                this.model.rotatingBoundingRectangleSize.width / 2.0,
-                this.model.rotatingBoundingRectangleSize.height / 2.0);
-            const model = this.model as RegularPolygonWithSingleLockTileModel;            
-            result.hitArea = AdditionalMath.getRegularPolygon(hitAreaCenterPoint,
-                model.hitAreaCircumscribedCircleRadius, model.hitAreaSideCount,
-                model.hitAreaInitialRotationAngle);
-        }
+        result.hitArea = this.model.geometry.hitArea.clone();
 
         return result;
     }
 
-    private getBluredSpriteWithMask(renderer: Renderer,
+    private getBlurredSpriteWithMask(
+        renderer: Renderer,
         graphicsPath: GraphicsPath,
         graphicsTexture: Texture,
         spriteWidth: number,
-        spriteHeight: number): Sprite {
-
+        spriteHeight: number
+    ): Sprite {
         const maskGraphics = new Graphics()
             .path(graphicsPath)
             .fill({
@@ -94,7 +80,7 @@ export class SvgPathTileView extends BaseTileView {
 
         const maskTexture = renderer.generateTexture({
             target: maskGraphics,
-            resolution: this.viewSettings.tileTextureResolution,
+            resolution: this.viewSettings.generateTileTextureResolution,
             width: spriteWidth,
             height: spriteHeight,
             textureSourceOptions: {
@@ -155,7 +141,7 @@ export class SvgPathTileView extends BaseTileView {
 
         const result =  renderer.generateTexture({
             target: graphics,
-            resolution: this.viewSettings.tileTextureResolution,
+            resolution: this.viewSettings.generateTileTextureResolution,
             width: textureWidth,
             height: textureHeight,
             textureSourceOptions: {
