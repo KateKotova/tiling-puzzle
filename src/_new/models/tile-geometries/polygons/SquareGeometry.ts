@@ -33,13 +33,14 @@ export class SquareGeometry extends RegularPolygonTileGeometry {
         this.pivotPoint = new Point(sideHalf, sideHalf);        
         this.defaultBoundingRectangleSize = new Size(this.side, this.side);
         this.hitArea = new Polygon([
-            new Point(-sideHalf, -sideHalf),
-            new Point(sideHalf, -sideHalf),
-            new Point(sideHalf, sideHalf),
-            new Point(-sideHalf, sideHalf)
+            new Point(0, 0),
+            new Point(this.side, 0),
+            new Point(this.side, this.side),
+            new Point(0, this.side)
         ]);
 
-        this.circumscribedCircleRadius = this.diagonal / 2.0;
+        // ceil - чтобы избежать зазоров
+        this.circumscribedCircleRadius = Math.ceil(this.diagonal / 2.0);
         this.regularPolygonInitialRotationAngle = Math.PI / 4;
     }
 }

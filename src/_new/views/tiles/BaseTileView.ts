@@ -30,9 +30,8 @@ export abstract class BaseTileView implements TileView {
     protected createTile(): Container {
         const result = new Container();       
         result.addChild(this.content);        
-        result.cacheAsTexture({ resolution: this.viewSettings.tileTextureResolution });
-        result.pivot.set(this.model.geometry.pivotPoint.x, this.model.geometry.pivotPoint.y);
-        result.hitArea = this.model.geometry.hitArea.clone();
+        result.cacheAsTexture({ resolution: this.viewSettings.cacheTileAsTextureResolution });
+        result.pivot.set(this.model.geometry.pivotPoint.x, this.model.geometry.pivotPoint.y);        
         result.rotation = this.model.currentRotationAngle;   
         result.position = this.model.currentPositionPoint.clone();
         return result;

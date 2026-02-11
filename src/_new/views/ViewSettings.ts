@@ -6,7 +6,8 @@ import { Color } from "pixi.js";
  * Предполагается, что создаётся единственный экземпляр этого класса и везде передаётся.
  */
 export class ViewSettings {
-    public readonly tileTextureResolution: number = 2;
+    public readonly cacheTileAsTextureResolution: number = 2;
+    public readonly generateTileTextureResolution: number = 1;
     public readonly bevelFilterOptions: BevelFilterOptions = { 
         rotation: 45,
         thickness: 1.8,

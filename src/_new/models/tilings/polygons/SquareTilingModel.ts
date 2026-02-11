@@ -74,7 +74,9 @@ export class SquareTilingModel extends RectangularGridTilingModel {
     }
 
     protected initializeImageTileInfo(): void {
-        const tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
+        // ceil - чтобы избежать зазоров
+        const tileSide = Math.ceil(this.textureTileSide
+            * this.imageContainerModel.sideToTextureSideRatio);
         this.tileGeometry = new SquareGeometry(tileSide);
     }
 

@@ -81,12 +81,12 @@ export abstract class RectangularGridTilingModel extends TilingModel {
         const textureTileLocalPivotPointY = tileModel.geometry.pivotPoint.y
             / sideToTextureSideRatio;
 
-        const textureTileAbsolutePivotPointX = (tileModel.targetPositionPoint.x
-            + this.tilingContainerModel.boundingRectangle.x)
-            / sideToTextureSideRatio;
-        const textureTileAbsolutePivotPointY = (tileModel.targetPositionPoint.y
-            + this.tilingContainerModel.boundingRectangle.y)
-            / sideToTextureSideRatio;
+        const textureTileAbsolutePivotPointX = tileModel.targetPositionPoint.x
+            / sideToTextureSideRatio
+            + this.textureXTilingOffset;
+        const textureTileAbsolutePivotPointY = tileModel.targetPositionPoint.y
+            / sideToTextureSideRatio
+             + this.textureYTilingOffset;
         
         const textureTileDefaultBoundingRectangleWidth
             = tileModel.geometry.defaultBoundingRectangleSize.width

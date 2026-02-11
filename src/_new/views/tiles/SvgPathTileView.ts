@@ -44,7 +44,9 @@ export class SvgPathTileView extends BaseTileView {
             graphicsTexture, sprite.width, sprite.height);
         result.addChild(blurredSpriteWithMask);
         
-        result.cacheAsTexture({ resolution: this.viewSettings.tileTextureResolution });
+        result.cacheAsTexture({ resolution: this.viewSettings.cacheTileAsTextureResolution });
+
+        result.hitArea = this.model.geometry.hitArea.clone();
 
         return result;
     }
@@ -76,7 +78,7 @@ export class SvgPathTileView extends BaseTileView {
 
         const maskTexture = renderer.generateTexture({
             target: maskGraphics,
-            resolution: this.viewSettings.tileTextureResolution,
+            resolution: this.viewSettings.generateTileTextureResolution,
             width: spriteWidth,
             height: spriteHeight,
             textureSourceOptions: {
@@ -137,7 +139,7 @@ export class SvgPathTileView extends BaseTileView {
 
         const result =  renderer.generateTexture({
             target: graphics,
-            resolution: this.viewSettings.tileTextureResolution,
+            resolution: this.viewSettings.generateTileTextureResolution,
             width: textureWidth,
             height: textureHeight,
             textureSourceOptions: {

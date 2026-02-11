@@ -48,7 +48,7 @@ export class RegularPolygonTileView extends BaseTileView {
 
         const graphicsTexture = renderer.generateTexture({
             target: graphics,
-            resolution: this.viewSettings.tileTextureResolution,
+            resolution: this.viewSettings.generateTileTextureResolution,
             textureSourceOptions: {
                 scaleMode: "nearest"
             }
@@ -56,11 +56,13 @@ export class RegularPolygonTileView extends BaseTileView {
         graphics.destroy();
 
         const sprite = new Sprite(graphicsTexture);
-        sprite.cacheAsTexture({ resolution: this.viewSettings.tileTextureResolution });
+        sprite.cacheAsTexture({ resolution: this.viewSettings.cacheTileAsTextureResolution });
 
         const result = new Container();        
         result.addChild(sprite);        
-        result.cacheAsTexture({ resolution: this.viewSettings.tileTextureResolution });
+        result.cacheAsTexture({ resolution: this.viewSettings.cacheTileAsTextureResolution });
+
+        result.hitArea = this.model.geometry.hitArea.clone();
 
         return result;
     }
