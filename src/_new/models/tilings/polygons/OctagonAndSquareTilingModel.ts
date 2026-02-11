@@ -146,13 +146,13 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
                     + inscribedCircleRadius
             );
         } else {
-            const offset = this.octagonTileGeometry.side
-                + this.squareTileGeometry.circumscribedCircleRadius
             result.targetPositionPoint = new Point(
-                targetPosition.columnIndex * octagonTileInscribedCircleDiameter
-                    + offset,
-                (targetPosition.rowIndex - 1) / 2.0 * octagonTileInscribedCircleDiameter
-                    + offset
+                // ceil - чтобы избежать зазоров
+                Math.ceil((targetPosition.columnIndex + 1)
+                    * octagonTileInscribedCircleDiameter),
+                // ceil - чтобы избежать зазоров
+                Math.ceil((targetPosition.rowIndex + 1) / 2.0
+                    * octagonTileInscribedCircleDiameter)
             );
         }
             

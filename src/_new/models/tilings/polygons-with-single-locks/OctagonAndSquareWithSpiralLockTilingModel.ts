@@ -179,14 +179,11 @@ export class OctagonAndSquareWithSpiralLockTilingModel extends RectangularGridTi
                 = ((targetPosition.rowIndex - 1) / 2 + targetPosition.columnIndex) % 2 == 0
                 ? 7.0 / 4.0 * Math.PI
                 : Math.PI / 4;
-            const offset = this.octagonTileGeometry.side
-                + this.squareTileGeometry.circumscribedCircleRadius
-                + lockHeight;
             result.targetPositionPoint = new Point(
-                targetPosition.columnIndex * octagonTileInscribedCircleDiameter
-                    + offset,
-                (targetPosition.rowIndex - 1) / 2.0 * octagonTileInscribedCircleDiameter
-                    + offset
+                (targetPosition.columnIndex + 1) * octagonTileInscribedCircleDiameter
+                    + lockHeight,
+                (targetPosition.rowIndex + 1) / 2.0 * octagonTileInscribedCircleDiameter
+                    + lockHeight
             );
         }
         

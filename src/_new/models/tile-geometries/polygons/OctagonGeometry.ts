@@ -22,7 +22,7 @@ export class OctagonGeometry extends RegularPolygonTileGeometry {
      * Отношение радиуса описанной окружности восьмиугольника к его стороне.
      */
     public static readonly circumscribedCircleRadiusToSideRatio: number
-        = Math.sqrt(1 - Math.sqrt(2) / 2.0);
+        = 1 / Math.sqrt(2 - Math.sqrt(2));
 
     public readonly geometryType: TileGeometryType = TileGeometryType.Octagon;
     /**

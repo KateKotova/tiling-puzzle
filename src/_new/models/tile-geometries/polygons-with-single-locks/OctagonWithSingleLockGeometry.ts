@@ -49,8 +49,8 @@ export class OctagonWithSingleLockGeometry extends OctagonGeometry {
 
         this.pivotPoint.x += this.lockHeight;
         this.pivotPoint.y += this.lockHeight;
-        this.defaultBoundingRectangleSize.width += this.lockHeight;
-        this.defaultBoundingRectangleSize.height += this.lockHeight;
+        this.defaultBoundingRectangleSize.width += this.lockHeight * 2;
+        this.defaultBoundingRectangleSize.height += this.lockHeight * 2;
         this.hitArea = AdditionalMath.getRegularPolygon(
             this.pivotPoint,
             this.circumscribedCircleRadius,

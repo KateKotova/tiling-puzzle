@@ -19,7 +19,7 @@ async function main(): Promise<void> {
     const containerHeight = 400;
 
     const textureMinSideTileCount = 4;
-    const tilingType = TilingType.HexagonWithSingleLock;
+    const tilingType = TilingType.OctagonAndSquareWithSingleLock;
 
     //#endregion test data end
 
