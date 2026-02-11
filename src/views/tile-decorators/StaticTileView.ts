@@ -1,17 +1,44 @@
 import { Texture, Container, Filter, FederatedPointerEvent } from "pixi.js";
 import { TileModel } from "../../models/tiles/TileModel.ts";
-import { TileView } from "./TileView.ts";
-import { DraggingTileData } from "./DraggingTileData.ts";
-import { RegularPolygonTileModel } from "../../models/polygons/tiles/RegularPolygonTileModel.ts";
 import { ViewSettings } from "../ViewSettings.ts";
+import { TileView } from "../tiles/TileView.ts";
+import { GlowFilter } from "pixi-filters";
+import { DraggingTileData } from "./DraggingTileData.ts";
 
+/**
+ * Класс декоратора представления неподвижного элемента замощения,
+ * который обозначает место, куда должен быть размещён пользователем подвижный элемент замощения
+ */
 export class StaticTileView implements TileView {
     private viewSettings: ViewSettings;
+    /**
+     * Композиция: элемент замощения, который декорируется
+     */
     public view: TileView;
+    /**
+     * Признак того, что данная статическая фигура является ячейкой-целью
+     * для перетаскивания подвижной фигуры
+     */
     private isDragTarget: boolean = false;
+    /**
+     * Информация о фигуре, которая перетаскивается в данный момент.
+     * Этот объект один на всех.
+     */
     private draggingTileData: DraggingTileData;
 
-    constructor (viewSettings: ViewSettings, view: TileView, draggingTileData: DraggingTileData) {
+    /**
+     * Создание неподвижного элемента замощения,
+     * служащего ячейкой для перетаскивания подвижного элемента замощения
+     * @param viewSettings Настройки представления
+     * @param view Элемент замощения, который декорируется
+     * @param draggingTileData Информация о фигуре, которая перетаскивается в данный момент.
+     * Этот объект один на всех.
+     */
+    constructor (
+        viewSettings: ViewSettings,
+        view: TileView,
+        draggingTileData: DraggingTileData
+    ) {
         this.viewSettings = viewSettings;
         this.view = view;
         this.draggingTileData = draggingTileData;
@@ -24,7 +51,7 @@ export class StaticTileView implements TileView {
         return this.view.model;
     }
 
-    public get texture(): Texture | null {
+    public get texture(): Texture | undefined {
         return this.view.texture;
     }
 
@@ -45,23 +72,9 @@ export class StaticTileView implements TileView {
     }
 
     private getDraggingTileHasTheSameType(): boolean {
-        if (!this.draggingTileData.view?.model
-            || this.draggingTileData.view.model.tileType != this.view.model.tileType) {
-            return false;
-        }
-
-        if (this.draggingTileData.view.model instanceof RegularPolygonTileModel) {
-            const draggingModel = this.draggingTileData.view.model as RegularPolygonTileModel;
-            if (!(this.view.model instanceof RegularPolygonTileModel)) {
-                return false;
-            }
-            const model = this.view.model as RegularPolygonTileModel;
-            if (draggingModel.sideCount != model.sideCount) {
-                return false;
-            }
-        }
-
-        return true;
+        return !!this.draggingTileData.view
+            && this.draggingTileData.view.model.geometry.geometryType
+            == this.view.model.geometry.geometryType;
     }
 
     public onPointerEnter(): void {
@@ -73,8 +86,9 @@ export class StaticTileView implements TileView {
         if (this.draggingTileData.view) {
             this.draggingTileData.view.dragTarget?.onPointerLeave();
             this.draggingTileData.view.dragTarget = this;
-        }        
-        this.view.setFilter(this.viewSettings.targetEmptyTileGlowFilter);
+        }
+        const filter = new GlowFilter(this.viewSettings.targetStaticTileGlowFilterOptions);      
+        this.view.setFilter(filter);
 
         this.view.tile.off('pointerenter', this.onPointerEnter, this);
         this.view.tile.on('pointerleave', this.onPointerLeave, this);
@@ -90,7 +104,7 @@ export class StaticTileView implements TileView {
 
         this.isDragTarget = false;
         if (this.draggingTileData.view && this.draggingTileData.view.dragTarget == this) {
-            this.draggingTileData.view.dragTarget = null;
+            this.draggingTileData.view.dragTarget = undefined;
         }
         this.view.removeFilters();
 

@@ -1,24 +1,62 @@
-import { Texture, Container, Point, Ticker, FederatedPointerEvent, Filter } from "pixi.js";
+import {
+    Texture,
+    Container,
+    Point,
+    Ticker,
+    FederatedPointerEvent,
+    Filter,
+    Polygon,
+    Matrix
+} from "pixi.js";
 import { TileModel } from "../../models/tiles/TileModel.ts";
-import { TileView } from "./TileView.ts";
 import { ViewSettings } from "../ViewSettings.ts";
-import { AdditionalMath } from "../../models/math/AdditionalMath.ts";
 import { StaticTileView } from "./StaticTileView.ts";
 import { DraggingTileData } from "./DraggingTileData.ts";
+import { TileView } from "../tiles/TileView.ts";
+import { GlowFilter } from "pixi-filters";
+import { AdditionalMath } from "../../math/AdditionalMath.ts";
 
-export class DragableTileView implements TileView {
+/**
+ * Класс декоратора представления подвижного элемента замощения
+ */
+export class DraggableTileView implements TileView {
     private viewSettings: ViewSettings;
+    /**
+     * Композиция: элемент замощения, который декорируется
+     */
     public view: TileView;
-    private parentContainer: Container | null;
+    /**
+     * Контейнер, в котором фигура находится по умолчанию
+     */
+    private parentContainer: Container | null = null;
+    /**
+     * Контейнер, в который фигура переносится на время вращения и/или перетаскивания
+     */
     private selectedTileContainer: Container;
     private ticker: Ticker;
     private isDragging: boolean = false;
     private dragOffset: Point = new Point(0, 0);
     private dragStartPosition: Point = new Point(0, 0);
     private dragStartTime: number = 0;
+    /**
+     * Информация о фигуре, которая перетаскивается в данный момент.
+     * Этот объект один на всех.
+     */
     private draggingTileData: DraggingTileData;
-    public dragSource: StaticTileView | null = null;
-    public dragTarget: StaticTileView | null = null;
+    /**
+     * Статическая фигура-ячейка, с которой происходит перетаскивание
+     */
+    private dragSource?: StaticTileView;
+    /**
+     * Зона целевой статической фигуры-ячейки, определяемая указателем.
+     * Это нужно вычислять и хранить для перетаскивания,
+     * потому что под перетаскиваемой фигурой зона не видна.
+     */
+    public dragSourceAbsoluteHitArea?: Polygon;
+    /**
+     * Статическая фигура-ячейка, на которую происходит перетаскивание
+     */
+    public dragTarget?: StaticTileView;
     private onPointerDownIsActive: boolean = true;
 
     private boundOnRotationTicker: (ticker: Ticker) => void = this.onRotationTicker.bind(this);
@@ -26,12 +64,23 @@ export class DragableTileView implements TileView {
     private boundGlobalPointerUp: (event: PointerEvent) => void
         = this.onGlobalPointerUp.bind(this);
 
-    constructor (viewSettings: ViewSettings,
+    /**
+     * Создание подвижного элемента замощения
+     * @param viewSettings Настройки представления
+     * @param view Элемент замощения, который декорируется
+     * @param selectedTileContainer Контейнер, в который фигура переносится
+     * на время вращения и/или перетаскивания
+     * @param ticker Инструмент PixiJS, отвечающий за время
+     * @param draggingTileData Информация о фигуре, которая перетаскивается в данный момент.
+     * Этот объект один на всех.
+     */
+    constructor (
+        viewSettings: ViewSettings,
         view: TileView,
         selectedTileContainer: Container,
         ticker: Ticker,
-        draggingTileData: DraggingTileData) {
-            
+        draggingTileData: DraggingTileData
+    ) {            
         this.viewSettings = viewSettings;
         this.view = view;
         this.parentContainer = this.view.tile.parent;
@@ -47,7 +96,7 @@ export class DragableTileView implements TileView {
         return this.view.model;
     }
 
-    public get texture(): Texture | null {
+    public get texture(): Texture | undefined {
         return this.view.texture;
     }
 
@@ -91,7 +140,7 @@ export class DragableTileView implements TileView {
 
     private onRotationTicker(ticker: Ticker) {
         this.executeRotation(ticker.deltaMS);
-        if (this.view.model.getRotaionIsCompleted()) {
+        if (this.view.model.getRotationIsCompleted()) {
             this.completeRotation();
             this.ticker.remove(this.boundOnRotationTicker);
             this.setOnPointerDownActivity(true);
@@ -109,14 +158,14 @@ export class DragableTileView implements TileView {
 
     public rotateToDragTarget(dragTargetModel: TileModel): void {
         const rotationAngleDifference = this.view.model.getNewPositionMinAngleDifference(
-            dragTargetModel.rotationAngle);
+            dragTargetModel.targetRotationAngle);
         this.startRotation(rotationAngleDifference);
     }
 
     public moveToStaticTile(staticTileModel: TileModel): void {
         const moveDifference = new Point(
-            staticTileModel.currentPositionPoint.x - this.view.model.currentPositionPoint.x,
-            staticTileModel.currentPositionPoint.y - this.view.model.currentPositionPoint.y);
+            staticTileModel.targetPositionPoint.x - this.view.model.currentPositionPoint.x,
+            staticTileModel.targetPositionPoint.y - this.view.model.currentPositionPoint.y);
         this.startMove(moveDifference);
     }
 
@@ -137,13 +186,15 @@ export class DragableTileView implements TileView {
         this.selectedTileContainer.addChild(this.view.tile);
         
         if (!this.isDragging) {
-            this.view.setFilter(this.viewSettings.selectedTileGlowFilter);
+            const filter = new GlowFilter(this.viewSettings.selectedTileGlowFilterOptions);
+            this.view.setFilter(filter);
         }
     }
 
     private prepareToMove(moveDifference: Point): void {
         this.view.model.prepareToMove(moveDifference);
-        this.view.setFilter(this.viewSettings.selectedTileGlowFilter);
+        const filter = new GlowFilter(this.viewSettings.selectedTileGlowFilterOptions);
+        this.view.setFilter(filter);
     }
 
     private executeRotation(deltaTime: number): void {
@@ -190,7 +241,8 @@ export class DragableTileView implements TileView {
             parentEventPosition.y - this.view.tile.position.y);
         
         this.selectedTileContainer.addChild(this.view.tile);
-        this.view.setFilter(this.viewSettings.selectedTileGlowFilter);
+        const filter = new GlowFilter(this.viewSettings.selectedTileGlowFilterOptions);
+        this.view.setFilter(filter);
     }
 
     private onPointerMove(event: FederatedPointerEvent): void {
@@ -204,10 +256,9 @@ export class DragableTileView implements TileView {
             parentEventPosition.y - this.dragOffset.y);
         this.view.tile.position = this.view.model.currentPositionPoint.clone();
 
-        if (this.dragSource) {
-            const dragSourceSimpleHintArea = this.dragSource.view.model.absoluteBoundingRectangle;
-            const pointerIsInHitArea = AdditionalMath.getPointIsInsideRectangle(
-                parentEventPosition, dragSourceSimpleHintArea);
+        if (this.dragSource && this.dragSourceAbsoluteHitArea) {
+            const pointerIsInHitArea = AdditionalMath.getPointIsInsidePolygon(
+                parentEventPosition, this.dragSourceAbsoluteHitArea);
             if (!this.dragTarget && pointerIsInHitArea) {
                 this.dragSource.onPointerEnter();
             } else if (this.dragTarget && !pointerIsInHitArea) {
@@ -240,14 +291,10 @@ export class DragableTileView implements TileView {
             this.view.removeFilters();
         }
 
-        if (!this.dragSource) {
-            this.dragSource = this.dragTarget;
-        }
-
         if (this.dragTarget) {
-            this.dragSource = this.dragTarget;
+            this.setDragSource(this.dragTarget);
         }
-        this.dragTarget = null;
+        this.dragTarget = undefined;
         this.draggingTileData.view = null;
 
         this.view.tile.off('globalpointermove', this.onPointerMove, this);
@@ -276,6 +323,26 @@ export class DragableTileView implements TileView {
         } else {
             this.selectedTileContainer.removeChild(this.view.tile);
         }
+    }
+
+    public setDragSource(dragSource?: StaticTileView) {
+        this.dragSource = dragSource;
+        if (!dragSource) {
+            this.dragSourceAbsoluteHitArea = undefined;
+            return;
+        }
+
+        const pivotPoint = dragSource.view.model.geometry.pivotPoint;
+        const currentPositionPoint = dragSource.view.model.currentPositionPoint;
+        const matrix = new Matrix()
+            .translate(-pivotPoint.x, -pivotPoint.y)
+            .rotate(dragSource.view.model.currentRotationAngle)
+            .translate(currentPositionPoint.x, currentPositionPoint.y);
+
+        this.dragSourceAbsoluteHitArea = AdditionalMath.getTransformedPolygon(
+            dragSource.view.model.geometry.hitArea,
+            matrix
+        );
     }
 
     public destroy(): void {

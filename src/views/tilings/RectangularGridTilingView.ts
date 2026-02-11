@@ -1,13 +1,18 @@
 import { Renderer, Ticker } from "pixi.js";
-import { TilingView } from "./TilingView.ts";
 import { RectangularGridTilingModel } from "../../models/tilings/RectangularGridTilingModel.ts";
 import { TilingModel } from "../../models/tilings/TilingModel.ts";
-import { TileViewFactory } from "../tiles/TileViewFactory.ts";
 import { ViewSettings } from "../ViewSettings.ts";
+import { TilingView } from "./TilingView.ts";
+import { TileViewFactory } from "../tiles/TileViewFactory.ts";
+import { RectangularGridTilePosition } from "../../models/tiles/RectangularGridTilePosition.ts";
 import { TileViewParameters } from "../tiles/TileViewParameters.ts";
-import { StaticTileView } from "../tiles/StaticTileView.ts";
-import { DragableTileView } from "../tiles/DragableTileView.ts";
+import { StaticTileView } from "../tile-decorators/StaticTileView.ts";
+import { DraggableTileView } from "../tile-decorators/DraggableTileView.ts";
 
+/**
+ * Класс представления замощения, представляющего собой прямоугольную сетку,
+ * где фигуры размещаются в строках и столбцах
+ */
 export class RectangularGridTilingView extends TilingView {
     constructor(viewSettings: ViewSettings, model: TilingModel) {
         if (!(model instanceof RectangularGridTilingModel)) {
@@ -20,56 +25,57 @@ export class RectangularGridTilingView extends TilingView {
         const model = this.model as RectangularGridTilingModel;
         const tileViewFactory = new TileViewFactory();
         
-        for (let rowIndex = 0; rowIndex < model.textureTileRowCount; rowIndex++) {
-            for (let columnIndex = 0; columnIndex < model.textureTileColumnCount;
-                columnIndex++) {
-
+        for (let rowIndex = 0; rowIndex < model.tileRowCount; rowIndex++) {
+            for (let columnIndex = 0; columnIndex < model.tileColumnCount; columnIndex++) {
                 if (!model.getGridIndicesAreCorrect(rowIndex, columnIndex)) {
                     continue;
                 }
 
-                const filledTileModel = model.getTileModel(rowIndex, columnIndex);
-                if (!filledTileModel) {
+                const tilePosition = new RectangularGridTilePosition(rowIndex, columnIndex);
+
+                const staticTileModel = model.getTileModel(tilePosition);
+                if (!staticTileModel) {
                     continue;
                 }
-                filledTileModel.currentRotationAngle = filledTileModel.rotationAngle;
-                filledTileModel.currentPositionPoint = filledTileModel.positionPoint.clone();
+                staticTileModel.currentRotationAngle = staticTileModel.targetRotationAngle;
+                staticTileModel.currentPositionPoint = staticTileModel.targetPositionPoint.clone();
 
-                const filledTileViewParameters: TileViewParameters = {
+                const staticTileViewParameters: TileViewParameters = {
                     viewSettings: this.viewSettings,
-                    model: filledTileModel,
-                    texture: null,
+                    model: staticTileModel,
+                    texture: undefined,
                     renderer,
                     replacingTextureFillColor: this.staticTileFillColor
                 };
-                const filledTileView = tileViewFactory.getView(filledTileViewParameters);
-                filledTileView.content.alpha = 0.7;
-                this.staticTilesContainer.addChild(filledTileView.tile);
-                const staticTileView = new StaticTileView(this.viewSettings,
-                    filledTileView, this.draggingTileData);
+                const staticTileView = tileViewFactory.getView(staticTileViewParameters);
+                //staticTileView.content.alpha = 0.7;
+                this.staticTilesContainer.addChild(staticTileView.tile);
+                const decoratedStaticTileView = new StaticTileView(this.viewSettings,
+                    staticTileView, this.draggingTileData);
 
-                const shouldCreateTexturedTile = Math.random() >= 0.5;
-                if (shouldCreateTexturedTile) {
-                    const texturedTileModel = filledTileModel.clone();
-                    texturedTileModel.currentRotationAngle = texturedTileModel.rotationAngle;
-                    texturedTileModel.currentPositionPoint
-                        = texturedTileModel.positionPoint.clone();
-                    const texturedTileViewParameters: TileViewParameters = {
+                const shouldCreateDraggableTile = Math.random() >= 0.5;
+                if (shouldCreateDraggableTile) {
+                    const draggableTileModel = staticTileModel.clone();
+                    draggableTileModel.currentRotationAngle
+                        = draggableTileModel.targetRotationAngle;
+                    draggableTileModel.currentPositionPoint
+                        = draggableTileModel.targetPositionPoint.clone();
+                    const draggableTileViewParameters: TileViewParameters = {
                         viewSettings: this.viewSettings,
-                        model: texturedTileModel,
-                        texture: model.getTileTexture(texturedTileModel),
+                        model: draggableTileModel,
+                        texture: model.getTileTexture(draggableTileModel),
                         renderer,
                         replacingTextureFillColor: this.staticTileFillColor
                     };
-                    const texturedTileView = tileViewFactory.getView(texturedTileViewParameters);
-                    this.tilesContainer.addChild(texturedTileView.tile);
-                    const dragableTileView = new DragableTileView(
+                    const draggableTileView = tileViewFactory.getView(draggableTileViewParameters);
+                    this.draggableTilesContainer.addChild(draggableTileView.tile);
+                    const decoratedDraggableTileView = new DraggableTileView(
                         this.viewSettings,
-                        texturedTileView,
+                        draggableTileView,
                         this.selectedTileContainer,
                         ticker,
                         this.draggingTileData);
-                    dragableTileView.dragSource = staticTileView;
+                    decoratedDraggableTileView.setDragSource(decoratedStaticTileView);
                 }
             }
         }

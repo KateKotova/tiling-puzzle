@@ -1,13 +1,12 @@
 import { Application, Assets, Container, Graphics } from "pixi.js";
+import { TilingType } from "./models/tilings/TilingType.ts";
+import { ModelSettings } from "./models/ModelSettings.ts";
+import { ViewSettings } from "./views/ViewSettings.ts";
 import { TilingTextureModel } from "./models/TilingTextureModel.ts";
 import { ImageContainerModel } from "./models/ImageContainerModel.ts";
-import { TilingType } from "./models/tilings/TilingType.ts";
-import { RectangularGridTilingModelFactory }
-  from "./models/tilings/RectangularGridTilingModelFactory.ts";
+import { RectangularGridTilingModelFactory } from "./models/tilings/RectangularGridTilingModelFactory.ts";
 import { RectangularGridTilingModel } from "./models/tilings/RectangularGridTilingModel.ts";
 import { RectangularGridTilingView } from "./views/tilings/RectangularGridTilingView.ts";
-import { ViewSettings } from "./views/ViewSettings.ts";
-import { ModelSettings } from "./models/ModelSettings.ts";
 
 async function main(): Promise<void> {
   try {

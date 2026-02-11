@@ -1,26 +1,33 @@
-import { Color, Container, Graphics, Point, Renderer, Sprite } from "pixi.js";
+import { Color, Container, Graphics, Renderer, Sprite } from "pixi.js";
 import { BaseTileView } from "./BaseTileView.ts";
-import { RegularPolygonTileModel } from "../../models/polygons/tiles/RegularPolygonTileModel.ts";
-import { AdditionalMath } from "../../models/math/AdditionalMath.ts";
 import { TileViewParameters } from "./TileViewParameters.ts";
+import { RegularPolygonTileGeometry } from "../../models/tile-geometries/RegularPolygonTileGeometry.ts";
+import { TileLockType } from "../../models/tile-locks/TileLockType.ts";
 
+/**
+ * Представление элемента замощения, который представляет собой правильный многоугольник
+ */
 export class RegularPolygonTileView extends BaseTileView {
     constructor (parameters: TileViewParameters) {
-        if (!(parameters.model instanceof RegularPolygonTileModel)) {
-            throw new Error("The tile is not an instance of RegularPolygonTileModel");
+        if (!(parameters.model.geometry instanceof RegularPolygonTileGeometry)) {
+            throw new Error("The tile geometry is not an instance of RegularPolygonTileGeometry");
+        }
+        if (parameters.model.geometry.lockType != TileLockType.None) {
+            throw new Error("The tile lock type is not None");
         }
         super(parameters);
     }
 
     protected createContent(renderer: Renderer, replacingTextureFillColor: Color): Container {
-        const model = this.model as RegularPolygonTileModel;
+        const geometry = this.model.geometry as RegularPolygonTileGeometry;
         const graphics = new Graphics()
             .regularPoly(
-                model.absoluteBoundingRectangle.width / 2.0,
-                model.absoluteBoundingRectangle.height / 2.0,
-                model.circumscribedCircleRadius,
-                model.sideCount,
-                model.regularPolygonInitialRotationAngle
+                geometry.pivotPoint.x,
+                geometry.pivotPoint.y,
+                // +0.5 - чтобы избежать зазоров
+                geometry.circumscribedCircleRadius + 0.5,
+                geometry.sideCount,
+                geometry.regularPolygonInitialRotationAngle
             );
 
         if (this.texture) {
@@ -36,13 +43,13 @@ export class RegularPolygonTileView extends BaseTileView {
         }
 
         const graphicsSideToSpriteSideRatio = graphics.width
-            / model.rotatingBoundingRectangleSize.width;
+            / geometry.defaultBoundingRectangleSize.width;
         const bevelFilter = this.getBevelFilter(graphicsSideToSpriteSideRatio);
         graphics.filters = [bevelFilter];
 
         const graphicsTexture = renderer.generateTexture({
             target: graphics,
-            resolution: this.viewSettings.tileTextureResolution,
+            resolution: this.viewSettings.generateTileTextureResolution,
             textureSourceOptions: {
                 scaleMode: "nearest"
             }
@@ -50,17 +57,13 @@ export class RegularPolygonTileView extends BaseTileView {
         graphics.destroy();
 
         const sprite = new Sprite(graphicsTexture);
-        sprite.cacheAsTexture({ resolution: this.viewSettings.tileTextureResolution });
+        sprite.cacheAsTexture({ resolution: this.viewSettings.cacheTileAsTextureResolution });
 
         const result = new Container();        
         result.addChild(sprite);        
-        result.cacheAsTexture({ resolution: this.viewSettings.tileTextureResolution });
+        result.cacheAsTexture({ resolution: this.viewSettings.cacheTileAsTextureResolution });
 
-        const hitAreaCenterPoint = new Point(model.rotatingBoundingRectangleSize.width / 2.0,
-            model.rotatingBoundingRectangleSize.height / 2.0);
-        result.hitArea = AdditionalMath.getRegularPolygon(hitAreaCenterPoint,
-            model.circumscribedCircleRadius, model.sideCount,
-            model.regularPolygonInitialRotationAngle);
+        result.hitArea = this.model.geometry.hitArea.clone();
 
         return result;
     }

@@ -1,7 +1,10 @@
 import { Point } from "pixi.js";
-import { ChangeResult } from "./ChangeResult.ts";
+import { OverTimeValueChangeResult } from "./OverTimeValueChangeResult.ts";
 
-export class SmoothPointChangeController {
+/**
+ * Класс, контролирующий плавное изменение точки с течением времени
+ */
+export class OverTimePointChangeController {
     private startPoint: Point;
     private targetPoint: Point;
     private totalTime: number;
@@ -10,6 +13,14 @@ export class SmoothPointChangeController {
     private currentPoint: Point;
     private isCompleted: boolean = false;
     
+    /**
+     * Создание контроллера плавного изменение точки с течением времени
+     * @param startPoint Начальные координаты точки
+     * @param targetPoint Конечные координаты точки
+     * @param totalTime Общее время изменения точки
+     * @param accelerationTimeToTotalTimeRatio Доля времени ускорения от общего времени.
+     * Число от 0 до 0.5.
+     */
     constructor(startPoint: Point,
         targetPoint: Point,
         totalTime: number,
@@ -37,14 +48,14 @@ export class SmoothPointChangeController {
         
         const result = this.getChangeResult(deltaTime);        
         this.currentTime = result.newCurrentTime;
-        this.currentPoint.x += result.increment.x;
-        this.currentPoint.y += result.increment.y;
-        this.isCompleted = result.isCompleted;
+        this.currentPoint.x += result.valueIncrement.x;
+        this.currentPoint.y += result.valueIncrement.y;
+        this.isCompleted = result.valueChangeIsCompleted;
         
-        return result.increment;
+        return result.valueIncrement;
     }
 
-    private getChangeResult(deltaTime: number): ChangeResult<Point> {
+    private getChangeResult(deltaTime: number): OverTimeValueChangeResult<Point> {
         const totalPointDifference = new Point(this.targetPoint.x - this.startPoint.x,
             this.targetPoint.y - this.startPoint.y);
         
@@ -53,9 +64,9 @@ export class SmoothPointChangeController {
         
         if (totalDistance === 0) {
             return {
-                increment: new Point(0, 0),
+                valueIncrement: new Point(0, 0),
                 newCurrentTime: Math.min(this.currentTime + deltaTime, this.totalTime),
-                isCompleted: this.currentTime + deltaTime >= this.totalTime
+                valueChangeIsCompleted: this.currentTime + deltaTime >= this.totalTime
             };
         }
         
@@ -97,9 +108,9 @@ export class SmoothPointChangeController {
             direction.y * distanceIncrement);
 
         return {
-            increment: valueIncrement,
+            valueIncrement: valueIncrement,
             newCurrentTime: newTime,
-            isCompleted: newTime >= this.totalTime
+            valueChangeIsCompleted: newTime >= this.totalTime
         };
     }
 

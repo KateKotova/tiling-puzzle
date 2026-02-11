@@ -1,6 +1,9 @@
-import { ChangeResult } from "./ChangeResult";
+import { OverTimeValueChangeResult } from "./OverTimeValueChangeResult.ts";
 
-export class SmoothValueChangeController {
+/**
+ * Класс, контролирующий плавное изменение числа с течением времени
+ */
+export class OverTimeNumberChangeController {
     private startValue: number;
     private targetValue: number;
     private totalTime: number;
@@ -9,6 +12,14 @@ export class SmoothValueChangeController {
     private currentValue: number;
     private isCompleted: boolean = false;
     
+    /**
+     * Создание контроллера плавного изменение числа с течением времени
+     * @param startValue Начальное значение числа
+     * @param targetValue Конечное значение числа
+     * @param totalTime Общее время изменения числа
+     * @param accelerationTimeToTotalTimeRatio Доля времени ускорения от общего времени.
+     * Число от 0 до 0.5.
+     */
     constructor(startValue: number,
         targetValue: number,
         totalTime: number,
@@ -36,13 +47,13 @@ export class SmoothValueChangeController {
         
         const result = this.getChangeResult(deltaTime);        
         this.currentTime = result.newCurrentTime;
-        this.currentValue += result.increment;
-        this.isCompleted = result.isCompleted;
+        this.currentValue += result.valueIncrement;
+        this.isCompleted = result.valueChangeIsCompleted;
         
-        return result.increment;
+        return result.valueIncrement;
     }
 
-    private getChangeResult(deltaTime: number): ChangeResult<number> {
+    private getChangeResult(deltaTime: number): OverTimeValueChangeResult<number> {
         const totalValueDifference = this.targetValue - this.startValue;        
         const direction = totalValueDifference >= 0 ? 1 : -1;
         const totalValueDistance = Math.abs(totalValueDifference);
@@ -79,9 +90,9 @@ export class SmoothValueChangeController {
         const valueIncrement = (newTimeDistance - currentTimeDistance) * direction;
 
         return {
-            increment: valueIncrement,
+            valueIncrement: valueIncrement,
             newCurrentTime: newTime,
-            isCompleted: newTime >= this.totalTime
+            valueChangeIsCompleted: newTime >= this.totalTime
         };
     }
 
@@ -100,17 +111,17 @@ export class SmoothValueChangeController {
         const maxVelocity = acceleration * accelerationTime;
 
         if (clampedTime <= accelerationTime + constantTime) {
-            const constatntVeloсityTime = clampedTime - accelerationTime;
-            return accelerationDistance + maxVelocity * constatntVeloсityTime;
+            const constantVelocityTime = clampedTime - accelerationTime;
+            return accelerationDistance + maxVelocity * constantVelocityTime;
         }
         
-        const constatntVeloсityDistance = maxVelocity * constantTime;
+        const constantVelocityDistance = maxVelocity * constantTime;
         
         const decelerationTime = clampedTime - (accelerationTime + constantTime);
         const decelerationDistance = maxVelocity * decelerationTime
             - 0.5 * acceleration * decelerationTime * decelerationTime;
         
-        return accelerationDistance + constatntVeloсityDistance + decelerationDistance;
+        return accelerationDistance + constantVelocityDistance + decelerationDistance;
     }
     
     public getIsCompleted(): boolean {

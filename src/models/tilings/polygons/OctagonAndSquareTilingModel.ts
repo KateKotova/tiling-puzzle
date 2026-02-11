@@ -1,0 +1,161 @@
+import { Point, Renderer } from "pixi.js";
+import { ImageContainerModel } from "../../ImageContainerModel.ts";
+import { ModelSettings } from "../../ModelSettings.ts";
+import { OctagonGeometry } from "../../tile-geometries/polygons/OctagonGeometry.ts";
+import { SquareGeometry } from "../../tile-geometries/polygons/SquareGeometry.ts";
+import { TilingTextureModel } from "../../TilingTextureModel.ts";
+import { RectangularGridTilingModel } from "../RectangularGridTilingModel.ts";
+import { TilingType } from "../TilingType.ts";
+import { TilePosition } from "../../tiles/TilePosition.ts";
+import { TileModel } from "../../tiles/TileModel.ts";
+import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
+import { TileGeometry } from "../../tile-geometries/TileGeometry.ts";
+
+/**
+ * Класс модели замощения, представляющего собой прямоугольную сетку,
+ * где в строках и столбцах размещаются правильные шестиугольники и квадраты.
+ * Восьмиугольники расположены так, что их верхние и нижние стороны горизонтальны,
+ * а левые и правые - вертикальны.
+ * Квадраты находится между восьмиугольниками, они повёрнуты на 90 градусов
+ * относительно своего обычного положения, то есть первая вершина смотрит вверх.
+ * Будем считать, что в чётных строках расположены восьмиугольники,
+ * а в нечётных - квадраты.
+ * Края будут все заполнены состыкованными восьмиугольниками,
+ * поэтому строк, содержащих квадраты, будет на одну строку меньше,
+ * чем строк, содержащих восьмиугольники,
+ * а также столбцов, содержащих квадраты, будет на один столбец меньше,
+ * чем столбцов, содержащих восьмиугольники.
+ */
+export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
+    public readonly tilingType: TilingType = TilingType.OctagonAndSquare;
+
+    /**
+     * Количество восьмиугольников, укладывающихся в минимальную сторону текстуры,
+     * в ширину или в высоту, в зависимости от того, что из них минимально.
+     * Помним, что квадраты будут находиться между восьмиугольниками,
+     * поэтому здесь они не учитываются.
+     */
+    public textureMinSideOctagonTileCount: number;
+    public static readonly textureMinSideMinOctagonTileCount = 2;
+
+    //#region Texture tile info
+
+    /**
+     * Сторона квадрата или восьмиугольника в масштабе и координатах исходной текстуры
+     */
+    private textureTileSide: number = 0;
+
+    //#endregion Texture tile info
+
+    /**
+     * Инструменты для геометрических построений правильного восьмиугольника,
+     * один экземпляр на все восьмиугольники мозаики
+     */
+    private octagonTileGeometry?: OctagonGeometry;
+    /**
+     * Инструменты для геометрических построений квадрата,
+     * один экземпляр на все квадраты мозаики
+     */
+    private squareTileGeometry?: SquareGeometry;
+
+    /**
+     * Создание замощения правильными восьмиугольниками и квадратами
+     * @param modelSettings Модель настроек
+     * @param textureModel Модель текстуры
+     * @param textureMinSideOctagonTileCount Количество восьмиугольников,
+     * укладывающихся в минимальную сторону текстуры,
+     * в ширину или в высоту, в зависимости от того, что из них минимально.
+     * Помним, что квадраты будут находиться между восьмиугольниками,
+     * поэтому здесь они не учитываются.
+     * @param imageContainerModel Модель контейнера изображения
+     * @param renderer Объект, ответственный за отображение
+     */
+    constructor(
+        modelSettings: ModelSettings,
+        textureModel: TilingTextureModel,
+        textureMinSideOctagonTileCount: number,
+        imageContainerModel: ImageContainerModel,
+        renderer: Renderer
+    ) {
+
+        super(modelSettings, textureModel, imageContainerModel, renderer);
+        this.textureMinSideOctagonTileCount
+            = textureMinSideOctagonTileCount
+                < OctagonAndSquareTilingModel.textureMinSideMinOctagonTileCount
+                ? OctagonAndSquareTilingModel.textureMinSideMinOctagonTileCount
+                : Math.floor(textureMinSideOctagonTileCount);
+    }
+
+    protected initializeTextureTileInfo(): void {
+        this.textureTileSide = this.textureModel.minSide / this.textureMinSideOctagonTileCount
+            / OctagonGeometry.inscribedCircleDiameterToSideRatio;
+        if (this.textureModel.widthToHeightRatio <= 1) {
+            this.tileColumnCount = this.textureMinSideOctagonTileCount;
+            this.tileRowCount = 2 * Math.trunc(this.textureModel.height / this.textureTileSide
+                / OctagonGeometry.inscribedCircleDiameterToSideRatio) - 1;
+        } else {
+            this.tileColumnCount = Math.trunc(
+                this.textureModel.width / this.textureTileSide
+                / OctagonGeometry.inscribedCircleDiameterToSideRatio);
+            this.tileRowCount = 2 * this.textureMinSideOctagonTileCount - 1;
+        }
+
+        const textureOctagonTileInscribedCircleDiameter = this.textureTileSide
+            * OctagonGeometry.inscribedCircleDiameterToSideRatio;
+        this.textureXTilingOffset = (this.textureModel.width
+            - textureOctagonTileInscribedCircleDiameter * this.tileColumnCount) / 2.0;
+        this.textureYTilingOffset = (this.textureModel.height
+            - textureOctagonTileInscribedCircleDiameter * (this.tileRowCount / 2.0 + 0.5)) / 2.0;
+    }
+
+    protected initializeImageTileInfo(): void {
+        const tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
+        this.octagonTileGeometry = new OctagonGeometry(tileSide);
+        this.squareTileGeometry = new SquareGeometry(tileSide);
+    }
+
+    public getGridIndicesAreCorrect(rowIndex: number, columnIndex: number): boolean {
+        return rowIndex >= 0
+            && rowIndex < this.tileRowCount
+            && columnIndex >= 0
+            && columnIndex < this.tileColumnCount - (rowIndex % 2);
+    }
+
+    protected getProtectedTileModel(targetTilePosition: TilePosition): TileModel {
+        if (!this.octagonTileGeometry || !this.squareTileGeometry) {
+            throw new Error('Tile geometry is not defined');
+        }
+
+        const targetPosition = targetTilePosition as RectangularGridTilePosition;
+        const tileIsOctagon = targetPosition.rowIndex % 2 == 0;
+        const tileGeometry: TileGeometry = tileIsOctagon
+            ? this.octagonTileGeometry
+            : this.squareTileGeometry;
+        const result = new TileModel(this.modelSettings, tileGeometry);
+        result.targetTilePosition = targetPosition.clone();
+        result.targetRotationAngle = tileIsOctagon ? 0 : Math.PI / 4.0;
+        
+        const octagonTileInscribedCircleDiameter
+            = this.octagonTileGeometry.inscribedCircleDiameter;
+        if (tileIsOctagon) {
+            const inscribedCircleRadius = octagonTileInscribedCircleDiameter / 2.0;
+            result.targetPositionPoint = new Point(
+                targetPosition.columnIndex * octagonTileInscribedCircleDiameter
+                    + inscribedCircleRadius,
+                targetPosition.rowIndex / 2.0 * octagonTileInscribedCircleDiameter
+                    + inscribedCircleRadius
+            );
+        } else {
+            result.targetPositionPoint = new Point(
+                // ceil - чтобы избежать зазоров
+                Math.ceil((targetPosition.columnIndex + 1)
+                    * octagonTileInscribedCircleDiameter),
+                // ceil - чтобы избежать зазоров
+                Math.ceil((targetPosition.rowIndex + 1) / 2.0
+                    * octagonTileInscribedCircleDiameter)
+            );
+        }
+            
+        return result;
+    }
+}
