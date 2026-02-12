@@ -1,7 +1,7 @@
 import { Point, Polygon } from "pixi.js";
-import { RegularPolygonTileGeometry } from "../RegularPolygonTileGeometry.ts";
 import { TileGeometryType } from "../TileGeometryType.ts";
 import { Size } from "../../../math/Size.ts";
+import { SquareBaseGeometry } from "../polygon-bases/SquareBaseGeometry.ts";
 
 /**
  * Класс геометрии квадрата.
@@ -12,25 +12,18 @@ import { Size } from "../../../math/Size.ts";
  * ось OX направлена вправо, ось OY направлена вниз.
  * Потом начало координат переместится в точку опоры.
  */
-export class SquareGeometry extends RegularPolygonTileGeometry {
-    /**
-     * Отношение  диагонали квадрата к его стороне.
-     */
-    public static readonly diagonalToSideRatio: number = Math.sqrt(2);
-
+export class SquareGeometry extends SquareBaseGeometry {
     public readonly geometryType: TileGeometryType = TileGeometryType.Square;
-    /**
-     * Диагональ квадрата.
-     */
-    public readonly diagonal: number;
 
     constructor(baseValue: number, sideToBaseValueRatio: number = 1) {
-        super(baseValue, 4, sideToBaseValueRatio);
+        super(baseValue, sideToBaseValueRatio);
 
-        this.diagonal = this.side * SquareGeometry.diagonalToSideRatio;
+        this.freedomDegree = this.sideCount;
+        this.freedomDegreeRotationAngle = this.getFreedomDegreeRotationAngle();
 
         const sideHalf = this.side / 2.0;
-        this.pivotPoint = new Point(sideHalf, sideHalf);        
+        this.pivotPoint = new Point(sideHalf, sideHalf);
+        this.regularPolygonInitialRotationAngle = Math.PI / 4;      
         this.defaultBoundingRectangleSize = new Size(this.side, this.side);
         this.hitArea = new Polygon([
             new Point(0, 0),
@@ -38,8 +31,5 @@ export class SquareGeometry extends RegularPolygonTileGeometry {
             new Point(this.side, this.side),
             new Point(0, this.side)
         ]);
-
-        this.circumscribedCircleRadius = this.diagonal / 2.0;
-        this.regularPolygonInitialRotationAngle = Math.PI / 4;
     }
 }

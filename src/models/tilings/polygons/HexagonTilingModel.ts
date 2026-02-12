@@ -8,6 +8,7 @@ import { TilingType } from "../TilingType.ts";
 import { TilePosition } from "../../tiles/TilePosition.ts";
 import { TileModel } from "../../tiles/TileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
+import { HexagonBaseGeometry } from "../../tile-geometries/polygon-bases/HexagonBaseGeometry.ts";
 
 /**
  * Класс модели замощения, представляющего собой прямоугольную сетку,
@@ -76,11 +77,11 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
                 / (0.5 + 3 * this.textureMinSideTilePairCount);
             this.tileColumnCount = 2 * this.textureMinSideTilePairCount;
             this.tileRowCount = Math.trunc(this.textureModel.height
-                / this.textureTileSide / HexagonGeometry.inscribedCircleDiameterToSideRatio
+                / this.textureTileSide / HexagonBaseGeometry.inscribedCircleDiameterToSideRatio
                 - 0.5);
         } else {
             this.textureTileSide = this.textureModel.minSide
-                / HexagonGeometry.inscribedCircleDiameterToSideRatio
+                / HexagonBaseGeometry.inscribedCircleDiameterToSideRatio
                 / (this.textureMinSideTilePairCount * 2 + 0.5);
             this.tileColumnCount = 2 * Math.trunc((this.textureModel.width
                 / this.textureTileSide - 0.5) / 3.0);
@@ -90,7 +91,7 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
         this.textureXTilingOffset = (this.textureModel.width
             - this.textureTileSide * (0.5 + 3 / 2.0 * this.tileColumnCount)) / 2.0;
         this.textureYTilingOffset = (this.textureModel.height
-            - HexagonGeometry.inscribedCircleDiameterToSideRatio * this.textureTileSide
+            - HexagonBaseGeometry.inscribedCircleDiameterToSideRatio * this.textureTileSide
             * (this.tileRowCount + 0.5)) / 2.0;
     }
 
@@ -108,11 +109,11 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
         const result = new TileModel(this.modelSettings, this.tileGeometry);
         result.targetTilePosition = targetPosition.clone();
         result.targetRotationAngle = 0;
-        const inscribedCircleRadius = this.tileGeometry.inscribedCircleDiameter / 2.0;
+        const inscribedCircleRadius = this.tileGeometry.inscribedCircleRadius;
         result.targetPositionPoint = new Point(
             targetPosition.columnIndex * this.tileGeometry.side / 2.0 * 3
                 + this.tileGeometry.side,
-            targetPosition.rowIndex * this.tileGeometry.inscribedCircleDiameter
+            targetPosition.rowIndex * this.tileGeometry.inscribedCircleRadius * 2.0
                 + (targetPosition.columnIndex % 2 == 1 ? inscribedCircleRadius : 0)
                 + inscribedCircleRadius
         );     

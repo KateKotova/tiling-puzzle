@@ -1,7 +1,7 @@
 import { Point, Polygon } from "pixi.js";
-import { RegularPolygonTileGeometry } from "../RegularPolygonTileGeometry.ts";
 import { TileGeometryType } from "../TileGeometryType.ts";
 import { Size } from "../../../math/Size.ts";
+import { TriangleBaseGeometry } from "../polygon-bases/TriangleBaseGeometry.ts";
 
 /**
  * Класс геометрии правильного треугольника.
@@ -12,40 +12,23 @@ import { Size } from "../../../math/Size.ts";
  * ось OX направлена вправо, ось OY направлена вниз.
  * Потом начало координат переместится в точку опоры.
  */
-export class TriangleGeometry extends RegularPolygonTileGeometry {
-     /**
-     * Отношение высоты треугольника к его стороне.
-     */
-    public static readonly heightToSideRatio: number = Math.sqrt(3) / 2.0;
-
+export class TriangleGeometry extends TriangleBaseGeometry {
     public readonly geometryType: TileGeometryType = TileGeometryType.Triangle;
-    /**
-     * Высота треугольника.
-     */
-    public readonly height: number;
-    /**
-     * Диаметр вписанной окружности треугольника.
-     */
-    public readonly inscribedCircleDiameter: number;
 
     constructor(baseValue: number, sideToBaseValueRatio: number = 1) {
-        super(baseValue, 3, sideToBaseValueRatio);
+        super(baseValue, sideToBaseValueRatio);
 
-        this.height = this.side * TriangleGeometry.heightToSideRatio;
+        this.freedomDegree = this.sideCount;
+        this.freedomDegreeRotationAngle = this.getFreedomDegreeRotationAngle();
 
         const sideHalf = this.side / 2.0;
-        const heightThird = this.height / 3.0;
-        const heightTwoThirds = 2 * heightThird;
-        this.pivotPoint = new Point(sideHalf, heightTwoThirds);        
+        this.pivotPoint = new Point(sideHalf, this.circumscribedCircleRadius);
+        this.regularPolygonInitialRotationAngle = 0;        
         this.defaultBoundingRectangleSize = new Size(this.side, this.height);
         this.hitArea = new Polygon([
             new Point(sideHalf, 0),
             new Point(this.side, this.height),
             new Point(0, this.height)
         ]);
-
-        this.circumscribedCircleRadius = heightTwoThirds;
-        this.inscribedCircleDiameter = heightThird;
-        this.regularPolygonInitialRotationAngle = 0;
     }
 }

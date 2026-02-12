@@ -1,8 +1,8 @@
 import { Point } from "pixi.js";
-import { RegularPolygonTileGeometry } from "../RegularPolygonTileGeometry.ts";
 import { TileGeometryType } from "../TileGeometryType.ts";
 import { Size } from "../../../math/Size.ts";
 import { AdditionalMath } from "../../../math/AdditionalMath.ts";
+import { HexagonBaseGeometry } from "../polygon-bases/HexagonBaseGeometry.ts";
 
 /**
  * Класс геометрии правильного шестиугольника.
@@ -12,30 +12,21 @@ import { AdditionalMath } from "../../../math/AdditionalMath.ts";
  * ось OX направлена вправо, ось OY направлена вниз.
  * Потом начало координат переместится в точку опоры.
  */
-export class HexagonGeometry extends RegularPolygonTileGeometry {
-    /**
-     * Отношение диаметра вписанной окружности шестиугольника к его стороне.
-     */
-    public static readonly inscribedCircleDiameterToSideRatio: number = Math.sqrt(3);
-
+export class HexagonGeometry extends HexagonBaseGeometry {
     public readonly geometryType: TileGeometryType = TileGeometryType.Hexagon;
-    /**
-     * Диаметр вписанной окружности шестиугольника.
-     */
-    public readonly inscribedCircleDiameter: number;
 
     constructor(baseValue: number, sideToBaseValueRatio: number = 1) {
-        super(baseValue, 6, sideToBaseValueRatio);
+        super(baseValue, sideToBaseValueRatio);
 
-        this.inscribedCircleDiameter = this.side
-            * HexagonGeometry.inscribedCircleDiameterToSideRatio;
+        this.freedomDegree = this.sideCount;
+        this.freedomDegreeRotationAngle = this.getFreedomDegreeRotationAngle();
 
-        const heightHalf = this.inscribedCircleDiameter / 2.0;
-        this.pivotPoint = new Point(this.side, heightHalf);        
-        this.defaultBoundingRectangleSize = new Size(this.side * 2, this.inscribedCircleDiameter);
-
-        this.circumscribedCircleRadius = this.side;
-        this.regularPolygonInitialRotationAngle = Math.PI / 6.0;
+        this.pivotPoint = new Point(this.side, this.inscribedCircleRadius);
+        this.regularPolygonInitialRotationAngle = Math.PI / 6.0;   
+        this.defaultBoundingRectangleSize = new Size(
+            this.side * 2,
+            this.inscribedCircleRadius * 2
+        );        
         this.hitArea = AdditionalMath.getRegularPolygon(
             this.pivotPoint,
             this.circumscribedCircleRadius,

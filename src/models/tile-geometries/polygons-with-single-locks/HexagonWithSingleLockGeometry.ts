@@ -1,7 +1,7 @@
 import { AdditionalMath } from "../../../math/AdditionalMath.ts";
 import { Size } from "../../../math/Size.ts";
 import { TileLockType } from "../../tile-locks/TileLockType.ts";
-import { HexagonGeometry } from "../polygons/HexagonGeometry.ts";
+import { HexagonBaseGeometry } from "../polygon-bases/HexagonBaseGeometry.ts";
 import { TileGeometryType } from "../TileGeometryType.ts";
 
 /**
@@ -17,7 +17,7 @@ import { TileGeometryType } from "../TileGeometryType.ts";
  * ось OX направлена вправо, ось OY направлена вниз.
  * Потом начало координат переместится в точку опоры.
  */
-export class HexagonWithSingleLockGeometry extends HexagonGeometry {
+export class HexagonWithSingleLockGeometry extends HexagonBaseGeometry {
     public readonly geometryType: TileGeometryType = TileGeometryType.HexagonWithSingleLock;
     public readonly lockType: TileLockType = TileLockType.Single;
 
@@ -38,10 +38,10 @@ export class HexagonWithSingleLockGeometry extends HexagonGeometry {
     constructor(baseValue: number, sideToBaseValueRatio: number = 1) {
         super(baseValue, sideToBaseValueRatio);
 
-        this.setLockHeight();
-
-        this.freedomDegree = 3;
+        this.freedomDegree = this.sideCount / 2;
         this.freedomDegreeRotationAngle = this.getFreedomDegreeRotationAngle();
+
+        this.setLockHeight();
 
         this.pivotPoint.y += this.lockHeight;
         this.defaultBoundingRectangleSize.height += this.lockHeight;

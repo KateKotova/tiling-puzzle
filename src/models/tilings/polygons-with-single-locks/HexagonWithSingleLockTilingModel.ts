@@ -10,7 +10,7 @@ import { TilingType } from "../TilingType.ts";
 import { TilePosition } from "../../tiles/TilePosition.ts";
 import { TileModel } from "../../tiles/TileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
-import { HexagonGeometry } from "../../tile-geometries/polygons/HexagonGeometry.ts";
+import { HexagonBaseGeometry } from "../../tile-geometries/polygon-bases/HexagonBaseGeometry.ts";
 
 /**
  * Класс модели замощения, представляющего собой прямоугольную сетку,
@@ -89,11 +89,11 @@ export class HexagonWithSingleLockTilingModel extends RectangularGridTilingModel
             textureLockHeight = this.textureTileSide * lockHeightToSideRatio;
             this.tileColumnCount = 2 * this.textureMinSideTilePairCount;
             this.tileRowCount = Math.trunc((this.textureModel.height - textureLockHeight)
-                / this.textureTileSide / HexagonGeometry.inscribedCircleDiameterToSideRatio
+                / this.textureTileSide / HexagonBaseGeometry.inscribedCircleDiameterToSideRatio
                 - 0.5);
         } else {
             this.textureTileSide = this.textureModel.minSide
-                / HexagonGeometry.inscribedCircleDiameterToSideRatio
+                / HexagonBaseGeometry.inscribedCircleDiameterToSideRatio
                 / (this.textureMinSideTilePairCount * 2 + 0.5 + lockHeightToSideRatio / 2);
             textureLockHeight = this.textureTileSide * lockHeightToSideRatio;
             this.tileColumnCount = 2 * Math.trunc((this.textureModel.width
@@ -104,7 +104,7 @@ export class HexagonWithSingleLockTilingModel extends RectangularGridTilingModel
         this.textureXTilingOffset = (this.textureModel.width
             - this.textureTileSide * (0.5 + 3 / 2.0 * this.tileColumnCount)) / 2.0;
         this.textureYTilingOffset = (this.textureModel.height - textureLockHeight
-            - HexagonGeometry.inscribedCircleDiameterToSideRatio * this.textureTileSide
+            - HexagonBaseGeometry.inscribedCircleDiameterToSideRatio * this.textureTileSide
             * (this.tileRowCount + 0.5)) / 2.0;
     }
 
@@ -122,11 +122,11 @@ export class HexagonWithSingleLockTilingModel extends RectangularGridTilingModel
         const result = new TileModel(this.modelSettings, this.tileGeometry);
         result.targetTilePosition = targetPosition.clone();
         result.targetRotationAngle = 0;
-        const inscribedCircleRadius = this.tileGeometry.inscribedCircleDiameter / 2.0;
+        const inscribedCircleRadius = this.tileGeometry.inscribedCircleRadius;
         result.targetPositionPoint = new Point(
             targetPosition.columnIndex * this.tileGeometry.side / 2.0 * 3
                 + this.tileGeometry.side,
-            targetPosition.rowIndex * this.tileGeometry.inscribedCircleDiameter
+            targetPosition.rowIndex * this.tileGeometry.inscribedCircleRadius * 2
                 + (targetPosition.columnIndex % 2 == 1 ? inscribedCircleRadius : 0)
                 + this.tileGeometry.lockHeight
                 + inscribedCircleRadius

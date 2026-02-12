@@ -10,6 +10,7 @@ import { TilePosition } from "../../tiles/TilePosition.ts";
 import { TileModel } from "../../tiles/TileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
 import { TileGeometry } from "../../tile-geometries/TileGeometry.ts";
+import { OctagonBaseGeometry } from "../../tile-geometries/polygon-bases/OctagonBaseGeometry.ts";
 
 /**
  * Класс модели замощения, представляющего собой прямоугольную сетку,
@@ -88,20 +89,20 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
 
     protected initializeTextureTileInfo(): void {
         this.textureTileSide = this.textureModel.minSide / this.textureMinSideOctagonTileCount
-            / OctagonGeometry.inscribedCircleDiameterToSideRatio;
+            / OctagonBaseGeometry.inscribedCircleDiameterToSideRatio;
         if (this.textureModel.widthToHeightRatio <= 1) {
             this.tileColumnCount = this.textureMinSideOctagonTileCount;
             this.tileRowCount = 2 * Math.trunc(this.textureModel.height / this.textureTileSide
-                / OctagonGeometry.inscribedCircleDiameterToSideRatio) - 1;
+                / OctagonBaseGeometry.inscribedCircleDiameterToSideRatio) - 1;
         } else {
             this.tileColumnCount = Math.trunc(
                 this.textureModel.width / this.textureTileSide
-                / OctagonGeometry.inscribedCircleDiameterToSideRatio);
+                / OctagonBaseGeometry.inscribedCircleDiameterToSideRatio);
             this.tileRowCount = 2 * this.textureMinSideOctagonTileCount - 1;
         }
 
         const textureOctagonTileInscribedCircleDiameter = this.textureTileSide
-            * OctagonGeometry.inscribedCircleDiameterToSideRatio;
+            * OctagonBaseGeometry.inscribedCircleDiameterToSideRatio;
         this.textureXTilingOffset = (this.textureModel.width
             - textureOctagonTileInscribedCircleDiameter * this.tileColumnCount) / 2.0;
         this.textureYTilingOffset = (this.textureModel.height
@@ -135,15 +136,15 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
         result.targetTilePosition = targetPosition.clone();
         result.targetRotationAngle = tileIsOctagon ? 0 : Math.PI / 4.0;
         
-        const octagonTileInscribedCircleDiameter
-            = this.octagonTileGeometry.inscribedCircleDiameter;
+        const octagonTileInscribedCircleRadius
+            = this.octagonTileGeometry.inscribedCircleRadius;
+        const octagonTileInscribedCircleDiameter = octagonTileInscribedCircleRadius * 2;
         if (tileIsOctagon) {
-            const inscribedCircleRadius = octagonTileInscribedCircleDiameter / 2.0;
             result.targetPositionPoint = new Point(
                 targetPosition.columnIndex * octagonTileInscribedCircleDiameter
-                    + inscribedCircleRadius,
+                    + octagonTileInscribedCircleRadius,
                 targetPosition.rowIndex / 2.0 * octagonTileInscribedCircleDiameter
-                    + inscribedCircleRadius
+                    + octagonTileInscribedCircleRadius
             );
         } else {
             result.targetPositionPoint = new Point(
