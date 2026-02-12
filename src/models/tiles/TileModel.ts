@@ -14,6 +14,9 @@ import { AdditionalMath } from "../../math/AdditionalMath";
  * и целевое (то, в котором она должна быть, когда мозаика собрана).
  */
 export class TileModel {
+    private static rotationAngleEpsilon: number = Math.PI / 180;
+    private static positionCoordinateEpsilon: number = 2;
+
     private modelSettings: ModelSettings;
     public geometry: TileGeometry;
     /**
@@ -86,6 +89,20 @@ export class TileModel {
         result.currentTargetRotationAngle = this.currentTargetRotationAngle;
 
         return result;
+    }
+
+    /**
+     * Получение признака того, что фигура находится в правильной позиции
+     * и с правильным углом вращения, чтобы мозаика была собрана
+     * @returns Верно ли расположен элемент замощения
+     */
+    public getIsLocatedCorrectly(): boolean {
+        return Math.abs(this.targetPositionPoint.x - this.currentPositionPoint.x)
+            <= TileModel.positionCoordinateEpsilon
+            && Math.abs(this.targetPositionPoint.y - this.currentPositionPoint.y)
+            <= TileModel.positionCoordinateEpsilon
+            && Math.abs(this.targetRotationAngle - this.currentRotationAngle)
+            <= TileModel.rotationAngleEpsilon;
     }
 
     /**

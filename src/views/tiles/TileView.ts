@@ -26,5 +26,9 @@ export interface TileView {
      * @returns 
      */
     removeFilters: () => void;
+
+    createContent: (shouldAddBevelFilter: boolean) => Container;
+    replaceContent: (newContent: Container) => void;
+
     destroy: () => void;
 }
