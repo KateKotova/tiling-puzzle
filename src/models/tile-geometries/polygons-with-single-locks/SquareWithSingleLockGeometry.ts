@@ -39,8 +39,9 @@ export class SquareWithSingleLockGeometry extends SquareBaseGeometry {
 
         this.setLockHeight();
 
-        this.pivotPoint.y += this.lockHeight;
-        this.defaultBoundingRectangleSize.height += this.lockHeight * 2;
+        const sideHalf = this.side / 2.0;
+        this.pivotPoint = new Point(sideHalf, sideHalf + this.lockHeight);
+        this.defaultBoundingRectangleSize = new Size(this.side, this.side + this.lockHeight * 2);
         this.hitArea = new Polygon([
             new Point(0, this.lockHeight),
             new Point(this.side, this.lockHeight),

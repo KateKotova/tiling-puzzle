@@ -119,7 +119,7 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
             // ceil - чтобы избежать зазоров
             Math.ceil(targetPosition.rowIndex * this.tileGeometry.height
                 + (tileIsRotated
-                    ? this.tileGeometry.inscribedCircleRadius * 2
+                    ? this.tileGeometry.inscribedCircleRadius
                     : this.tileGeometry.circumscribedCircleRadius))
         );
         

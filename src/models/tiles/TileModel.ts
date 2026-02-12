@@ -101,9 +101,16 @@ export class TileModel {
      * в радианах
      */
     public getSamePositionNextAngleMinAngleDifference(): number {
+        const normalizedCurrentRotationAngle = AdditionalMath.getNormalizedAngle(
+            this.currentRotationAngle);
+        // currentTargetRotationAngle вместо currentRotationAngle,
+        // потому что предыдущее вращение может быть не закончено,
+        // и уже начинается новое, поэтому freedomDegreeRotationAngle
+        // нужно откладывать от целевого значения, а не от текущего,
+        // иначе пазл может перекоситься.
         const normalizedNextRotationAngle = AdditionalMath.getNormalizedAngle(
-            this.currentRotationAngle + this.geometry.freedomDegreeRotationAngle);
-        return AdditionalMath.getMinAngleDifference(this.currentRotationAngle,
+            this.currentTargetRotationAngle + this.geometry.freedomDegreeRotationAngle);
+        return AdditionalMath.getMinAngleDifference(normalizedCurrentRotationAngle,
             normalizedNextRotationAngle);
     }
 
@@ -210,6 +217,7 @@ export class TileModel {
     public completeRotation(): void {
         this.currentRotationAngle = AdditionalMath.getNormalizedAngle(
             this.currentTargetRotationAngle);
+        this.currentTargetRotationAngle = this.currentRotationAngle;
     }
 
     /**
