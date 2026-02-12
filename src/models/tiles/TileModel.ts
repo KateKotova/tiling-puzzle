@@ -14,6 +14,9 @@ import { AdditionalMath } from "../../math/AdditionalMath";
  * и целевое (то, в котором она должна быть, когда мозаика собрана).
  */
 export class TileModel {
+    private static rotationAngleEpsilon: number = Math.PI / 180;
+    private static positionCoordinateEpsilon: number = 2;
+
     private modelSettings: ModelSettings;
     public geometry: TileGeometry;
     /**
@@ -89,6 +92,20 @@ export class TileModel {
     }
 
     /**
+     * Получение признака того, что фигура находится в правильной позиции
+     * и с правильным углом вращения, чтобы мозаика была собрана
+     * @returns Верно ли расположен элемент замощения
+     */
+    public getIsLocatedCorrectly(): boolean {
+        return Math.abs(this.targetPositionPoint.x - this.currentPositionPoint.x)
+            <= TileModel.positionCoordinateEpsilon
+            && Math.abs(this.targetPositionPoint.y - this.currentPositionPoint.y)
+            <= TileModel.positionCoordinateEpsilon
+            && Math.abs(this.targetRotationAngle - this.currentRotationAngle)
+            <= TileModel.rotationAngleEpsilon;
+    }
+
+    /**
      * Элемент замощения имеет степень свободы, то есть число вращений вокруг оси,
      * которые он может совершить вокруг точки опоры так, чтобы оставаться в том же положении
      * и той же формы, но текстура при этом будет поворачиваться.
@@ -101,9 +118,16 @@ export class TileModel {
      * в радианах
      */
     public getSamePositionNextAngleMinAngleDifference(): number {
+        const normalizedCurrentRotationAngle = AdditionalMath.getNormalizedAngle(
+            this.currentRotationAngle);
+        // currentTargetRotationAngle вместо currentRotationAngle,
+        // потому что предыдущее вращение может быть не закончено,
+        // и уже начинается новое, поэтому freedomDegreeRotationAngle
+        // нужно откладывать от целевого значения, а не от текущего,
+        // иначе пазл может перекоситься.
         const normalizedNextRotationAngle = AdditionalMath.getNormalizedAngle(
-            this.currentRotationAngle + this.geometry.freedomDegreeRotationAngle);
-        return AdditionalMath.getMinAngleDifference(this.currentRotationAngle,
+            this.currentTargetRotationAngle + this.geometry.freedomDegreeRotationAngle);
+        return AdditionalMath.getMinAngleDifference(normalizedCurrentRotationAngle,
             normalizedNextRotationAngle);
     }
 
@@ -210,6 +234,7 @@ export class TileModel {
     public completeRotation(): void {
         this.currentRotationAngle = AdditionalMath.getNormalizedAngle(
             this.currentTargetRotationAngle);
+        this.currentTargetRotationAngle = this.currentRotationAngle;
     }
 
     /**

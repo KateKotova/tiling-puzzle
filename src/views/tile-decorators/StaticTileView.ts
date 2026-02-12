@@ -71,6 +71,14 @@ export class StaticTileView implements TileView {
         this.view.removeFilters();
     }
 
+    public createContent(shouldAddBevelFilter: boolean): Container {
+        return this.view.createContent(shouldAddBevelFilter);
+    }
+
+    public replaceContent(newContent: Container): void {
+        this.view.replaceContent(newContent);
+    }
+
     private getDraggingTileHasTheSameType(): boolean {
         return !!this.draggingTileData.view
             && this.draggingTileData.view.model.geometry.geometryType

@@ -8,24 +8,36 @@ import { TileViewParameters } from "./TileViewParameters.ts";
 /**
  * Базовый класс представления элемента замощения
  */
-export abstract class BaseTileView implements TileView {
+export abstract class TileViewBase implements TileView {
     protected viewSettings: ViewSettings;
     public model: TileModel;
     public texture?: Texture;
     public tile: Container;
     public content: Container;
+    protected renderer: Renderer;
+    /**
+     * Цвет заливки, применяемый в отсутствии текстуры
+     */
+    protected replacingTextureFillColor: Color;
 
     constructor (parameters: TileViewParameters) {
         this.viewSettings = parameters.viewSettings;
         this.model = parameters.model;
         this.texture = parameters.texture;
-        this.content = this.createContent(parameters.renderer,
-            parameters.replacingTextureFillColor);
+        this.renderer = parameters.renderer;
+        this.replacingTextureFillColor = parameters.replacingTextureFillColor;
+        this.content = this.createContent(true);
         this.tile = this.createTile();
     }
 
-    protected abstract createContent(renderer: Renderer, replacingTextureFillColor: Color)
-        : Container;
+    public abstract createContent(shouldAddBevelFilter: boolean): Container;
+
+    public replaceContent(newContent: Container): void {
+        this.tile.removeChild(this.content);
+        this.content.destroy();
+        this.content = newContent;
+        this.tile.addChild(this.content); 
+    }
     
     protected createTile(): Container {
         const result = new Container();       

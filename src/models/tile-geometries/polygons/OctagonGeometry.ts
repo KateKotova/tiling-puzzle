@@ -1,8 +1,8 @@
 import { Point } from "pixi.js";
-import { RegularPolygonTileGeometry } from "../RegularPolygonTileGeometry.ts";
 import { TileGeometryType } from "../TileGeometryType.ts";
 import { Size } from "../../../math/Size.ts";
 import { AdditionalMath } from "../../../math/AdditionalMath.ts";
+import { OctagonBaseGeometry } from "../polygon-bases/OctagonBaseGeometry.ts";
 
 /**
  * Класс геометрии правильного восьмиугольника.
@@ -13,37 +13,20 @@ import { AdditionalMath } from "../../../math/AdditionalMath.ts";
  * ось OX направлена вправо, ось OY направлена вниз.
  * Потом начало координат переместится в точку опоры.
  */
-export class OctagonGeometry extends RegularPolygonTileGeometry {
-    /**
-     * Отношение диаметра вписанной окружности восьмиугольника к его стороне.
-     */
-    public static readonly inscribedCircleDiameterToSideRatio: number = 1 + Math.sqrt(2);
-    /**
-     * Отношение радиуса описанной окружности восьмиугольника к его стороне.
-     */
-    public static readonly circumscribedCircleRadiusToSideRatio: number
-        = 1 / Math.sqrt(2 - Math.sqrt(2));
-
+export class OctagonGeometry extends OctagonBaseGeometry {
     public readonly geometryType: TileGeometryType = TileGeometryType.Octagon;
-    /**
-     * Диаметр вписанной окружности восьмиугольника.
-     */
-    public readonly inscribedCircleDiameter: number;
 
     constructor(baseValue: number, sideToBaseValueRatio: number = 1) {
-        super(baseValue, 8, sideToBaseValueRatio);
+        super(baseValue, sideToBaseValueRatio);
 
-        this.inscribedCircleDiameter = this.side
-            * OctagonGeometry.inscribedCircleDiameterToSideRatio;
+        this.freedomDegree = this.sideCount;
+        this.freedomDegreeRotationAngle = this.getFreedomDegreeRotationAngle();
 
-        const inscribedCircleRadius = this.inscribedCircleDiameter / 2.0;
-        this.pivotPoint = new Point(inscribedCircleRadius, inscribedCircleRadius);        
-        this.defaultBoundingRectangleSize = new Size(this.inscribedCircleDiameter,
-            this.inscribedCircleDiameter);
-
-        this.circumscribedCircleRadius = this.side
-            * OctagonGeometry.circumscribedCircleRadiusToSideRatio;
-        this.regularPolygonInitialRotationAngle = 3 / 8.0 * Math.PI;
+        const inscribedCircleDiameter = this.inscribedCircleRadius * 2;
+        this.pivotPoint = new Point(this.inscribedCircleRadius, this.inscribedCircleRadius);
+        this.regularPolygonInitialRotationAngle = 3 / 8.0 * Math.PI;     
+        this.defaultBoundingRectangleSize = new Size(inscribedCircleDiameter,
+            inscribedCircleDiameter);
         this.hitArea = AdditionalMath.getRegularPolygon(
             this.pivotPoint,
             this.circumscribedCircleRadius,

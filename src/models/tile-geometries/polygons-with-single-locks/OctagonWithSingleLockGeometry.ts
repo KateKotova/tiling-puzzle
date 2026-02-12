@@ -1,7 +1,8 @@
+import { Point } from "pixi.js";
 import { AdditionalMath } from "../../../math/AdditionalMath.ts";
 import { Size } from "../../../math/Size.ts";
 import { TileLockType } from "../../tile-locks/TileLockType.ts";
-import { OctagonGeometry } from "../polygons/OctagonGeometry.ts";
+import { OctagonBaseGeometry } from "../polygon-bases/OctagonBaseGeometry.ts";
 import { TileGeometryType } from "../TileGeometryType.ts";
 
 /**
@@ -17,7 +18,7 @@ import { TileGeometryType } from "../TileGeometryType.ts";
  * ось OX направлена вправо, ось OY направлена вниз.
  * Потом начало координат переместится в точку опоры.
  */
-export class OctagonWithSingleLockGeometry extends OctagonGeometry {
+export class OctagonWithSingleLockGeometry extends OctagonBaseGeometry {
     public readonly geometryType: TileGeometryType = TileGeometryType.OctagonWithSingleLock;
     public readonly lockType: TileLockType = TileLockType.Single;
 
@@ -42,15 +43,21 @@ export class OctagonWithSingleLockGeometry extends OctagonGeometry {
     constructor(baseValue: number, sideToBaseValueRatio: number = 1) {
         super(baseValue, sideToBaseValueRatio);
 
-        this.setLockHeight();
-
-        this.freedomDegree = 4;
+        this.freedomDegree = this.sideCount / 2;
         this.freedomDegreeRotationAngle = this.getFreedomDegreeRotationAngle();
 
-        this.pivotPoint.x += this.lockHeight;
-        this.pivotPoint.y += this.lockHeight;
-        this.defaultBoundingRectangleSize.width += this.lockHeight * 2;
-        this.defaultBoundingRectangleSize.height += this.lockHeight * 2;
+        this.setLockHeight();
+
+        const defaultBoundingRectangleSideHalf = this.inscribedCircleRadius + this.lockHeight;
+        this.pivotPoint = new Point(
+            defaultBoundingRectangleSideHalf,
+            defaultBoundingRectangleSideHalf
+        );
+        const defaultBoundingRectangleSide = defaultBoundingRectangleSideHalf * 2;
+        this.defaultBoundingRectangleSize = new Size(
+            defaultBoundingRectangleSide,
+            defaultBoundingRectangleSide
+        );
         this.hitArea = AdditionalMath.getRegularPolygon(
             this.pivotPoint,
             this.circumscribedCircleRadius,

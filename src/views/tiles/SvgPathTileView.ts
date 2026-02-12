@@ -1,6 +1,5 @@
 import {
     BlurFilter,
-    Color,
     Container,
     Graphics,
     GraphicsPath,
@@ -8,14 +7,14 @@ import {
     Sprite,
     Texture
 } from "pixi.js";
-import { BaseTileView } from "./BaseTileView.ts";
+import { TileViewBase } from "./TileViewBase.ts";
 import { TileViewParameters } from "./TileViewParameters.ts";
 import { Size } from "../../math/Size.ts";
 
 /**
  * Представление элемента замощения, который представляет собой svg-путь
  */
-export class SvgPathTileView extends BaseTileView {
+export class SvgPathTileView extends TileViewBase {
     private spriteBoundingSize: Size = new Size();
 
     constructor (parameters: TileViewParameters) {
@@ -25,12 +24,11 @@ export class SvgPathTileView extends BaseTileView {
         super(parameters);
     }
 
-    protected createContent(renderer: Renderer, replacingTextureFillColor: Color): Container {
+    public createContent(shouldAddBevelFilter: boolean): Container {
         this.spriteBoundingSize = this.model.geometry.defaultBoundingRectangleSize.clone();
 
         const graphicsPath = new GraphicsPath(this.model.geometry.svgPath);
-        const graphicsTexture = this.getGraphicsTexture(renderer, graphicsPath,
-            replacingTextureFillColor);
+        const graphicsTexture = this.getGraphicsTexture(graphicsPath, shouldAddBevelFilter);
 
         const sprite = new Sprite(graphicsTexture);
         // +0.5 - чтобы избежать зазоров
@@ -42,7 +40,7 @@ export class SvgPathTileView extends BaseTileView {
         const result = new Container();        
         result.addChild(sprite);
         
-        const blurredSpriteWithMask = this.getBlurredSpriteWithMask(renderer, graphicsPath,
+        const blurredSpriteWithMask = this.getBlurredSpriteWithMask(this.renderer, graphicsPath,
             graphicsTexture, sprite.width, sprite.height);
         result.addChild(blurredSpriteWithMask);
         
@@ -112,10 +110,7 @@ export class SvgPathTileView extends BaseTileView {
         return result;
     }
 
-    private getGraphicsTexture(renderer: Renderer,
-        graphicsPath: GraphicsPath,
-        replacingTextureFillColor: Color): Texture {
-
+    private getGraphicsTexture(graphicsPath: GraphicsPath, shouldAddBevelFilter: boolean): Texture {
         const graphics = new Graphics();
         graphics.roundPixels = false;
         graphics.path(graphicsPath);
@@ -127,19 +122,21 @@ export class SvgPathTileView extends BaseTileView {
             });
         } else {
             graphics.fill({
-                color: replacingTextureFillColor,
+                color: this.replacingTextureFillColor,
                 alpha: 1
             });
         }
 
-        const graphicsSideToSpriteSideRatio = graphics.width / this.spriteBoundingSize.width;
-        const bevelFilter = this.getBevelFilter(graphicsSideToSpriteSideRatio);
-        graphics.filters = [bevelFilter];
+        if (shouldAddBevelFilter) {
+            const graphicsSideToSpriteSideRatio = graphics.width / this.spriteBoundingSize.width;
+            const bevelFilter = this.getBevelFilter(graphicsSideToSpriteSideRatio);
+            graphics.filters = [bevelFilter];
+        }
 
         const textureWidth = this.getPowerOfTwoSize(this.spriteBoundingSize.width);
         const textureHeight = this.getPowerOfTwoSize(this.spriteBoundingSize.height);
 
-        const result =  renderer.generateTexture({
+        const result =  this.renderer.generateTexture({
             target: graphics,
             resolution: this.viewSettings.generateTileTextureResolution,
             width: textureWidth,

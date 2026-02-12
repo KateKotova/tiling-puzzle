@@ -38,6 +38,7 @@ export class RectangularGridTilingView extends TilingView {
                     continue;
                 }
                 staticTileModel.currentRotationAngle = staticTileModel.targetRotationAngle;
+                staticTileModel.currentTargetRotationAngle = staticTileModel.targetRotationAngle;
                 staticTileModel.currentPositionPoint = staticTileModel.targetPositionPoint.clone();
 
                 const staticTileViewParameters: TileViewParameters = {
@@ -56,8 +57,10 @@ export class RectangularGridTilingView extends TilingView {
                 const shouldCreateDraggableTile = Math.random() >= 0.5;
                 if (shouldCreateDraggableTile) {
                     const draggableTileModel = staticTileModel.clone();
-                    draggableTileModel.currentRotationAngle
-                        = draggableTileModel.targetRotationAngle;
+                    const currentRotationAngle = draggableTileModel.targetRotationAngle
+                        + draggableTileModel.geometry.freedomDegreeRotationAngle;
+                    draggableTileModel.currentRotationAngle = currentRotationAngle;
+                    draggableTileModel.currentTargetRotationAngle = currentRotationAngle;
                     draggableTileModel.currentPositionPoint
                         = draggableTileModel.targetPositionPoint.clone();
                     const draggableTileViewParameters: TileViewParameters = {

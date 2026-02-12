@@ -9,11 +9,11 @@ import { TileLockType } from "../../tile-locks/TileLockType.ts";
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { RectangularGridTilingModel } from "../RectangularGridTilingModel.ts";
 import { TilingType } from "../TilingType.ts";
-import { OctagonGeometry } from "../../tile-geometries/polygons/OctagonGeometry.ts";
 import { TilePosition } from "../../tiles/TilePosition.ts";
 import { TileModel } from "../../tiles/TileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
 import { TileGeometry } from "../../tile-geometries/TileGeometry.ts";
+import { OctagonBaseGeometry } from "../../tile-geometries/polygon-bases/OctagonBaseGeometry.ts";
 
 /**
  * Класс модели замощения, представляющего собой прямоугольную сетку,
@@ -106,7 +106,7 @@ export class OctagonAndSquareWithSpiralLockTilingModel extends RectangularGridTi
         const lockHeightToSideRatio = this.getLockHeightToSideRatio();
         this.textureTileSide = this.textureModel.minSide
             / (this.textureMinSideOctagonTileCount
-            * OctagonGeometry.inscribedCircleDiameterToSideRatio
+            * OctagonBaseGeometry.inscribedCircleDiameterToSideRatio
             + 2 * lockHeightToSideRatio);
         const textureLockHeight = this.textureTileSide * lockHeightToSideRatio;
 
@@ -115,16 +115,16 @@ export class OctagonAndSquareWithSpiralLockTilingModel extends RectangularGridTi
             this.tileRowCount = 2 * Math.trunc(
                 (this.textureModel.height - 2 * textureLockHeight)
                 / this.textureTileSide
-                / OctagonGeometry.inscribedCircleDiameterToSideRatio) - 1;
+                / OctagonBaseGeometry.inscribedCircleDiameterToSideRatio) - 1;
         } else {
             this.tileColumnCount = Math.trunc(
                 (this.textureModel.width - 2 * textureLockHeight)
-                / this.textureTileSide / OctagonGeometry.inscribedCircleDiameterToSideRatio);
+                / this.textureTileSide / OctagonBaseGeometry.inscribedCircleDiameterToSideRatio);
             this.tileRowCount = 2 * this.textureMinSideOctagonTileCount - 1;
         }
 
         const textureOctagonTileInscribedCircleDiameter = this.textureTileSide
-            * OctagonGeometry.inscribedCircleDiameterToSideRatio;
+            * OctagonBaseGeometry.inscribedCircleDiameterToSideRatio;
         this.textureXTilingOffset = (this.textureModel.width
             - textureOctagonTileInscribedCircleDiameter * this.tileColumnCount
             - 2 * textureLockHeight) / 2.0;
@@ -160,19 +160,19 @@ export class OctagonAndSquareWithSpiralLockTilingModel extends RectangularGridTi
         result.targetTilePosition = targetPosition.clone();
 
         const lockHeight = this.octagonTileGeometry.lockHeight;
-        const octagonTileInscribedCircleDiameter
-            = this.octagonTileGeometry.inscribedCircleDiameter;
+        const octagonTileInscribedCircleRadius
+            = this.octagonTileGeometry.inscribedCircleRadius;
+        const octagonTileInscribedCircleDiameter = octagonTileInscribedCircleRadius * 2;
         if (tileIsOctagon) {
             result.targetRotationAngle
                 = (targetPosition.rowIndex / 2 + targetPosition.columnIndex) % 2 == 0
                 ? 0
                 : Math.PI / 4;            
-            const inscribedCircleRadius = octagonTileInscribedCircleDiameter / 2.0;
             result.targetPositionPoint = new Point(
                 targetPosition.columnIndex * octagonTileInscribedCircleDiameter
-                    + inscribedCircleRadius + lockHeight,
+                    + octagonTileInscribedCircleRadius + lockHeight,
                 targetPosition.rowIndex / 2.0 * octagonTileInscribedCircleDiameter
-                    + inscribedCircleRadius + lockHeight
+                    + octagonTileInscribedCircleRadius + lockHeight
             );
         } else {
             result.targetRotationAngle

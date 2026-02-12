@@ -5,22 +5,34 @@ import { TileGeometry } from "./TileGeometry.ts";
  */
 export abstract class RegularPolygonTileGeometry extends TileGeometry {
     /**
+     * Отношение радиуса описанной окружности правильного многоугольника к его стороне.
+     */
+    public readonly circumscribedCircleRadiusToSideRatio: number = 1;
+    /**
+     * Отношение радиуса вписанной окружности правильного многоугольника к его стороне.
+     */
+    public readonly inscribedCircleRadiusToSideRatio: number = 1;
+    /**
      * Отношение стороны правильного многоугольника к базовой величине.
      * По умолчанию сторона правильного многоугольника равна базовой величине.
      */
     public readonly sideToBaseValueRatio: number;
     /**
-     * Сторона правильного многоугольника.
+     * Сторона правильного многоугольника
      */
     public readonly side: number;
     /**
-     * Количество сторон правильного многоугольника.
+     * Количество сторон правильного многоугольника
      */
     public readonly sideCount: number = 0;
     /**
      * Радиус описанной окружности
      */
     public circumscribedCircleRadius: number = 0;
+    /**
+     * Радиус вписанной окружности
+     */
+    public inscribedCircleRadius: number = 0;
     /**
      * Начальный угол вращения в радианах относительно опорной точки.
      * В PixiJS правильный многоугольник строится так, что первая вершина находится вверху,
@@ -39,11 +51,13 @@ export abstract class RegularPolygonTileGeometry extends TileGeometry {
         sideToBaseValueRatio: number = 1
     ) {
         super(baseValue);
-
         this.sideCount = sideCount;
         this.sideToBaseValueRatio = sideToBaseValueRatio;
         this.side = this.baseValue * this.sideToBaseValueRatio;
-        this.freedomDegree = sideCount;
-        this.freedomDegreeRotationAngle = this.getFreedomDegreeRotationAngle();
+    }
+
+    protected setCircumscribedAndInscribedCircleRadiuses() {
+        this.circumscribedCircleRadius = this.side * this.circumscribedCircleRadiusToSideRatio;
+        this.inscribedCircleRadius = this.side * this.inscribedCircleRadiusToSideRatio;
     }
 }

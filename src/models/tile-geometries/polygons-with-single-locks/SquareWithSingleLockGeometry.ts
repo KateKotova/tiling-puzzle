@@ -1,8 +1,8 @@
 import { Point, Polygon } from "pixi.js";
 import { TileLockType } from "../../tile-locks/TileLockType.ts";
-import { SquareGeometry } from "../polygons/SquareGeometry.ts";
 import { TileGeometryType } from "../TileGeometryType.ts";
 import { Size } from "../../../math/Size.ts";
+import { SquareBaseGeometry } from "../polygon-bases/SquareBaseGeometry.ts";
 
 /**
  * Класс геометрии квадрата c одинарными замками.
@@ -17,7 +17,7 @@ import { Size } from "../../../math/Size.ts";
  * ось OX направлена вправо, ось OY направлена вниз.
  * Потом начало координат переместится в точку опоры.
  */
-export class SquareWithSingleLockGeometry extends SquareGeometry {
+export class SquareWithSingleLockGeometry extends SquareBaseGeometry {
     public readonly geometryType: TileGeometryType = TileGeometryType.SquareWithSingleLock;
     public readonly lockType: TileLockType = TileLockType.Single;
 
@@ -34,13 +34,14 @@ export class SquareWithSingleLockGeometry extends SquareGeometry {
     constructor(baseValue: number, sideToBaseValueRatio: number = 1) {
         super(baseValue, sideToBaseValueRatio);
 
-        this.setLockHeight();
-
-        this.freedomDegree = 2;
+        this.freedomDegree = this.sideCount / 2;
         this.freedomDegreeRotationAngle = this.getFreedomDegreeRotationAngle();
 
-        this.pivotPoint.y += this.lockHeight;
-        this.defaultBoundingRectangleSize.height += this.lockHeight * 2;
+        this.setLockHeight();
+
+        const sideHalf = this.side / 2.0;
+        this.pivotPoint = new Point(sideHalf, sideHalf + this.lockHeight);
+        this.defaultBoundingRectangleSize = new Size(this.side, this.side + this.lockHeight * 2);
         this.hitArea = new Polygon([
             new Point(0, this.lockHeight),
             new Point(this.side, this.lockHeight),

@@ -20,7 +20,7 @@ export class ViewSettings {
     public readonly selectedTileGlowFilterOptions: GlowFilterOptions = {
         distance: 5,
         outerStrength: 2,
-        innerStrength: 1,
+        innerStrength: 2,
         color: this.selectedTileGlowFilterColor,
         quality: 0.5,
         knockout: false
@@ -29,10 +29,20 @@ export class ViewSettings {
     public readonly tapMaxDistance: number = 3;
     public readonly targetStaticTileGlowFilterColor: Color = new Color(0x3F00FF);
     public readonly targetStaticTileGlowFilterOptions: GlowFilterOptions = {
-        distance: 5,
+        distance: 8,
         outerStrength: 1,
-        innerStrength: 5,
+        innerStrength: 4,
         color: this.targetStaticTileGlowFilterColor,
+        quality: 0.5,
+        knockout: false
+    };
+    public readonly correctLocatedTileFilterShowTime: number = 500;
+    public readonly correctLocatedTileGlowFilterColor: Color = new Color(0x00FF00);
+    public readonly correctLocatedTileGlowFilterOptions: GlowFilterOptions = {
+        distance: 10,
+        outerStrength: 2,
+        innerStrength: 5,
+        color: this.correctLocatedTileGlowFilterColor,
         quality: 0.5,
         knockout: false
     };

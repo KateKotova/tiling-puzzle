@@ -1,5 +1,5 @@
-import { Color, Container, Graphics, Renderer, Sprite } from "pixi.js";
-import { BaseTileView } from "./BaseTileView.ts";
+import { Container, Graphics, Sprite } from "pixi.js";
+import { TileViewBase } from "./TileViewBase.ts";
 import { TileViewParameters } from "./TileViewParameters.ts";
 import { RegularPolygonTileGeometry } from "../../models/tile-geometries/RegularPolygonTileGeometry.ts";
 import { TileLockType } from "../../models/tile-locks/TileLockType.ts";
@@ -7,7 +7,7 @@ import { TileLockType } from "../../models/tile-locks/TileLockType.ts";
 /**
  * Представление элемента замощения, который представляет собой правильный многоугольник
  */
-export class RegularPolygonTileView extends BaseTileView {
+export class RegularPolygonTileView extends TileViewBase {
     constructor (parameters: TileViewParameters) {
         if (!(parameters.model.geometry instanceof RegularPolygonTileGeometry)) {
             throw new Error("The tile geometry is not an instance of RegularPolygonTileGeometry");
@@ -18,7 +18,7 @@ export class RegularPolygonTileView extends BaseTileView {
         super(parameters);
     }
 
-    protected createContent(renderer: Renderer, replacingTextureFillColor: Color): Container {
+    public createContent(shouldAddBevelFilter: boolean): Container {
         const geometry = this.model.geometry as RegularPolygonTileGeometry;
         const graphics = new Graphics()
             .regularPoly(
@@ -37,17 +37,19 @@ export class RegularPolygonTileView extends BaseTileView {
             });
         } else {
             graphics.fill({
-                color: replacingTextureFillColor,
+                color: this.replacingTextureFillColor,
                 alpha: 1
             });
         }
 
-        const graphicsSideToSpriteSideRatio = graphics.width
-            / geometry.defaultBoundingRectangleSize.width;
-        const bevelFilter = this.getBevelFilter(graphicsSideToSpriteSideRatio);
-        graphics.filters = [bevelFilter];
+        if (shouldAddBevelFilter) {
+            const graphicsSideToSpriteSideRatio = graphics.width
+                / geometry.defaultBoundingRectangleSize.width;
+            const bevelFilter = this.getBevelFilter(graphicsSideToSpriteSideRatio);
+            graphics.filters = [bevelFilter];
+        }
 
-        const graphicsTexture = renderer.generateTexture({
+        const graphicsTexture = this.renderer.generateTexture({
             target: graphics,
             resolution: this.viewSettings.generateTileTextureResolution,
             textureSourceOptions: {
