@@ -7,7 +7,6 @@ import { TileLockType } from "../../tile-locks/TileLockType.ts";
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { RectangularGridTilingModel } from "../RectangularGridTilingModel.ts";
 import { TilingType } from "../TilingType.ts";
-import { TilePosition } from "../../tiles/TilePosition.ts";
 import { TileModel } from "../../tiles/TileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
 import { HexagonBaseGeometry } from "../../tile-geometries/polygon-bases/HexagonBaseGeometry.ts";
@@ -113,21 +112,20 @@ export class HexagonWithSingleLockTilingModel extends RectangularGridTilingModel
         this.tileGeometry = new HexagonWithSingleLockGeometry(tileSide);
     }
 
-    protected getProtectedTileModel(targetTilePosition: TilePosition): TileModel {
+    protected getProtectedTileModel(targetTilePosition: RectangularGridTilePosition): TileModel {
         if (!this.tileGeometry) {
             throw new Error('tileGeometry is not defined');
         }
 
-        const targetPosition = targetTilePosition as RectangularGridTilePosition;
         const result = new TileModel(this.modelSettings, this.tileGeometry);
-        result.targetTilePosition = targetPosition.clone();
+        result.targetTilePosition = targetTilePosition.clone();
         result.targetRotationAngle = 0;
         const inscribedCircleRadius = this.tileGeometry.inscribedCircleRadius;
         result.targetPositionPoint = new Point(
-            targetPosition.columnIndex * this.tileGeometry.side / 2.0 * 3
+            targetTilePosition.columnIndex * this.tileGeometry.side / 2.0 * 3
                 + this.tileGeometry.side,
-            targetPosition.rowIndex * this.tileGeometry.inscribedCircleRadius * 2
-                + (targetPosition.columnIndex % 2 == 1 ? inscribedCircleRadius : 0)
+            targetTilePosition.rowIndex * this.tileGeometry.inscribedCircleRadius * 2
+                + (targetTilePosition.columnIndex % 2 == 1 ? inscribedCircleRadius : 0)
                 + this.tileGeometry.lockHeight
                 + inscribedCircleRadius
         );     

@@ -5,7 +5,6 @@ import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { RectangularGridTilingModel } from "../RectangularGridTilingModel.ts";
 import { TilingType } from "../TilingType.ts";
 import { SquareGeometry } from "../../tile-geometries/polygons/SquareGeometry.ts";
-import { TilePosition } from "../../tiles/TilePosition.ts";
 import { TileModel } from "../../tiles/TileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
 
@@ -78,19 +77,18 @@ export class SquareTilingModel extends RectangularGridTilingModel {
         this.tileGeometry = new SquareGeometry(tileSide);
     }
 
-    protected getProtectedTileModel(targetTilePosition: TilePosition): TileModel {
+    protected getProtectedTileModel(targetTilePosition: RectangularGridTilePosition): TileModel {
         if (!this.tileGeometry) {
             throw new Error('tileGeometry is not defined');
         }
 
-        const targetPosition = targetTilePosition as RectangularGridTilePosition;
         const result = new TileModel(this.modelSettings, this.tileGeometry);
-        result.targetTilePosition = targetPosition.clone();
+        result.targetTilePosition = targetTilePosition.clone();
         result.targetRotationAngle = 0;
         const sideHalf = this.tileGeometry.side / 2.0;
         result.targetPositionPoint = new Point(
-           targetPosition.columnIndex * this.tileGeometry.side + sideHalf,
-           targetPosition.rowIndex * this.tileGeometry.side + sideHalf
+           targetTilePosition.columnIndex * this.tileGeometry.side + sideHalf,
+           targetTilePosition.rowIndex * this.tileGeometry.side + sideHalf
         );
         return result;
     }

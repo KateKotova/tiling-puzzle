@@ -18,4 +18,8 @@ export class RectangularGridTilePosition extends TilePosition {
     public clone(): TilePosition {
         return new RectangularGridTilePosition(this.rowIndex, this.columnIndex);
     }
+
+    public toString(): string {
+        return `r${this.rowIndex}c${this.columnIndex}`;
+    }
 }

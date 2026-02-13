@@ -9,7 +9,6 @@ import { TileLockType } from "../../tile-locks/TileLockType.ts";
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { RectangularGridTilingModel } from "../RectangularGridTilingModel.ts";
 import { TilingType } from "../TilingType.ts";
-import { TilePosition } from "../../tiles/TilePosition.ts";
 import { TileModel } from "../../tiles/TileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
 import { TileGeometry } from "../../tile-geometries/TileGeometry.ts";
@@ -146,18 +145,17 @@ export class OctagonAndSquareWithSpiralLockTilingModel extends RectangularGridTi
             && columnIndex < this.tileColumnCount - (rowIndex % 2);
     }
 
-    protected getProtectedTileModel(targetTilePosition: TilePosition): TileModel {
+    protected getProtectedTileModel(targetTilePosition: RectangularGridTilePosition): TileModel {
         if (!this.octagonTileGeometry || !this.squareTileGeometry) {
             throw new Error('Tile geometry is not defined');
         }
             
-        const targetPosition = targetTilePosition as RectangularGridTilePosition;
-        const tileIsOctagon = targetPosition.rowIndex % 2 == 0;
+        const tileIsOctagon = targetTilePosition.rowIndex % 2 == 0;
         const tileGeometry: TileGeometry = tileIsOctagon
             ? this.octagonTileGeometry
             : this.squareTileGeometry;
         const result = new TileModel(this.modelSettings, tileGeometry);
-        result.targetTilePosition = targetPosition.clone();
+        result.targetTilePosition = targetTilePosition.clone();
 
         const lockHeight = this.octagonTileGeometry.lockHeight;
         const octagonTileInscribedCircleRadius
@@ -165,24 +163,24 @@ export class OctagonAndSquareWithSpiralLockTilingModel extends RectangularGridTi
         const octagonTileInscribedCircleDiameter = octagonTileInscribedCircleRadius * 2;
         if (tileIsOctagon) {
             result.targetRotationAngle
-                = (targetPosition.rowIndex / 2 + targetPosition.columnIndex) % 2 == 0
+                = (targetTilePosition.rowIndex / 2 + targetTilePosition.columnIndex) % 2 == 0
                 ? 0
                 : Math.PI / 4;            
             result.targetPositionPoint = new Point(
-                targetPosition.columnIndex * octagonTileInscribedCircleDiameter
+                targetTilePosition.columnIndex * octagonTileInscribedCircleDiameter
                     + octagonTileInscribedCircleRadius + lockHeight,
-                targetPosition.rowIndex / 2.0 * octagonTileInscribedCircleDiameter
+                targetTilePosition.rowIndex / 2.0 * octagonTileInscribedCircleDiameter
                     + octagonTileInscribedCircleRadius + lockHeight
             );
         } else {
             result.targetRotationAngle
-                = ((targetPosition.rowIndex - 1) / 2 + targetPosition.columnIndex) % 2 == 0
+                = ((targetTilePosition.rowIndex - 1) / 2 + targetTilePosition.columnIndex) % 2 == 0
                 ? 7.0 / 4.0 * Math.PI
                 : Math.PI / 4;
             result.targetPositionPoint = new Point(
-                (targetPosition.columnIndex + 1) * octagonTileInscribedCircleDiameter
+                (targetTilePosition.columnIndex + 1) * octagonTileInscribedCircleDiameter
                     + lockHeight,
-                (targetPosition.rowIndex + 1) / 2.0 * octagonTileInscribedCircleDiameter
+                (targetTilePosition.rowIndex + 1) / 2.0 * octagonTileInscribedCircleDiameter
                     + lockHeight
             );
         }

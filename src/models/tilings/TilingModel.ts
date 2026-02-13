@@ -1,4 +1,4 @@
-import { Texture } from "pixi.js";
+import { Graphics, Matrix, Renderer, Texture } from "pixi.js";
 import { ModelSettings } from "../ModelSettings.ts";
 import { ImageContainerModel } from "../ImageContainerModel.ts";
 import { TileLockType } from "../tile-locks/TileLockType.ts";
@@ -20,6 +20,7 @@ export abstract class TilingModel {
     public textureModel: TilingTextureModel;
     public tilingContainerModel?: TilingContainerModel;
     protected imageContainerModel: ImageContainerModel;
+    private renderer: Renderer;
 
     //#region Texture tile info
 
@@ -39,11 +40,13 @@ export abstract class TilingModel {
     constructor(
         modelSettings: ModelSettings,
         textureModel: TilingTextureModel,
-        imageContainerModel: ImageContainerModel
+        imageContainerModel: ImageContainerModel,
+        renderer: Renderer
     ) {
         this.modelSettings = modelSettings;
         this.textureModel = textureModel;
         this.imageContainerModel = imageContainerModel;
+        this.renderer = renderer;
     }
 
     public getLockHeightToSideRatio(): number {
@@ -62,5 +65,62 @@ export abstract class TilingModel {
 
     protected abstract initializeImageTileInfo(): void;
 
-    public abstract getTileTexture(tileModel: TileModel): Texture;
+    public getTileTexture(tileModel: TileModel): Texture {
+        if (!this.tilingContainerModel) {
+            throw new Error('tilingContainerModel is not initialized');
+        }
+
+        const sideToTextureSideRatio = this.imageContainerModel.sideToTextureSideRatio;
+
+        const textureTileLocalPivotPointX = tileModel.geometry.pivotPoint.x
+            / sideToTextureSideRatio;
+        const textureTileLocalPivotPointY = tileModel.geometry.pivotPoint.y
+            / sideToTextureSideRatio;
+
+        const textureTileAbsolutePivotPointX = tileModel.targetPositionPoint.x
+            / sideToTextureSideRatio
+            + this.textureXTilingOffset;
+        const textureTileAbsolutePivotPointY = tileModel.targetPositionPoint.y
+            / sideToTextureSideRatio
+             + this.textureYTilingOffset;
+        
+        const textureTileDefaultBoundingRectangleWidth
+            = tileModel.geometry.defaultBoundingRectangleSize.width
+            / sideToTextureSideRatio;
+        const textureTileDefaultBoundingRectangleHeight
+            = tileModel.geometry.defaultBoundingRectangleSize.height
+            / sideToTextureSideRatio;
+
+        const textureMatrix = new Matrix();
+        textureMatrix.setTransform(
+            0, 0,
+            textureTileAbsolutePivotPointX, textureTileAbsolutePivotPointY,
+            1, 1,
+            -tileModel.targetRotationAngle,
+            0, 0
+        );
+        const globalTile = new Graphics()
+            .rect(
+                -textureTileLocalPivotPointX,
+                -textureTileLocalPivotPointY,
+                textureTileDefaultBoundingRectangleWidth,
+                textureTileDefaultBoundingRectangleHeight
+            )
+            .fill({
+                texture: this.textureModel.texture,
+                textureSpace: "global",
+                matrix: textureMatrix
+            });
+
+        const result = this.renderer.generateTexture({
+            target: globalTile,
+            resolution: 1,
+            textureSourceOptions: {
+                scaleMode: "nearest"
+            }
+        });
+
+        globalTile.destroy();
+        return result;
+    }
 }

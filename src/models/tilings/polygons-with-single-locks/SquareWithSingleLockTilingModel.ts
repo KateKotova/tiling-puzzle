@@ -7,7 +7,6 @@ import { TileLockType } from "../../tile-locks/TileLockType.ts";
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { RectangularGridTilingModel } from "../RectangularGridTilingModel.ts";
 import { TilingType } from "../TilingType.ts";
-import { TilePosition } from "../../tiles/TilePosition.ts";
 import { TileModel } from "../../tiles/TileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
 
@@ -99,23 +98,23 @@ export class SquareWithSingleLockTilingModel extends RectangularGridTilingModel 
         this.tileGeometry = new SquareWithSingleLockGeometry(tileSide);
     }
 
-    protected getProtectedTileModel(targetTilePosition: TilePosition): TileModel {
+    protected getProtectedTileModel(targetTilePosition: RectangularGridTilePosition): TileModel {
         if (!this.tileGeometry) {
             throw new Error('tileGeometry is not defined');
         }
             
-        const targetPosition = targetTilePosition as RectangularGridTilePosition;
         const result = new TileModel(this.modelSettings, this.tileGeometry);
-        result.targetTilePosition = targetPosition.clone();
+        result.targetTilePosition = targetTilePosition.clone();
 
-        const tileIsRotated = (targetPosition.rowIndex + targetPosition.columnIndex) % 2 == 1;
+        const tileIsRotated = (targetTilePosition.rowIndex + targetTilePosition.columnIndex)
+            % 2 == 1;
         result.targetRotationAngle = tileIsRotated ? Math.PI / 2 : 0;
 
         const sideHalf = this.tileGeometry.side / 2.0;
         result.targetPositionPoint = new Point(
-            targetPosition.columnIndex * this.tileGeometry.side + sideHalf
+            targetTilePosition.columnIndex * this.tileGeometry.side + sideHalf
                 + this.tileGeometry.lockHeight,
-            targetPosition.rowIndex * this.tileGeometry.side + sideHalf
+            targetTilePosition.rowIndex * this.tileGeometry.side + sideHalf
                 + this.tileGeometry.lockHeight
         );
 
