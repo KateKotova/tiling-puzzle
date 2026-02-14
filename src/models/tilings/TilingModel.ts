@@ -7,6 +7,9 @@ import { TilingTextureModel } from "../TilingTextureModel.ts";
 import { TilingType } from "./TilingType.ts";
 import { TileLockHeightToBaseValueRatios } from "../tile-locks/TileLockHeightToBaseValueRatios.ts";
 import { TileModel } from "../tiles/TileModel.ts";
+import { TilePosition } from "../tiles/TilePosition.ts";
+import { TilingLayoutStrategyType } from "./TilingLayoutStrategyType.ts";
+import { Algorithm } from "../../math/Algorithm.ts";
 
 /**
  * Класс модели замощения
@@ -37,6 +40,23 @@ export abstract class TilingModel {
 
     //#endregion Texture tile info
 
+    /**
+     * Карта, где по строковому представлению позиции
+     * можно найти её индекс удалённости от края картинки
+     */
+    protected edgeDistanceIndicesByTilePositionStrings: Map<string, number>
+        = new Map<string, number>();
+    /**
+     * Массив, индексы которого - индексы удалённости элементов замощения от края картинки.
+     * По каждому индексу хранится массив позиций элементов замощения,
+     * соответствующих данному индексу удалённости от края картинки.
+     */
+    protected tilePositionsByEdgeDistanceIndices: TilePosition[][] = [];
+    /**
+     * Массив, где элементы замощения перемешаны в зависимости от выбранной стратегии сборки мозаики
+     */
+    private shuffledTilePositions: TilePosition[] = [];
+
     constructor(
         modelSettings: ModelSettings,
         textureModel: TilingTextureModel,
@@ -58,12 +78,19 @@ export abstract class TilingModel {
         this.tilingContainerModel = new TilingContainerModel(this.imageContainerModel,
             this.textureXTilingOffset, this.textureYTilingOffset);
         this.initializeImageTileInfo();
+        this.setTilePositionsByEdgeDistanceIndices();
         this.isInitialized = true;
     }
 
     protected abstract initializeTextureTileInfo(): void;
 
     protected abstract initializeImageTileInfo(): void;
+
+    /**
+     * Заполнение массива, где по индексам удалённости элементов замощения от края картинки
+     * хранятся массивы соответствующих позиций элементов замощения.
+     */
+    protected abstract setTilePositionsByEdgeDistanceIndices(): void;
 
     public getTileTexture(tileModel: TileModel): Texture {
         if (!this.tilingContainerModel) {
@@ -122,5 +149,52 @@ export abstract class TilingModel {
 
         globalTile.destroy();
         return result;
+    }
+
+    /**
+     * Установка массива позиций элементов замощения, согласно выбранной стратегии сборки мозаики,
+     * для выдачи элементов мозаики пользователю
+     * @param tilingLayoutStrategyType Стратегия укладки мозаики
+     * @returns 
+     */
+    protected setShuffledTilePositions(tilingLayoutStrategyType: TilingLayoutStrategyType) {
+        this.shuffledTilePositions = [];
+        switch (tilingLayoutStrategyType) {
+            case TilingLayoutStrategyType.FromEdgesToCenter:
+                for (
+                    let edgeDistanceIndex = 0;
+                    edgeDistanceIndex < this.tilePositionsByEdgeDistanceIndices.length;
+                    edgeDistanceIndex++
+                ) {
+                    const shuffledTilePositions = Algorithm.getShuffledArray(
+                        this.tilePositionsByEdgeDistanceIndices[edgeDistanceIndex]);
+                    this.shuffledTilePositions.push(...shuffledTilePositions);
+                }
+                return;
+            case TilingLayoutStrategyType.FromCenterToEdges:
+                for (
+                    let edgeDistanceIndex = this.tilePositionsByEdgeDistanceIndices.length - 1;
+                    edgeDistanceIndex >= 0;
+                    edgeDistanceIndex--
+                ) {
+                    const shuffledTilePositions = Algorithm.getShuffledArray(
+                        this.tilePositionsByEdgeDistanceIndices[edgeDistanceIndex]);
+                    this.shuffledTilePositions.push(...shuffledTilePositions);
+                }
+                return;
+            case TilingLayoutStrategyType.Random:
+                for (
+                    let edgeDistanceIndex = 0;
+                    edgeDistanceIndex < this.tilePositionsByEdgeDistanceIndices.length;
+                    edgeDistanceIndex++
+                ) {
+                    this.shuffledTilePositions
+                        .push(...this.tilePositionsByEdgeDistanceIndices[edgeDistanceIndex]);
+                }
+                this.shuffledTilePositions = Algorithm.getShuffledArray(this.shuffledTilePositions);
+                return;
+            default:
+                return;
+        }
     }
 }

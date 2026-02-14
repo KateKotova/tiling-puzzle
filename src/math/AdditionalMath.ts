@@ -82,26 +82,6 @@ export class AdditionalMath {
     }
 
     /**
-     * Получение преобразованного многоугольника. Выполняется поворот и перемещение.
-     * @param polygon Исходный многоугольник
-     * @param rotationAngle Угол поворота в радианах (положительный - против часовой стрелки,
-     * отрицательный - по часовой стрелке) относительно точки (0; 0).
-     * Поворот многоугольника происходит до его перемещения.
-     * @param targetPoint Точка, в которую нужно переместить многоугольник после поворота.
-     * @returns Новый многоугольник с преобразованными координатами
-     */
-    public static getRotatedAndTranslatedPolygon(
-        polygon: Polygon,
-        rotationAngle: number,
-        targetPoint: Point
-    ): Polygon {
-        const matrix = new Matrix();
-        matrix.rotate(rotationAngle);
-        matrix.translate(targetPoint.x, targetPoint.y);
-        return AdditionalMath.getTransformedPolygon(polygon, matrix);
-    }
-
-    /**
      * Получение преобразованного многоугольника.
      * @param polygon Исходный многоугольник
      * @param matrix Матрица трансформации
