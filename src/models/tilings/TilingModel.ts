@@ -92,6 +92,16 @@ export abstract class TilingModel {
      */
     protected abstract setTilePositionsByEdgeDistanceIndices(): void;
 
+    protected addTilePosition(
+        tilePosition: TilePosition,
+        edgeDistanceIndex: number,
+        tilePositions: TilePosition[]
+    ) {
+        tilePosition.edgeDistanceIndex = edgeDistanceIndex;
+        this.edgeDistanceIndicesByTilePositionStrings.set(tilePosition.toString(), edgeDistanceIndex);
+        tilePositions.push(tilePosition);
+    }
+
     public getTileTexture(tileModel: TileModel): Texture {
         if (!this.tilingContainerModel) {
             throw new Error('tilingContainerModel is not initialized');

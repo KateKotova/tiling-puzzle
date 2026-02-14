@@ -4,16 +4,16 @@ import { ModelSettings } from "../../ModelSettings.ts";
 import { OctagonGeometry } from "../../tile-geometries/polygons/OctagonGeometry.ts";
 import { SquareGeometry } from "../../tile-geometries/polygons/SquareGeometry.ts";
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
-import { RectangularGridTilingModel } from "../RectangularGridTilingModel.ts";
 import { TilingType } from "../TilingType.ts";
 import { TileModel } from "../../tiles/TileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
 import { TileGeometry } from "../../tile-geometries/TileGeometry.ts";
 import { OctagonBaseGeometry } from "../../tile-geometries/polygon-bases/OctagonBaseGeometry.ts";
+import { OctagonAndSquareTilingBaseModel } from "../OctagonAndSquareTilingBaseModel.ts";
 
 /**
  * Класс модели замощения, представляющего собой прямоугольную сетку,
- * где в строках и столбцах размещаются правильные шестиугольники и квадраты.
+ * где в строках и столбцах размещаются правильные восьмиугольники и квадраты.
  * Восьмиугольники расположены так, что их верхние и нижние стороны горизонтальны,
  * а левые и правые - вертикальны.
  * Квадраты находится между восьмиугольниками, они повёрнуты на 90 градусов
@@ -26,7 +26,7 @@ import { OctagonBaseGeometry } from "../../tile-geometries/polygon-bases/Octagon
  * а также столбцов, содержащих квадраты, будет на один столбец меньше,
  * чем столбцов, содержащих восьмиугольники.
  */
-export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
+export class OctagonAndSquareTilingModel extends OctagonAndSquareTilingBaseModel {
     public readonly tilingType: TilingType = TilingType.OctagonAndSquare;
 
     /**
@@ -112,13 +112,6 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
         const tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
         this.octagonTileGeometry = new OctagonGeometry(tileSide);
         this.squareTileGeometry = new SquareGeometry(tileSide);
-    }
-
-    public getGridIndicesAreCorrect(rowIndex: number, columnIndex: number): boolean {
-        return rowIndex >= 0
-            && rowIndex < this.tileRowCount
-            && columnIndex >= 0
-            && columnIndex < this.tileColumnCount - (rowIndex % 2);
     }
 
     protected getProtectedTileModel(targetTilePosition: RectangularGridTilePosition): TileModel {

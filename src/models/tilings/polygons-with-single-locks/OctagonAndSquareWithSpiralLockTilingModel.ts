@@ -7,16 +7,16 @@ import { SquareWithSingleLockGeometry }
     from "../../tile-geometries/polygons-with-single-locks/SquareWithSingleLockGeometry.ts";
 import { TileLockType } from "../../tile-locks/TileLockType.ts";
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
-import { RectangularGridTilingModel } from "../RectangularGridTilingModel.ts";
 import { TilingType } from "../TilingType.ts";
 import { TileModel } from "../../tiles/TileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
 import { TileGeometry } from "../../tile-geometries/TileGeometry.ts";
 import { OctagonBaseGeometry } from "../../tile-geometries/polygon-bases/OctagonBaseGeometry.ts";
+import { OctagonAndSquareTilingBaseModel } from "../OctagonAndSquareTilingBaseModel.ts";
 
 /**
  * Класс модели замощения, представляющего собой прямоугольную сетку,
- * где в строках и столбцах размещаются правильные шестиугольники и квадраты
+ * где в строках и столбцах размещаются правильные восьмиугольники и квадраты
  * с одинарными замками.
  * Восьмиугольники расположены так, что их верхние и нижние стороны горизонтальны,
  * а левые и правые - вертикальны.
@@ -40,7 +40,9 @@ import { OctagonBaseGeometry } from "../../tile-geometries/polygon-bases/Octagon
  * У одних выпуклые замки расположены на одной диагонали, а замки-впадины - на другой.
  * У других всё наоборот.
  */
-export class OctagonAndSquareWithSpiralLockTilingModel extends RectangularGridTilingModel {
+export class OctagonAndSquareWithSpiralLockTilingModel
+    extends OctagonAndSquareTilingBaseModel {
+
     public readonly tilingType: TilingType = TilingType.OctagonAndSquareWithSingleLock;
         public readonly lockType: TileLockType = TileLockType.Single;
 
@@ -136,13 +138,6 @@ export class OctagonAndSquareWithSpiralLockTilingModel extends RectangularGridTi
         const tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
         this.octagonTileGeometry = new OctagonWithSingleLockGeometry(tileSide);
         this.squareTileGeometry = new SquareWithSingleLockGeometry(tileSide);
-    }
-
-    public getGridIndicesAreCorrect(rowIndex: number, columnIndex: number): boolean {
-        return rowIndex >= 0
-            && rowIndex < this.tileRowCount
-            && columnIndex >= 0
-            && columnIndex < this.tileColumnCount - (rowIndex % 2);
     }
 
     protected getProtectedTileModel(targetTilePosition: RectangularGridTilePosition): TileModel {

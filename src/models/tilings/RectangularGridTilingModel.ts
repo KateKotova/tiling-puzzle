@@ -61,16 +61,14 @@ export abstract class RectangularGridTilingModel extends TilingModel {
         return Math.ceil(Math.min(tileRowCount, tileColumnCount) / 2.0) - 1;
     }
 
-    protected addTilePosition(
+    protected addTilePositionByIndices(
         rowIndex: number,
         columnIndex: number,
         edgeDistanceIndex: number,
         tilePositions: TilePosition[]
     ) {
         const tilePosition = new RectangularGridTilePosition(rowIndex, columnIndex);
-        tilePosition.edgeDistanceIndex = edgeDistanceIndex;
-        this.edgeDistanceIndicesByTilePositionStrings.set(tilePosition.toString(), edgeDistanceIndex);
-        tilePositions.push(tilePosition);
+        this.addTilePosition(tilePosition, edgeDistanceIndex, tilePositions);
     }
 
     protected setTilePositionsByEdgeDistanceIndices(): void {
@@ -88,8 +86,18 @@ export abstract class RectangularGridTilingModel extends TilingModel {
 
             const maxColumnIndex = this.tileColumnCount - 1 - edgeDistanceIndex;
             for (let columnIndex = edgeDistanceIndex; columnIndex <= maxColumnIndex; columnIndex++) {
-                this.addTilePosition(topRowIndex, columnIndex, edgeDistanceIndex, tilePositions);
-                this.addTilePosition(bottomRowIndex, columnIndex, edgeDistanceIndex, tilePositions);
+                this.addTilePositionByIndices(
+                    topRowIndex,
+                    columnIndex,
+                    edgeDistanceIndex,
+                    tilePositions
+                );
+                this.addTilePositionByIndices(
+                    bottomRowIndex,
+                    columnIndex,
+                    edgeDistanceIndex,
+                    tilePositions
+                );
             }
 
             const leftColumnIndex = edgeDistanceIndex;
@@ -97,8 +105,18 @@ export abstract class RectangularGridTilingModel extends TilingModel {
 
             const maxRowIndex = this.tileRowCount - 2 - edgeDistanceIndex;
             for (let rowIndex = edgeDistanceIndex + 1; rowIndex <= maxRowIndex; rowIndex++) {
-                this.addTilePosition(rowIndex, leftColumnIndex, edgeDistanceIndex, tilePositions);
-                this.addTilePosition(rowIndex, rightColumnIndex, edgeDistanceIndex, tilePositions);
+                this.addTilePositionByIndices(
+                    rowIndex,
+                    leftColumnIndex,
+                    edgeDistanceIndex,
+                    tilePositions
+                );
+                this.addTilePositionByIndices(
+                    rowIndex,
+                    rightColumnIndex,
+                    edgeDistanceIndex,
+                    tilePositions
+                );
             }
 
             this.tilePositionsByEdgeDistanceIndices.push(tilePositions);
