@@ -4,17 +4,16 @@ import { ModelSettings } from "../../ModelSettings.ts";
 import { OctagonGeometry } from "../../tile-geometries/polygons/OctagonGeometry.ts";
 import { SquareGeometry } from "../../tile-geometries/polygons/SquareGeometry.ts";
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
-import { RectangularGridTilingModel } from "../RectangularGridTilingModel.ts";
 import { TilingType } from "../TilingType.ts";
-import { TilePosition } from "../../tiles/TilePosition.ts";
 import { TileModel } from "../../tiles/TileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
 import { TileGeometry } from "../../tile-geometries/TileGeometry.ts";
 import { OctagonBaseGeometry } from "../../tile-geometries/polygon-bases/OctagonBaseGeometry.ts";
+import { OctagonAndSquareTilingBaseModel } from "../OctagonAndSquareTilingBaseModel.ts";
 
 /**
  * Класс модели замощения, представляющего собой прямоугольную сетку,
- * где в строках и столбцах размещаются правильные шестиугольники и квадраты.
+ * где в строках и столбцах размещаются правильные восьмиугольники и квадраты.
  * Восьмиугольники расположены так, что их верхние и нижние стороны горизонтальны,
  * а левые и правые - вертикальны.
  * Квадраты находится между восьмиугольниками, они повёрнуты на 90 градусов
@@ -27,7 +26,7 @@ import { OctagonBaseGeometry } from "../../tile-geometries/polygon-bases/Octagon
  * а также столбцов, содержащих квадраты, будет на один столбец меньше,
  * чем столбцов, содержащих восьмиугольники.
  */
-export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
+export class OctagonAndSquareTilingModel extends OctagonAndSquareTilingBaseModel {
     public readonly tilingType: TilingType = TilingType.OctagonAndSquare;
 
     /**
@@ -115,25 +114,17 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
         this.squareTileGeometry = new SquareGeometry(tileSide);
     }
 
-    public getGridIndicesAreCorrect(rowIndex: number, columnIndex: number): boolean {
-        return rowIndex >= 0
-            && rowIndex < this.tileRowCount
-            && columnIndex >= 0
-            && columnIndex < this.tileColumnCount - (rowIndex % 2);
-    }
-
-    protected getProtectedTileModel(targetTilePosition: TilePosition): TileModel {
+    protected getProtectedTileModel(targetTilePosition: RectangularGridTilePosition): TileModel {
         if (!this.octagonTileGeometry || !this.squareTileGeometry) {
             throw new Error('Tile geometry is not defined');
         }
 
-        const targetPosition = targetTilePosition as RectangularGridTilePosition;
-        const tileIsOctagon = targetPosition.rowIndex % 2 == 0;
+        const tileIsOctagon = targetTilePosition.rowIndex % 2 == 0;
         const tileGeometry: TileGeometry = tileIsOctagon
             ? this.octagonTileGeometry
             : this.squareTileGeometry;
         const result = new TileModel(this.modelSettings, tileGeometry);
-        result.targetTilePosition = targetPosition.clone();
+        result.targetTilePosition = targetTilePosition.clone();
         result.targetRotationAngle = tileIsOctagon ? 0 : Math.PI / 4.0;
         
         const octagonTileInscribedCircleRadius
@@ -141,18 +132,18 @@ export class OctagonAndSquareTilingModel extends RectangularGridTilingModel {
         const octagonTileInscribedCircleDiameter = octagonTileInscribedCircleRadius * 2;
         if (tileIsOctagon) {
             result.targetPositionPoint = new Point(
-                targetPosition.columnIndex * octagonTileInscribedCircleDiameter
+                targetTilePosition.columnIndex * octagonTileInscribedCircleDiameter
                     + octagonTileInscribedCircleRadius,
-                targetPosition.rowIndex / 2.0 * octagonTileInscribedCircleDiameter
+                targetTilePosition.rowIndex / 2.0 * octagonTileInscribedCircleDiameter
                     + octagonTileInscribedCircleRadius
             );
         } else {
             result.targetPositionPoint = new Point(
                 // ceil - чтобы избежать зазоров
-                Math.ceil((targetPosition.columnIndex + 1)
+                Math.ceil((targetTilePosition.columnIndex + 1)
                     * octagonTileInscribedCircleDiameter),
                 // ceil - чтобы избежать зазоров
-                Math.ceil((targetPosition.rowIndex + 1) / 2.0
+                Math.ceil((targetTilePosition.rowIndex + 1) / 2.0
                     * octagonTileInscribedCircleDiameter)
             );
         }

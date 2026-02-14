@@ -5,7 +5,6 @@ import { TriangleGeometry } from "../../tile-geometries/polygons/TriangleGeometr
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { RectangularGridTilingModel } from "../RectangularGridTilingModel.ts";
 import { TilingType } from "../TilingType.ts";
-import { TilePosition } from "../../tiles/TilePosition.ts";
 import { TileModel } from "../../tiles/TileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
 
@@ -100,24 +99,24 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
         this.tileGeometry = new TriangleGeometry(tileSide);
     }
 
-    protected getProtectedTileModel(targetTilePosition: TilePosition): TileModel {
+    protected getProtectedTileModel(targetTilePosition: RectangularGridTilePosition): TileModel {
         if (!this.tileGeometry) {
             throw new Error('tileGeometry is not defined');
         }
 
-        const targetPosition = targetTilePosition as RectangularGridTilePosition;
         const result = new TileModel(this.modelSettings, this.tileGeometry);
-        result.targetTilePosition = targetPosition.clone();
+        result.targetTilePosition = targetTilePosition.clone();
 
-        const tileIsRotated = (targetPosition.rowIndex + targetPosition.columnIndex) % 2 == 1;
+        const tileIsRotated = (targetTilePosition.rowIndex + targetTilePosition.columnIndex)
+            % 2 == 1;
         result.targetRotationAngle = tileIsRotated ? Math.PI : 0;
 
         const sideHalf = this.tileGeometry.side / 2.0;
         result.targetPositionPoint = new Point(
             // ceil - чтобы избежать зазоров
-            Math.ceil((targetPosition.columnIndex + 1) * sideHalf),
+            Math.ceil((targetTilePosition.columnIndex + 1) * sideHalf),
             // ceil - чтобы избежать зазоров
-            Math.ceil(targetPosition.rowIndex * this.tileGeometry.height
+            Math.ceil(targetTilePosition.rowIndex * this.tileGeometry.height
                 + (tileIsRotated
                     ? this.tileGeometry.inscribedCircleRadius
                     : this.tileGeometry.circumscribedCircleRadius))

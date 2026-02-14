@@ -1,9 +1,5 @@
-import { Graphics, Matrix, Renderer, Texture } from "pixi.js";
 import { TilingModel } from "./TilingModel.ts";
-import { TilingTextureModel } from "../TilingTextureModel.ts";
-import { ImageContainerModel } from "../ImageContainerModel.ts";
 import { TileModel } from "../tiles/TileModel.ts";
-import { ModelSettings } from "../ModelSettings.ts";
 import { TilePosition } from "../tiles/TilePosition.ts";
 import { RectangularGridTilePosition } from "../tiles/RectangularGridTilePosition.ts";
 
@@ -25,18 +21,6 @@ export abstract class RectangularGridTilingModel extends TilingModel {
     public tileRowCount: number = 0;
 
     //#endregion Texture tile info
-
-    private renderer: Renderer;
-
-    constructor(
-        modelSettings: ModelSettings,
-        textureModel: TilingTextureModel,
-        imageContainerModel: ImageContainerModel,
-        renderer: Renderer
-    ) {
-        super(modelSettings, textureModel, imageContainerModel);
-        this.renderer = renderer;
-    }
 
     /**
      * Получение признака того, что в заданной строке и столбце должна быть фигура
@@ -67,64 +51,75 @@ export abstract class RectangularGridTilingModel extends TilingModel {
      * Получение модели фигуры по её целевому положению в замощении
      * @param targetTilePosition Проверенная на корректность целевая позиция фигуры в замощении
      */
-    protected abstract getProtectedTileModel(targetTilePosition: TilePosition): TileModel;
+    protected abstract getProtectedTileModel(targetTilePosition: RectangularGridTilePosition)
+        : TileModel;
 
-    public getTileTexture(tileModel: TileModel): Texture {
-        if (!this.tilingContainerModel) {
-            throw new Error('tilingContainerModel is not initialized');
-        }
+    public static getMaxTilePositionEdgeDistanceIndex(
+        tileRowCount: number,
+        tileColumnCount: number
+    ): number {
+        return Math.ceil(Math.min(tileRowCount, tileColumnCount) / 2.0) - 1;
+    }
 
-        const sideToTextureSideRatio = this.imageContainerModel.sideToTextureSideRatio;
+    protected addTilePositionByIndices(
+        rowIndex: number,
+        columnIndex: number,
+        edgeDistanceIndex: number,
+        tilePositions: TilePosition[]
+    ) {
+        const tilePosition = new RectangularGridTilePosition(rowIndex, columnIndex);
+        this.addTilePosition(tilePosition, edgeDistanceIndex, tilePositions);
+    }
 
-        const textureTileLocalPivotPointX = tileModel.geometry.pivotPoint.x
-            / sideToTextureSideRatio;
-        const textureTileLocalPivotPointY = tileModel.geometry.pivotPoint.y
-            / sideToTextureSideRatio;
+    protected setTilePositionsByEdgeDistanceIndices(): void {
+        const maxEdgeDistanceIndex = RectangularGridTilingModel.getMaxTilePositionEdgeDistanceIndex(
+            this.tileRowCount, this.tileColumnCount);
+        for (
+            let edgeDistanceIndex = 0;
+            edgeDistanceIndex <= maxEdgeDistanceIndex;
+            edgeDistanceIndex++
+        ) {
+            const tilePositions: TilePosition[] = []; 
 
-        const textureTileAbsolutePivotPointX = tileModel.targetPositionPoint.x
-            / sideToTextureSideRatio
-            + this.textureXTilingOffset;
-        const textureTileAbsolutePivotPointY = tileModel.targetPositionPoint.y
-            / sideToTextureSideRatio
-             + this.textureYTilingOffset;
-        
-        const textureTileDefaultBoundingRectangleWidth
-            = tileModel.geometry.defaultBoundingRectangleSize.width
-            / sideToTextureSideRatio;
-        const textureTileDefaultBoundingRectangleHeight
-            = tileModel.geometry.defaultBoundingRectangleSize.height
-            / sideToTextureSideRatio;
+            const topRowIndex = edgeDistanceIndex;
+            const bottomRowIndex = this.tileRowCount - 1 - edgeDistanceIndex;
 
-        const textureMatrix = new Matrix();
-        textureMatrix.setTransform(
-            0, 0,
-            textureTileAbsolutePivotPointX, textureTileAbsolutePivotPointY,
-            1, 1,
-            -tileModel.targetRotationAngle,
-            0, 0
-        );
-        const globalTile = new Graphics()
-            .rect(
-                -textureTileLocalPivotPointX,
-                -textureTileLocalPivotPointY,
-                textureTileDefaultBoundingRectangleWidth,
-                textureTileDefaultBoundingRectangleHeight
-            )
-            .fill({
-                texture: this.textureModel.texture,
-                textureSpace: "global",
-                matrix: textureMatrix
-            });
-
-        const result = this.renderer.generateTexture({
-            target: globalTile,
-            resolution: 1,
-            textureSourceOptions: {
-                scaleMode: "nearest"
+            const maxColumnIndex = this.tileColumnCount - 1 - edgeDistanceIndex;
+            for (let columnIndex = edgeDistanceIndex; columnIndex <= maxColumnIndex; columnIndex++) {
+                this.addTilePositionByIndices(
+                    topRowIndex,
+                    columnIndex,
+                    edgeDistanceIndex,
+                    tilePositions
+                );
+                this.addTilePositionByIndices(
+                    bottomRowIndex,
+                    columnIndex,
+                    edgeDistanceIndex,
+                    tilePositions
+                );
             }
-        });
 
-        globalTile.destroy();
-        return result;
+            const leftColumnIndex = edgeDistanceIndex;
+            const rightColumnIndex = this.tileColumnCount - 1 - edgeDistanceIndex;
+
+            const maxRowIndex = this.tileRowCount - 2 - edgeDistanceIndex;
+            for (let rowIndex = edgeDistanceIndex + 1; rowIndex <= maxRowIndex; rowIndex++) {
+                this.addTilePositionByIndices(
+                    rowIndex,
+                    leftColumnIndex,
+                    edgeDistanceIndex,
+                    tilePositions
+                );
+                this.addTilePositionByIndices(
+                    rowIndex,
+                    rightColumnIndex,
+                    edgeDistanceIndex,
+                    tilePositions
+                );
+            }
+
+            this.tilePositionsByEdgeDistanceIndices.push(tilePositions);
+        }
     }
 }
