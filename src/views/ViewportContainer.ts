@@ -140,10 +140,10 @@ export class ViewportContainer extends Container {
         const scaledWidth = contentWidth * this.scale.x;
         const scaledHeight = contentHeight * this.scale.y;
         
-        this.x = (this.viewportSize.width - scaledWidth) / 2.0;
-        this.y = (this.viewportSize.height - scaledHeight) / 2.0;
+        const x = (this.viewportSize.width - scaledWidth) / 2.0;
+        const y = (this.viewportSize.height - scaledHeight) / 2.0;
         
-        this.clampPosition();
+        this.clampPosition(x, y);
     }
     
     /**
@@ -170,7 +170,7 @@ export class ViewportContainer extends Container {
             && this.contentOriginalSize.height > 0
         ) {
             this.resetScaleOfContentFitToViewport();
-            this.clampPosition();
+            this.clampPosition(this.x, this.y);
         }
     }
 
@@ -187,7 +187,7 @@ export class ViewportContainer extends Container {
      */
     public setViewportPosition(x: number, y: number): void {
         this.viewportPosition.set(x, y);
-        this.clampPosition();
+        this.clampPosition(this.x, this.y);
     }
 
     /**
@@ -200,17 +200,17 @@ export class ViewportContainer extends Container {
         const scaledWidth = this.contentOriginalSize.width * this.scale.x;
         const scaledHeight = this.contentOriginalSize.height * this.scale.y;
         
-        this.x = this.viewportPosition.x + (this.viewportSize.width - scaledWidth) / 2;
-        this.y = this.viewportPosition.y + (this.viewportSize.height - scaledHeight) / 2;
+        const x = this.viewportPosition.x + (this.viewportSize.width - scaledWidth) / 2;
+        const y = this.viewportPosition.y + (this.viewportSize.height - scaledHeight) / 2;
         
-        this.clampPosition();
+        this.clampPosition(x, y);
     }
 
     /**
      * Корректировка позиции с учетом текущего масштаба,
      * чтобы границы контента не вылезали за границы viewport-а
      */
-    private clampPosition(): void {
+    private clampPosition(x: number, y: number): void {
         if (
             this.contentOriginalSize.width <= ViewportContainer.coordinateEpsilon
             || this.contentOriginalSize.height <= ViewportContainer.coordinateEpsilon
@@ -226,20 +226,21 @@ export class ViewportContainer extends Container {
         const viewportTop = this.viewportPosition.y;
         const viewportBottom = this.viewportPosition.y + this.viewportSize.height;
 
-        this.x = contentScaledWidth < this.viewportSize.width
+        x = contentScaledWidth < this.viewportSize.width
             ? (viewportLeft + viewportRight - contentScaledWidth) / 2.0
-            : this.x > viewportLeft
+            : x > viewportLeft
                 ? viewportLeft
-                : this.x + contentScaledWidth < viewportRight
+                : x + contentScaledWidth < viewportRight
                     ? viewportRight - contentScaledWidth
-                    : this.x;
-        this.y = contentScaledHeight < this.viewportSize.height
+                    : x;
+        y = contentScaledHeight < this.viewportSize.height
             ? (viewportTop + viewportBottom - contentScaledHeight) / 2.0
-            : this.y > viewportTop
+            : y > viewportTop
                 ? viewportTop
-                : this.y + contentScaledHeight < viewportBottom
+                : y + contentScaledHeight < viewportBottom
                     ? viewportBottom - contentScaledHeight
-                    : this.y;
+                    : y;
+        this.position.set(x, y);
     }
 
     private addEventListeners(): void {
@@ -287,10 +288,10 @@ export class ViewportContainer extends Container {
         const oldX = this.x;
         const oldY = this.y;
         
-        this.x += e.clientX - this.lastMousePosition.x;
-        this.y += e.clientY - this.lastMousePosition.y;
+        const x = this.x + e.clientX - this.lastMousePosition.x;
+        const y = this.y + e.clientY - this.lastMousePosition.y;
         
-        this.clampPosition();
+        this.clampPosition(x, y);
         
         const actualDeltaX = this.x - oldX;
         const actualDeltaY = this.y - oldY;
@@ -326,10 +327,10 @@ export class ViewportContainer extends Container {
         
         this.scale.set(newScale);
         
-        this.x = mouseX - contentX * this.scale.x;
-        this.y = mouseY - contentY * this.scale.y;
+        const x = mouseX - contentX * this.scale.x;
+        const y = mouseY - contentY * this.scale.y;
         
-        this.clampPosition();
+        this.clampPosition(x, y);
     }
     
     private onTouchStart(e: TouchEvent): void {
@@ -397,10 +398,10 @@ export class ViewportContainer extends Container {
             const panY = (moveVector1.y + moveVector2.y) / 2.0
                 * this.viewSettings.viewportTouchPanSensitivity;
 
-            this.x += panX;
-            this.y += panY;
+            const x = this.x + panX;
+            const y = this.y + panY;
 
-            this.clampPosition();
+            this.clampPosition(x, y);
             
             const actualDeltaX = this.x - oldX;
             const actualDeltaY = this.y - oldY;
@@ -418,10 +419,10 @@ export class ViewportContainer extends Container {
             if (newScale >= this.minScale && newScale <= this.maxScale) {
                 this.scale.set(newScale);
                 
-                this.x = centerViewportX - relativeX * this.scale.x;
-                this.y = centerViewportY - relativeY * this.scale.y;
+                const x = centerViewportX - relativeX * this.scale.x;
+                const y = centerViewportY - relativeY * this.scale.y;
                 
-                this.clampPosition();
+                this.clampPosition(x, y);
                 
                 this.pinchDistance = currentDistance;
                 
