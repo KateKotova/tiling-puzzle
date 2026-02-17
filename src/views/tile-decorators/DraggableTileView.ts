@@ -20,7 +20,7 @@ import { AdditionalMath } from "../../math/AdditionalMath.ts";
  * Класс декоратора представления подвижного элемента замощения
  */
 export class DraggableTileView implements TileView {
-    private viewSettings: ViewSettings;
+    private readonly viewSettings: ViewSettings;
     /**
      * Композиция: элемент замощения, который декорируется
      */
@@ -146,7 +146,8 @@ export class DraggableTileView implements TileView {
     }
 
     private onPointerTap(event: PointerEvent): void {
-        if (event.pointerType === 'mouse' && event.button !== 0) {
+        const pointerIsMouseAndButtonIsNotLeft = event.pointerType === 'mouse' && event.button !== 0;
+        if (pointerIsMouseAndButtonIsNotLeft) {
             return;
         }
         this.stopRotation();

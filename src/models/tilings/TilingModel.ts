@@ -18,7 +18,7 @@ export abstract class TilingModel {
     public readonly tilingType: TilingType = TilingType.Unknown;
     public readonly lockType: TileLockType = TileLockType.None;
 
-    protected modelSettings: ModelSettings;
+    protected readonly modelSettings: ModelSettings;
     public isInitialized: boolean = false;
     public textureModel: TilingTextureModel;
     public tilingContainerModel?: TilingContainerModel;

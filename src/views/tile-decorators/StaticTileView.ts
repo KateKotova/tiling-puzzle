@@ -10,7 +10,7 @@ import { DraggingTileData } from "./DraggingTileData.ts";
  * который обозначает место, куда должен быть размещён пользователем подвижный элемент замощения
  */
 export class StaticTileView implements TileView {
-    private viewSettings: ViewSettings;
+    private readonly viewSettings: ViewSettings;
     /**
      * Композиция: элемент замощения, который декорируется
      */

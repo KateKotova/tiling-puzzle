@@ -7,7 +7,7 @@ import { DraggingTileData } from "../tile-decorators/DraggingTileData.ts";
  * Класс представления замощения
  */
 export abstract class TilingView {
-    protected viewSettings: ViewSettings;
+    protected readonly viewSettings: ViewSettings;
     public model: TilingModel;
     public tilingContainer: Container;
     public staticTilesContainer: Container;
