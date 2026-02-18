@@ -62,9 +62,9 @@ export class DraggableTileView implements TileView {
      * Эту зону нужно вычислять и хранить для перетаскивания,
      * потому что под перетаскиваемой фигурой зона не видна.
      */
-    private dragSourceAbsoluteHitArea?: Polygon;
+    private dragSourceTileWorldHitArea?: Polygon;
     private initialDragSource?: StaticTileView;
-    private initialDragSourceAbsoluteHitArea?: Polygon;
+    private initialDragSourceTileWorldHitArea?: Polygon;
     /**
      * Статическая фигура-ячейка, на которую происходит перетаскивание
      */
@@ -344,16 +344,19 @@ export class DraggableTileView implements TileView {
         );
         this.view.tile.position.copyFrom(this.view.model.currentPositionPoint);
 
-        if (this.initialDragSource && this.initialDragSourceAbsoluteHitArea) {
-            this.checkDragSourceActivity(
+        let wasEnteredToInitialDragSource = false;
+        if (this.initialDragSource && this.initialDragSourceTileWorldHitArea) {
+            wasEnteredToInitialDragSource = this.tryToEnterToDragSource(
                 this.initialDragSource,
-                this.initialDragSourceAbsoluteHitArea,
+                this.initialDragSourceTileWorldHitArea,
                 tileWorldPosition
             );
-        } else if (this.dragSource && this.dragSourceAbsoluteHitArea) {
-            this.checkDragSourceActivity(
+        }
+        
+        if (!wasEnteredToInitialDragSource && this.dragSource && this.dragSourceTileWorldHitArea) {
+            this.tryToEnterToDragSource(
                 this.dragSource,
-                this.dragSourceAbsoluteHitArea,
+                this.dragSourceTileWorldHitArea,
                 tileWorldPosition
             );
         }
@@ -429,31 +432,38 @@ export class DraggableTileView implements TileView {
     }
 
     /**
+     * Проверка попытки входа в ячейку-источник.
      * Исходная ячейка почему-то не определяется как целевая при перемещении
      * и не реагирует на события указателя.
      * Поэтому здесь мы смотрим, не попадает ли указатель в зону исходной ячейки,
      * чтобы её подсветить или, наоборот, чтобы убрать подсветку.
      * @param dragSource Исходная ячейка для перетаскивания
-     * @param dragSourceAbsoluteHitArea Зона захвата ячейки для перетаскивания
+     * @param dragSourceTileWorldHitArea Зона захвата ячейки для перетаскивания
      * в координатах родителя
      * @param tileWorldPosition Координаты точки в мире координат,
      * где живёт модель элемента замощения)
+     * @returns 
      */
-    private checkDragSourceActivity(
+    private tryToEnterToDragSource(
         dragSource: StaticTileView,
-        dragSourceAbsoluteHitArea: Polygon,
+        dragSourceTileWorldHitArea: Polygon,
         tileWorldPosition: Point
-    ): void {
+    ): boolean {
         const pointerIsInHitArea = AdditionalMath.getPointIsInsidePolygon(
             tileWorldPosition,
-            dragSourceAbsoluteHitArea
+            dragSourceTileWorldHitArea
         );
         
         if (!this.dragTarget && pointerIsInHitArea) {
             dragSource.onPointerEnter();
-        } else if (this.dragTarget && !pointerIsInHitArea) {
+            return true;
+        }
+        
+        if (this.dragTarget == dragSource && !pointerIsInHitArea) {
             dragSource.onPointerLeave();
         }
+
+        return false;
     }
 
     private addTileToParentContainer() {
@@ -469,13 +479,13 @@ export class DraggableTileView implements TileView {
     public setInitialDragSource(initialDragSource?: StaticTileView) {
         this.setDragSource(initialDragSource);
         this.initialDragSource = this.dragSource;
-        this.initialDragSourceAbsoluteHitArea = this.dragSourceAbsoluteHitArea?.clone();
+        this.initialDragSourceTileWorldHitArea = this.dragSourceTileWorldHitArea?.clone();
     }
 
     public setDragSource(dragSource?: StaticTileView) {
         this.dragSource = dragSource;
         if (!dragSource) {
-            this.dragSourceAbsoluteHitArea = undefined;
+            this.dragSourceTileWorldHitArea = undefined;
             return;
         }
 
@@ -492,7 +502,7 @@ export class DraggableTileView implements TileView {
             tileMatrix
         );
         
-        this.dragSourceAbsoluteHitArea = tileWorldHitArea;
+        this.dragSourceTileWorldHitArea = tileWorldHitArea;
     }
 
     /**
@@ -527,8 +537,8 @@ export class DraggableTileView implements TileView {
         }
         this.isLocatedCorrectly = true;
 
-        this.view.tile.eventMode = "none";
-        this.removeEventListeners();
+        this.removeInteractivity();
+        this.dragSource?.removeInteractivity();
 
         this.selectedTileContainer.addChild(this.view.tile);
         const filter = new GlowFilter(this.viewSettings.correctLocatedTileGlowFilterOptions);
@@ -540,6 +550,11 @@ export class DraggableTileView implements TileView {
             const contentWithoutBevelFilter = this.view.createContent(false);
             this.view.replaceContent(contentWithoutBevelFilter);
         },  this.viewSettings.correctLocatedTileFilterShowTime);
+    }
+
+    private removeInteractivity(): void {
+        this.view.tile.eventMode = "none";
+        this.removeEventListeners();
     }
 
     public destroy(): void {
