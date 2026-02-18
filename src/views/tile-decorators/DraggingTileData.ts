@@ -1,5 +1,6 @@
 import { DraggableTileView } from "./DraggableTileView";
 import { ViewportContainer } from "../ViewportContainer.ts";
+import { TileView } from "../tiles/TileView.ts";
 
 /**
  * Интерфейс информация о фигуре, которая перетаскивается в данный момент.
@@ -8,4 +9,5 @@ import { ViewportContainer } from "../ViewportContainer.ts";
 export interface DraggingTileData {
     view: DraggableTileView | null;
     viewport: ViewportContainer;
+    animatingViews: Set<TileView>;
 }

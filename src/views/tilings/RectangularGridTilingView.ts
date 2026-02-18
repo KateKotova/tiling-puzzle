@@ -1,4 +1,4 @@
-import { Renderer, Ticker } from "pixi.js";
+import { Container, Renderer, Ticker } from "pixi.js";
 import { RectangularGridTilingModel } from "../../models/tilings/RectangularGridTilingModel.ts";
 import { TilingModel } from "../../models/tilings/TilingModel.ts";
 import { ViewSettings } from "../ViewSettings.ts";
@@ -18,12 +18,13 @@ export class RectangularGridTilingView extends TilingView {
     constructor(
         viewSettings: ViewSettings,
         viewport: ViewportContainer,
+        selectedTileContainer: Container,
         model: TilingModel
     ) {
         if (!(model instanceof RectangularGridTilingModel)) {
             throw new Error("The tiling model is not an instance of RectangularGridTilingModel");
         }
-        super(viewSettings, viewport, model);
+        super(viewSettings, viewport, selectedTileContainer, model);
     }
 
     public setExampleTiling(renderer: Renderer, ticker: Ticker): void {

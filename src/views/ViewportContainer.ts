@@ -282,6 +282,10 @@ export class ViewportContainer extends Container {
     }
 
     private onMouseDown(e: MouseEvent): void {
+        if (this.draggingTileData?.animatingViews.size) {
+            return;
+        }
+        
         const isRightMouseButton = e.button === 2;
         if (isRightMouseButton) {
             this.isDragging = true;
@@ -292,7 +296,7 @@ export class ViewportContainer extends Container {
     }
     
     private onMouseMove(e: MouseEvent): void {
-        if (!this.isDragging) {
+        if (!this.isDragging || this.draggingTileData?.animatingViews.size) {
             return;
         }
         
@@ -321,6 +325,10 @@ export class ViewportContainer extends Container {
     
     private onWheel(e: WheelEvent): void {
         e.preventDefault();
+
+        if (this.draggingTileData?.animatingViews.size) {
+            return;
+        }
         
         const parentBounds = this.parent?.getBounds();
         if (!parentBounds) {
@@ -346,8 +354,8 @@ export class ViewportContainer extends Container {
     
     private onTouchStart(e: TouchEvent): void {
         e.preventDefault();
-        
-        if (e.touches.length !== 2 || this.draggingTileData?.view) {
+
+        if (e.touches.length !== 2 || this.draggingTileData?.animatingViews.size) {
             return;
         }
 
@@ -365,7 +373,11 @@ export class ViewportContainer extends Container {
     private onTouchMove(e: TouchEvent): void {
         e.preventDefault();
         
-        if (e.touches.length !== 2 || !this.isPinching || this.draggingTileData?.view) {
+        if (
+            e.touches.length !== 2
+            || !this.isPinching
+            || this.draggingTileData?.animatingViews.size
+        ) {
             return;
         }
 
