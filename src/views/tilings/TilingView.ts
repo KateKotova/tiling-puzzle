@@ -3,6 +3,7 @@ import { TilingModel } from "../../models/tilings/TilingModel.ts";
 import { ViewSettings } from "../ViewSettings.ts";
 import { DraggingTileData } from "../tile-decorators/DraggingTileData.ts";
 import { ViewportContainer } from "../ViewportContainer.ts";
+import { TileView } from "../tiles/TileView.ts";
 
 /**
  * Класс представления замощения
@@ -20,6 +21,7 @@ export abstract class TilingView {
     constructor(
         viewSettings: ViewSettings,
         viewport: ViewportContainer,
+        selectedTileContainer: Container,
         model: TilingModel
     ) {
         if (!model.isInitialized) {
@@ -29,7 +31,8 @@ export abstract class TilingView {
         this.viewSettings = viewSettings;
         this.draggingTileData = {
             view: null,
-            viewport: viewport
+            viewport: viewport,
+            animatingViews: new Set<TileView>()
         };
         this.model = model;
         this.tilingContainer = this.createTilingContainer();
@@ -40,8 +43,7 @@ export abstract class TilingView {
         this.draggableTilesContainer = new Container();
         this.tilingContainer.addChild(this.draggableTilesContainer);
 
-        this.selectedTileContainer = new Container();
-        this.tilingContainer.addChild(this.selectedTileContainer);
+        this.selectedTileContainer = selectedTileContainer;
     }
 
     private createTilingContainer(): Container {

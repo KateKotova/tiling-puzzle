@@ -106,7 +106,7 @@ export class StaticTileView implements TileView {
         const filter = new GlowFilter(this.viewSettings.targetStaticTileGlowFilterOptions);      
         this.view.setFilter(filter);
 
-        this.draggingTileData.view?.rotateToDragTarget(this.view.model);
+        this.draggingTileData.view?.rotateToDragTarget(this.view.model);     
     }
 
     public onPointerLeave(): void {
@@ -141,10 +141,19 @@ export class StaticTileView implements TileView {
         }
     }
 
-    public destroy(): void {
+    public removeInteractivity(): void {
+        this.view.tile.eventMode = "none";
+        this.removeEventListeners();
+    }
+
+    private removeEventListeners() {
         this.view.tile.off('pointerenter', this.onPointerEnter, this);
         this.view.tile.off('pointerleave', this.onPointerLeave, this);
-        this.view.tile.off('pointerup', this.onPointerUp, this);       
+        this.view.tile.off('pointerup', this.onPointerUp, this); 
+    }
+
+    public destroy(): void {
+        this.removeEventListeners();       
         this.view.destroy();
     }
 }

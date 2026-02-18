@@ -139,15 +139,15 @@ export class TileModel {
      * в радианах
      */
     public getNewPositionMinAngleDifference(normalizedTargetRotationAngle: number): number {
-        let result = AdditionalMath.getMinAngleDifference(this.currentRotationAngle,
-            normalizedTargetRotationAngle);
         if (this.geometry.freedomDegree == 1) {
-            return result;
+            return AdditionalMath.getMinAngleDifference(this.currentRotationAngle,
+                normalizedTargetRotationAngle);
         }
 
+        let result = 2 * Math.PI;
         for (
             let freedomDegreeIndex = 1, potentialRotationAngle = normalizedTargetRotationAngle;
-            freedomDegreeIndex < this.geometry.freedomDegree;
+            freedomDegreeIndex <= this.geometry.freedomDegree;
             freedomDegreeIndex++,
             potentialRotationAngle += this.geometry.freedomDegreeRotationAngle
         ) {
@@ -155,7 +155,7 @@ export class TileModel {
                 .getNormalizedAngle(potentialRotationAngle);
             const potentialResult = AdditionalMath.getMinAngleDifference(
                 this.currentRotationAngle, normalizedPotentialRotationAngle);
-            if (Math.abs(potentialResult) < Math.abs(result)) {
+            if (Math.abs(result) - Math.abs(potentialResult) > TileModel.rotationAngleEpsilon) {
                 result = potentialResult;
             }
         }
