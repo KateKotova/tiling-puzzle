@@ -9,10 +9,10 @@ import { TileViewParameters } from "./TileViewParameters.ts";
  * Базовый класс представления элемента замощения
  */
 export abstract class TileViewBase implements TileView {
-    protected viewSettings: ViewSettings;
+    protected readonly viewSettings: ViewSettings;
     public model: TileModel;
     public texture?: Texture;
-    public tile: Container;
+    public tile: Container;    
     public content: Container;
     protected renderer: Renderer;
     /**
@@ -45,7 +45,8 @@ export abstract class TileViewBase implements TileView {
         result.cacheAsTexture({ resolution: this.viewSettings.cacheTileAsTextureResolution });
         result.pivot.set(this.model.geometry.pivotPoint.x, this.model.geometry.pivotPoint.y);        
         result.rotation = this.model.currentRotationAngle;   
-        result.position = this.model.currentPositionPoint.clone();
+        result.position.copyFrom(this.model.currentPositionPoint);
+        result.hitArea = this.content.hitArea;     
         return result;
     }
 
@@ -64,13 +65,13 @@ export abstract class TileViewBase implements TileView {
     }
 
     public setFilter(filter: Filter): void {
-        this.content.filters = [filter];
-        this.content.updateCacheTexture();
+        this.tile.filters = [filter];
+        this.tile.updateCacheTexture();
     }
 
     public removeFilters(): void {
-        this.content.filters = [];
-        this.content.updateCacheTexture();
+        this.tile.filters = [];
+        this.tile.updateCacheTexture();
     }
 
     public destroy(): void {

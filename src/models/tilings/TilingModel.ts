@@ -18,7 +18,7 @@ export abstract class TilingModel {
     public readonly tilingType: TilingType = TilingType.Unknown;
     public readonly lockType: TileLockType = TileLockType.None;
 
-    protected modelSettings: ModelSettings;
+    protected readonly modelSettings: ModelSettings;
     public isInitialized: boolean = false;
     public textureModel: TilingTextureModel;
     public tilingContainerModel?: TilingContainerModel;
@@ -96,7 +96,7 @@ export abstract class TilingModel {
         tilePosition: TilePosition,
         edgeDistanceIndex: number,
         tilePositions: TilePosition[]
-    ) {
+    ): void {
         tilePosition.edgeDistanceIndex = edgeDistanceIndex;
         this.edgeDistanceIndicesByTilePositionStrings.set(tilePosition.toString(), edgeDistanceIndex);
         tilePositions.push(tilePosition);

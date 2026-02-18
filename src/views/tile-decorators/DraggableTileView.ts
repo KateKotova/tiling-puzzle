@@ -6,7 +6,8 @@ import {
     FederatedPointerEvent,
     Filter,
     Polygon,
-    Matrix
+    Matrix,
+    IHitArea
 } from "pixi.js";
 import { TileModel } from "../../models/tiles/TileModel.ts";
 import { ViewSettings } from "../ViewSettings.ts";
@@ -20,11 +21,18 @@ import { AdditionalMath } from "../../math/AdditionalMath.ts";
  * Класс декоратора представления подвижного элемента замощения
  */
 export class DraggableTileView implements TileView {
-    private viewSettings: ViewSettings;
+    private readonly viewSettings: ViewSettings;
     /**
      * Композиция: элемент замощения, который декорируется
      */
     public view: TileView;
+    /**
+     * Сохраняемая область попадания.
+     * При движении область попадания и события указателя отключаются,
+     * чтобы события указателя были видны элементам мозаики ниже.
+     * После окончания движения зона попадания восстанавливается.
+     */
+    private hitArea?: IHitArea;
     /**
      * Контейнер, в котором фигура находится по умолчанию
      */
@@ -54,12 +62,15 @@ export class DraggableTileView implements TileView {
      * Эту зону нужно вычислять и хранить для перетаскивания,
      * потому что под перетаскиваемой фигурой зона не видна.
      */
-    public dragSourceAbsoluteHitArea?: Polygon;
+    private dragSourceAbsoluteHitArea?: Polygon;
+    private initialDragSource?: StaticTileView;
+    private initialDragSourceAbsoluteHitArea?: Polygon;
     /**
      * Статическая фигура-ячейка, на которую происходит перетаскивание
      */
     public dragTarget?: StaticTileView;
 
+    private pointerDownId?: number;
     private onPointerDownIsActive: boolean = true;
     /**
      * Признака того, что фигура находится в правильной позиции
@@ -98,6 +109,8 @@ export class DraggableTileView implements TileView {
 
         this.view.tile.eventMode = "static";
         this.view.tile.on('pointerdown', this.onPointerDown, this);
+
+        this.hitArea = (this.view.tile.hitArea as unknown as Polygon).clone();
     }
 
     public get model(): TileModel {
@@ -146,7 +159,8 @@ export class DraggableTileView implements TileView {
     }
 
     private onPointerTap(event: PointerEvent): void {
-        if (event.pointerType === 'mouse' && event.button !== 0) {
+        const pointerIsMouseAndButtonIsNotLeft = event.pointerType === 'mouse' && event.button !== 0;
+        if (pointerIsMouseAndButtonIsNotLeft) {
             return;
         }
         this.stopRotation();
@@ -235,20 +249,20 @@ export class DraggableTileView implements TileView {
 
     private executeMove(deltaTime: number): void {
         this.view.model.executeMove(deltaTime);
-        this.view.tile.position = this.view.model.currentPositionPoint.clone();
+        this.view.tile.position.copyFrom(this.view.model.currentPositionPoint);
     }
 
     private completeRotation(): void {
         if (!this.isDragging) {
             this.view.removeFilters();
+            this.addTileToParentContainer();
         }
-
-        this.addTileToParentContainer();
+        
         this.view.model.completeRotation();
         this.view.tile.rotation = this.view.model.currentRotationAngle;
 
         if (this.view.model.getIsLocatedCorrectly()) {
-            this.destroyAsLocatedCorrectly();
+            this.fixAsLocatedCorrectly();
         }
     }
 
@@ -256,15 +270,33 @@ export class DraggableTileView implements TileView {
         this.view.removeFilters();
         this.addTileToParentContainer();
         this.view.model.completeMove();
-        this.view.tile.position = this.view.model.currentPositionPoint.clone();
+        this.view.tile.position.copyFrom(this.view.model.currentPositionPoint);
 
         if (this.view.model.getIsLocatedCorrectly()) {
-            this.destroyAsLocatedCorrectly();
+            this.fixAsLocatedCorrectly();
         }
     }
 
     private onPointerDown(event: FederatedPointerEvent): void {
+        if (event.propagationStopped) {
+            return;
+        }
+
+        const isMouseEventAndNotLeftButton = event.pointerType === 'mouse' && event.button !== 0;
+        if (isMouseEventAndNotLeftButton) {
+            return;
+        }
+        
+        if (event.pointerType === 'touch') {
+            if (event.isPrimary) {
+                this.pointerDownId = event.pointerId;
+            } else {
+                return;
+            }
+        }
+
         this.isDragging = true;
+        this.draggingTileData.view = this;
 
         this.setOnPointerDownActivity(false);
         this.view.tile.on('globalpointermove', this.onPointerMove, this);
@@ -272,56 +304,89 @@ export class DraggableTileView implements TileView {
 
         this.dragStartPosition = this.view.tile.position.clone();
         this.dragStartTime = event.timeStamp;
-        this.draggingTileData.view = this;
         
-        const parent = this.view.tile.parent ?? this.view.tile;
-        const parentEventPosition = parent.toLocal(event.global);
-        this.dragOffset.set(parentEventPosition.x - this.view.tile.position.x,
-            parentEventPosition.y - this.view.tile.position.y);
+        const globalPosition = new Point(event.global.x, event.global.y);
+        const tileWorldPosition = this.getTileWorldPosition(globalPosition);
+        
+        this.dragOffset.set(
+            tileWorldPosition.x - this.view.model.currentPositionPoint.x,
+            tileWorldPosition.y - this.view.model.currentPositionPoint.y
+        );
         
         this.selectedTileContainer.addChild(this.view.tile);
         const filter = new GlowFilter(this.viewSettings.selectedTileGlowFilterOptions);
         this.view.setFilter(filter);
+
+        // Убираем зону попадания, чтобы события указателя были видны
+        // статическим элементам замощения уровнем ниже
+        this.view.tile.hitArea = undefined;
+        this.view.content.hitArea = undefined;
     }
 
     private onPointerMove(event: FederatedPointerEvent): void {
-        if (!this.isDragging) {
+        if (!this.isDragging
+            || this.draggingTileData.view !== this
+            || (
+                event.pointerType === 'touch'
+                && event.isPrimary
+                && this.pointerDownId !== event.pointerId
+            )
+        ) {
             return;
         }
-        
-        const parent = this.view.tile.parent ?? this.view.tile;
-        const parentEventPosition = parent.toLocal(event.global);
-        this.view.model.currentPositionPoint.set(parentEventPosition.x - this.dragOffset.x,
-            parentEventPosition.y - this.dragOffset.y);
-        this.view.tile.position = this.view.model.currentPositionPoint.clone();
 
-        // Исходная ячейка почему-то не определяется как целевая и не реагирует на события мыши.
-        // Поэтому здесь мы смотрим, не попадает ли указатель в зону исходной ячейки,
-        // чтобы её подсветить или, наоборот, чтобы убрать подсветку.
-        if (this.dragSource && this.dragSourceAbsoluteHitArea) {
-            const pointerIsInHitArea = AdditionalMath.getPointIsInsidePolygon(
-                parentEventPosition, this.dragSourceAbsoluteHitArea);
-            if (!this.dragTarget && pointerIsInHitArea) {
-                this.dragSource.onPointerEnter();
-            } else if (this.dragTarget && !pointerIsInHitArea) {
-                this.dragSource.onPointerLeave();
-            }
+        const globalPosition = new Point(event.global.x, event.global.y);        
+        const tileWorldPosition = this.getTileWorldPosition(globalPosition);
+        
+        this.view.model.currentPositionPoint.set(
+            tileWorldPosition.x - this.dragOffset.x,
+            tileWorldPosition.y - this.dragOffset.y
+        );
+        this.view.tile.position.copyFrom(this.view.model.currentPositionPoint);
+
+        if (this.initialDragSource && this.initialDragSourceAbsoluteHitArea) {
+            this.checkDragSourceActivity(
+                this.initialDragSource,
+                this.initialDragSourceAbsoluteHitArea,
+                tileWorldPosition
+            );
+        } else if (this.dragSource && this.dragSourceAbsoluteHitArea) {
+            this.checkDragSourceActivity(
+                this.dragSource,
+                this.dragSourceAbsoluteHitArea,
+                tileWorldPosition
+            );
         }
     }
 
     public onGlobalPointerUp(event: PointerEvent): void {
-        if (!this.isDragging) {
+        if (!this.isDragging || this.draggingTileData.view !== this
+        ) {
             return;
+        }
+
+        if (event.pointerType === 'touch') {
+            if (this.pointerDownId === event.pointerId) {
+                this.pointerDownId = undefined;
+            } else {
+                return;
+            }
         }
 
         this.isDragging = false;
 
-        const federatedPointerEvent = event as FederatedPointerEvent;
-        if (this.dragTarget) {
-            this.dragTarget.onPointerUp(federatedPointerEvent);
-        } else if (this.dragSource) {
-            this.dragSource.onPointerUp(federatedPointerEvent);
+        const finalTarget = this.dragTarget;
+        const finalSource = this.dragSource;
+        
+        if (finalTarget) {
+            finalTarget.stopBeingDragTarget();
+        } else if (finalSource) {
+            finalSource.stopBeingDragTarget();
         }
+
+        // Восстанавливаем зону попадания, чтобы снова получать события указателя
+        this.view.tile.hitArea = this.hitArea;
+        this.view.content.hitArea = this.hitArea;
 
         const tapWasExecuted
             = (event.timeStamp - this.dragStartTime <= this.viewSettings.tapMaxDuration)
@@ -330,7 +395,8 @@ export class DraggableTileView implements TileView {
             && Math.abs(this.view.tile.position.y - this.dragStartPosition.y)
                 <= this.viewSettings.tapMaxDistance;
 
-        const moveTargetModel = this.dragTarget?.model ?? this.dragSource?.model;
+        const moveTargetModel = finalTarget?.model ?? finalSource?.model;
+        
         if (moveTargetModel) {
             this.moveToStaticTile(moveTargetModel);
             if (!tapWasExecuted) {
@@ -342,9 +408,10 @@ export class DraggableTileView implements TileView {
             this.view.removeFilters();
         }
 
-        if (this.dragTarget) {
-            this.setDragSource(this.dragTarget);
+        if (finalTarget) {
+            this.setDragSource(finalTarget);
         }
+        
         this.dragTarget = undefined;
         this.draggingTileData.view = null;
 
@@ -354,19 +421,55 @@ export class DraggableTileView implements TileView {
         if (tapWasExecuted) {
             this.view.model.currentPositionPoint.set(this.dragStartPosition.x,
                 this.dragStartPosition.y);
-            this.view.tile.position = this.view.model.currentPositionPoint.clone();
+            this.view.tile.position.copyFrom(this.view.model.currentPositionPoint);
             this.onPointerTap(event);
         } else {
             this.setOnPointerDownActivity(true);
         }
     }
 
+    /**
+     * Исходная ячейка почему-то не определяется как целевая при перемещении
+     * и не реагирует на события указателя.
+     * Поэтому здесь мы смотрим, не попадает ли указатель в зону исходной ячейки,
+     * чтобы её подсветить или, наоборот, чтобы убрать подсветку.
+     * @param dragSource Исходная ячейка для перетаскивания
+     * @param dragSourceAbsoluteHitArea Зона захвата ячейки для перетаскивания
+     * в координатах родителя
+     * @param tileWorldPosition Координаты точки в мире координат,
+     * где живёт модель элемента замощения)
+     */
+    private checkDragSourceActivity(
+        dragSource: StaticTileView,
+        dragSourceAbsoluteHitArea: Polygon,
+        tileWorldPosition: Point
+    ): void {
+        const pointerIsInHitArea = AdditionalMath.getPointIsInsidePolygon(
+            tileWorldPosition,
+            dragSourceAbsoluteHitArea
+        );
+        
+        if (!this.dragTarget && pointerIsInHitArea) {
+            dragSource.onPointerEnter();
+        } else if (this.dragTarget && !pointerIsInHitArea) {
+            dragSource.onPointerLeave();
+        }
+    }
+
     private addTileToParentContainer() {
         if (this.parentContainer) {
-            this.parentContainer?.addChild(this.view.tile);
-        } else {
+            if (this.parentContainer != this.view.tile.parent) {
+                this.parentContainer?.addChild(this.view.tile);            
+            }
+        } else if (this.selectedTileContainer == this.view.tile.parent) {
             this.selectedTileContainer.removeChild(this.view.tile);
         }
+    }
+
+    public setInitialDragSource(initialDragSource?: StaticTileView) {
+        this.setDragSource(initialDragSource);
+        this.initialDragSource = this.dragSource;
+        this.initialDragSourceAbsoluteHitArea = this.dragSourceAbsoluteHitArea?.clone();
     }
 
     public setDragSource(dragSource?: StaticTileView) {
@@ -378,15 +481,30 @@ export class DraggableTileView implements TileView {
 
         const pivotPoint = dragSource.view.model.geometry.pivotPoint;
         const currentPositionPoint = dragSource.view.model.currentPositionPoint;
-        const matrix = new Matrix()
+        
+        const tileMatrix = new Matrix()
             .translate(-pivotPoint.x, -pivotPoint.y)
             .rotate(dragSource.view.model.currentRotationAngle)
             .translate(currentPositionPoint.x, currentPositionPoint.y);
-
-        this.dragSourceAbsoluteHitArea = AdditionalMath.getTransformedPolygon(
+        
+        const tileWorldHitArea = AdditionalMath.getTransformedPolygon(
             dragSource.view.model.geometry.hitArea,
-            matrix
+            tileMatrix
         );
+        
+        this.dragSourceAbsoluteHitArea = tileWorldHitArea;
+    }
+
+    /**
+     * Получение глобальных координат экрана в мировых координатах контента
+     * (координаты, в которых живёт модель элемента замощения)
+     * @param globalPoint Глобальные координаты
+     * @returns Координаты, в которых живёт модель элемента замощения
+     */
+    private getTileWorldPosition(globalPoint: Point): Point {
+        return this.parentContainer
+            ? this.parentContainer.toLocal(globalPoint)
+            : globalPoint;
     }
 
     private removeEventListeners() {
@@ -397,7 +515,13 @@ export class DraggableTileView implements TileView {
         window.removeEventListener('pointerup', this.boundGlobalPointerUp);
     }
 
-    private destroyAsLocatedCorrectly() {
+    /**
+     * Фиксация элемента мозаики на своём месте после того, как он принял правильное положение.
+     * Элемент мозаики подсвечивается, потом погасает.
+     * Выдавленная рамка убирается, и фигура становится часть картинки.
+     * Реакция на события указателя пропадает.
+     */
+    private fixAsLocatedCorrectly(): void {
         if (this.isLocatedCorrectly) {
             return;
         }

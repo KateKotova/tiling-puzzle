@@ -7,6 +7,7 @@ import { ImageContainerModel } from "./models/ImageContainerModel.ts";
 import { RectangularGridTilingModelFactory } from "./models/tilings/RectangularGridTilingModelFactory.ts";
 import { RectangularGridTilingModel } from "./models/tilings/RectangularGridTilingModel.ts";
 import { RectangularGridTilingView } from "./views/tilings/RectangularGridTilingView.ts";
+import { ViewportContainer } from "./views/ViewportContainer.ts";
 
 async function main(): Promise<void> {
   try {
@@ -80,14 +81,26 @@ async function main(): Promise<void> {
     const containerCenterX = containerWidth / 2.0;
     const containerCenterY = containerHeight / 2.0;
 
+    const viewportContainer = new ViewportContainer(      
+      viewSettings,
+      {
+        x: containerCenterX - imageContainerModel.width / 2.0,
+        y: containerCenterY - imageContainerModel.height / 2.0,
+        width: imageContainerModel.width,
+        height: imageContainerModel.height,
+      }
+    );
+    container.addChild(viewportContainer);
+    viewportContainer.onAddedToParent();
+
     const imageContainer = new Container({
-      x: containerCenterX - imageContainerModel.width / 2.0,
-      y: containerCenterY - imageContainerModel.height / 2.0,
+      x: 0,
+      y: 0,
       width: imageContainerModel.width,
       height: imageContainerModel.height,
     });
-    container.addChild(imageContainer);
-
+    viewportContainer.addChild(imageContainer);
+    
     const image = new Graphics()
       .rect(0, 0, imageContainerModel.width, imageContainerModel.height)
       .fill({
@@ -97,9 +110,11 @@ async function main(): Promise<void> {
       });
     imageContainer.addChild(image);
 
-    const tilingView = new RectangularGridTilingView(viewSettings, tilingModel);
+    const tilingView = new RectangularGridTilingView(viewSettings, viewportContainer, tilingModel);
     tilingView.setExampleTiling(app.renderer, app.ticker);
     imageContainer.addChild(tilingView.tilingContainer);
+    viewportContainer.setContentSize(imageContainerModel.width, imageContainerModel.height);
+    viewportContainer.setDraggingTileData(tilingView.draggingTileData);
 
     /*
     // Bunny

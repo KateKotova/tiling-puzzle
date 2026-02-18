@@ -5,6 +5,39 @@ import { Matrix, Point, Polygon, Rectangle } from "pixi.js";
  */
 export class AdditionalMath {
     /**
+     * Получение расстояния между точками
+     * @param point1 Первая точка
+     * @param point2 Вторая точка
+     * @returns Расстояние между точками, неотрицательное число
+     */
+    public static getPointDistance(point1: Point, point2: Point): number {
+        const xOffset = point2.x - point1.x;
+        const yOffset = point2.y - point1.y;
+        return Math.sqrt(xOffset * xOffset + yOffset * yOffset);
+    }
+
+    /**
+     * Получение угла между векторами 
+     * @param vector1 Первый вектор
+     * @param vector2 Второй вектор
+     * @returns Угол между векторами в радианах от 0 до Pi
+     */
+    public static getAngleBetweenVectors(vector1: Point, vector2: Point): number {
+        // Скалярное произведение
+        const dotProduct = vector1.x * vector2.x + vector1.y * vector2.y;
+        // Длины векторов
+        const magnitude1 = Math.sqrt(vector1.x * vector1.x + vector1.y * vector1.y);
+        const magnitude2 = Math.sqrt(vector2.x * vector2.x + vector2.y * vector2.y);
+        
+        if (magnitude1 === 0 || magnitude2 === 0) {
+            return 0;
+        }
+        
+        const cos = dotProduct / (magnitude1 * magnitude2);
+        return Math.acos(Math.max(-1, Math.min(1, cos)));
+    }
+
+    /**
      * Получение угла, нормализованного в диапазоне [0, 2 * Pi),
      * то есть от нуля включительно до двух Pi не включительно.
      * @param angle Угол в радианах

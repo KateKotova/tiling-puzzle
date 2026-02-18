@@ -17,7 +17,7 @@ export class TileModel {
     private static rotationAngleEpsilon: number = Math.PI / 180;
     private static positionCoordinateEpsilon: number = 2;
 
-    private modelSettings: ModelSettings;
+    private readonly modelSettings: ModelSettings;
     public geometry: TileGeometry;
     /**
      * Целевая позиция элемента замощения в замощении
