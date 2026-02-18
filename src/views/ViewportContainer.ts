@@ -9,6 +9,7 @@ import {
 import { ViewSettings } from './ViewSettings.ts';
 import { AdditionalMath } from '../math/AdditionalMath.ts';
 import { Size } from '../math/Size.ts';
+import { DraggingTileData } from './tile-decorators/DraggingTileData.ts';
 
 /**
  * Класс контейнера-viewport-а,
@@ -47,6 +48,12 @@ export class ViewportContainer extends Container {
      * Начальный масштаб, такой, чтобы контент помещался во viewport
      */
     private scaleOfContentFitToViewport: number = 1;
+
+    /**
+     * Информация о фигуре, которая перетаскивается в данный момент.
+     * Этот объект один на всех.
+     */
+    private draggingTileData?: DraggingTileData;
     
     private boundOnMouseDown: (e: MouseEvent) => void = this.onMouseDown.bind(this);
     private boundOnMouseMove: (e: MouseEvent) => void = this.onMouseMove.bind(this);
@@ -61,7 +68,7 @@ export class ViewportContainer extends Container {
     
     constructor(
         viewSettings: ViewSettings,
-        options?: ContainerOptions<ContainerChild>
+        options?: ContainerOptions<ContainerChild>        
     ) {
         super(options);
         this.viewSettings = viewSettings;
@@ -85,6 +92,10 @@ export class ViewportContainer extends Container {
      */
     private get maxScale(): number {
         return this.viewSettings.viewportMaxScale * this.scaleOfContentFitToViewport;
+    }
+
+    public setDraggingTileData(draggingTileData: DraggingTileData) {
+        this.draggingTileData = draggingTileData;
     }
 
     private createContentMask(): void {
@@ -336,7 +347,7 @@ export class ViewportContainer extends Container {
     private onTouchStart(e: TouchEvent): void {
         e.preventDefault();
         
-        if (e.touches.length !== 2) {
+        if (e.touches.length !== 2 || this.draggingTileData?.view) {
             return;
         }
 
@@ -354,7 +365,7 @@ export class ViewportContainer extends Container {
     private onTouchMove(e: TouchEvent): void {
         e.preventDefault();
         
-        if (e.touches.length !== 2 || !this.isPinching) {
+        if (e.touches.length !== 2 || !this.isPinching || this.draggingTileData?.view) {
             return;
         }
 

@@ -15,7 +15,7 @@ export abstract class TilingView {
     public draggableTilesContainer: Container;
     protected staticTileFillColor: Color = new Color(0x00AA00);
     protected selectedTileContainer: Container;
-    protected draggingTileData: DraggingTileData;
+    public draggingTileData: DraggingTileData;
 
     constructor(
         viewSettings: ViewSettings,

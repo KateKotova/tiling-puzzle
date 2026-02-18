@@ -70,6 +70,7 @@ export class DraggableTileView implements TileView {
      */
     public dragTarget?: StaticTileView;
 
+    private pointerDownId?: number;
     private onPointerDownIsActive: boolean = true;
     /**
      * Признака того, что фигура находится в правильной позиции
@@ -286,10 +287,12 @@ export class DraggableTileView implements TileView {
             return;
         }
         
-        const isTouchEventAndIsMultiTouch = event.pointerType === 'touch'
-            && (event as unknown as TouchEvent)?.touches?.length > 1;
-        if (isTouchEventAndIsMultiTouch) {
-            return;
+        if (event.pointerType === 'touch') {
+            if (event.isPrimary) {
+                this.pointerDownId = event.pointerId;
+            } else {
+                return;
+            }
         }
 
         this.isDragging = true;
@@ -321,14 +324,17 @@ export class DraggableTileView implements TileView {
     }
 
     private onPointerMove(event: FederatedPointerEvent): void {
-        if (!this.isDragging) {
+        if (!this.isDragging
+            || this.draggingTileData.view !== this
+            || (
+                event.pointerType === 'touch'
+                && event.isPrimary
+                && this.pointerDownId !== event.pointerId
+            )
+        ) {
             return;
         }
-        
-        if (this.draggingTileData.view !== this) {
-            return;
-        }
-        
+
         const globalPosition = new Point(event.global.x, event.global.y);        
         const tileWorldPosition = this.getTileWorldPosition(globalPosition);
         
@@ -353,44 +359,18 @@ export class DraggableTileView implements TileView {
         }
     }
 
-    /**
-     * Исходная ячейка почему-то не определяется как целевая при перемещении
-     * и не реагирует на события указателя.
-     * Поэтому здесь мы смотрим, не попадает ли указатель в зону исходной ячейки,
-     * чтобы её подсветить или, наоборот, чтобы убрать подсветку.
-     * @param dragSource Исходная ячейка для перетаскивания
-     * @param dragSourceAbsoluteHitArea Зона захвата ячейки для перетаскивания
-     * в координатах родителя
-     * @param tileWorldPosition Координаты точки в мире координат,
-     * где живёт модель элемента замощения)
-     */
-    private checkDragSourceActivity(
-        dragSource: StaticTileView,
-        dragSourceAbsoluteHitArea: Polygon,
-        tileWorldPosition: Point
-    ): void {
-        const pointerIsInHitArea = AdditionalMath.getPointIsInsidePolygon(
-            tileWorldPosition,
-            dragSourceAbsoluteHitArea
-        );
-        
-        if (!this.dragTarget && pointerIsInHitArea) {
-            dragSource.onPointerEnter();
-        } else if (this.dragTarget && !pointerIsInHitArea) {
-            dragSource.onPointerLeave();
-        }
-    }
-
     public onGlobalPointerUp(event: PointerEvent): void {
-        const isTouchEventAndIsMultiTouch = event.pointerType === 'touch'
-            && (event as unknown as TouchEvent)?.touches?.length > 1;
-
-        if (
-            isTouchEventAndIsMultiTouch
-            || !this.isDragging
-            || this.draggingTileData.view !== this
+        if (!this.isDragging || this.draggingTileData.view !== this
         ) {
             return;
+        }
+
+        if (event.pointerType === 'touch') {
+            if (this.pointerDownId === event.pointerId) {
+                this.pointerDownId = undefined;
+            } else {
+                return;
+            }
         }
 
         this.isDragging = false;
@@ -445,6 +425,34 @@ export class DraggableTileView implements TileView {
             this.onPointerTap(event);
         } else {
             this.setOnPointerDownActivity(true);
+        }
+    }
+
+    /**
+     * Исходная ячейка почему-то не определяется как целевая при перемещении
+     * и не реагирует на события указателя.
+     * Поэтому здесь мы смотрим, не попадает ли указатель в зону исходной ячейки,
+     * чтобы её подсветить или, наоборот, чтобы убрать подсветку.
+     * @param dragSource Исходная ячейка для перетаскивания
+     * @param dragSourceAbsoluteHitArea Зона захвата ячейки для перетаскивания
+     * в координатах родителя
+     * @param tileWorldPosition Координаты точки в мире координат,
+     * где живёт модель элемента замощения)
+     */
+    private checkDragSourceActivity(
+        dragSource: StaticTileView,
+        dragSourceAbsoluteHitArea: Polygon,
+        tileWorldPosition: Point
+    ): void {
+        const pointerIsInHitArea = AdditionalMath.getPointIsInsidePolygon(
+            tileWorldPosition,
+            dragSourceAbsoluteHitArea
+        );
+        
+        if (!this.dragTarget && pointerIsInHitArea) {
+            dragSource.onPointerEnter();
+        } else if (this.dragTarget && !pointerIsInHitArea) {
+            dragSource.onPointerLeave();
         }
     }
 
