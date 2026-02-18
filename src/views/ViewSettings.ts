@@ -29,9 +29,9 @@ export class ViewSettings {
 
     public readonly selectedTileGlowFilterColor: Color = new Color(0x00FFFF);
     public readonly selectedTileGlowFilterOptions: GlowFilterOptions = {
-        distance: 5,
-        outerStrength: 2,
-        innerStrength: 2,
+        distance: 7,
+        outerStrength: 0,
+        innerStrength: 4,
         color: this.selectedTileGlowFilterColor,
         quality: 0.5,
         knockout: false
@@ -39,9 +39,9 @@ export class ViewSettings {
 
     public readonly targetStaticTileGlowFilterColor: Color = new Color(0x3F00FF);
     public readonly targetStaticTileGlowFilterOptions: GlowFilterOptions = {
-        distance: 8,
-        outerStrength: 1,
-        innerStrength: 4,
+        distance: 9,
+        outerStrength: 0,
+        innerStrength: 5,
         color: this.targetStaticTileGlowFilterColor,
         quality: 0.5,
         knockout: false
@@ -50,9 +50,9 @@ export class ViewSettings {
     public readonly correctLocatedTileFilterShowTime: number = 500;
     public readonly correctLocatedTileGlowFilterColor: Color = new Color(0x00FF00);
     public readonly correctLocatedTileGlowFilterOptions: GlowFilterOptions = {
-        distance: 10,
-        outerStrength: 2,
-        innerStrength: 5,
+        distance: 12,
+        outerStrength: 0,
+        innerStrength: 7,
         color: this.correctLocatedTileGlowFilterColor,
         quality: 0.5,
         knockout: false
