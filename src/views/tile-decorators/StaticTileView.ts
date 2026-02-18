@@ -45,6 +45,8 @@ export class StaticTileView implements TileView {
 
         this.view.tile.eventMode = "static";
         this.view.tile.on('pointerenter', this.onPointerEnter, this);
+        this.view.tile.on('pointerleave', this.onPointerLeave, this);
+        this.view.tile.on('pointerup', this.onPointerUp, this);
     }
 
     public get model(): TileModel {
@@ -80,68 +82,69 @@ export class StaticTileView implements TileView {
     }
 
     private getDraggingTileHasTheSameType(): boolean {
-        return !!this.draggingTileData.view
-            && this.draggingTileData.view.model.geometry.geometryType
-            == this.view.model.geometry.geometryType;
+        const draggingGeometryType = this.draggingTileData.view?.model.geometry.geometryType;
+        const currentGeometryType = this.view.model.geometry.geometryType;
+        return draggingGeometryType === currentGeometryType;
     }
 
     public onPointerEnter(): void {
-        if (this.isDragTarget || !this.getDraggingTileHasTheSameType()) {
+        if (!this.getDraggingTileHasTheSameType()) {
             return;
         }
 
-        this.isDragTarget = true;
         if (this.draggingTileData.view) {
-            this.draggingTileData.view.dragTarget?.onPointerLeave();
+            if (this.draggingTileData.view.dragTarget) {
+                this.draggingTileData.view.dragTarget.view.removeFilters();
+                this.draggingTileData.view.dragTarget.isDragTarget = false;
+            }
+            
             this.draggingTileData.view.dragTarget = this;
         }
+        
+        this.isDragTarget = true;
+        
         const filter = new GlowFilter(this.viewSettings.targetStaticTileGlowFilterOptions);      
         this.view.setFilter(filter);
-
-        this.view.tile.off('pointerenter', this.onPointerEnter, this);
-        this.view.tile.on('pointerleave', this.onPointerLeave, this);
-        this.view.tile.on('pointerup', this.onPointerUp, this);
 
         this.draggingTileData.view?.rotateToDragTarget(this.view.model);
     }
 
     public onPointerLeave(): void {
-        if (!this.isDragTarget) {
+        if (!this.isDragTarget || this.draggingTileData.view?.dragTarget !== this) {
             return;
         }
 
         this.isDragTarget = false;
-        if (this.draggingTileData.view && this.draggingTileData.view.dragTarget == this) {
+        this.view.removeFilters();
+        if (this.draggingTileData.view) {
             this.draggingTileData.view.dragTarget = undefined;
         }
-        this.view.removeFilters();
-
-        this.view.tile.on('pointerenter', this.onPointerEnter, this);
-        this.view.tile.off('pointerleave', this.onPointerLeave, this);
-        this.view.tile.off('pointerup', this.onPointerUp, this);
     }
 
     public onPointerUp(event: FederatedPointerEvent): void {
-        if (!this.isDragTarget) {
+        const isTouchEventAndIsMultiTouch = event.pointerType === 'touch'
+            && (event as unknown as TouchEvent)?.touches?.length > 1;
+        if (isTouchEventAndIsMultiTouch) {
             return;
         }
 
-        this.isDragTarget = false;
-        this.view.removeFilters();
-
         if (this.draggingTileData.view) {
+            this.stopBeingDragTarget();            
             this.draggingTileData.view.onGlobalPointerUp(event);
         }
+    }
 
-        this.view.tile.on('pointerenter', this.onPointerEnter, this);
-        this.view.tile.off('pointerleave', this.onPointerLeave, this);
-        this.view.tile.off('pointerup', this.onPointerUp, this);
+    public stopBeingDragTarget(): void {
+        if (this.isDragTarget) {
+            this.isDragTarget = false;
+            this.view.removeFilters();
+        }
     }
 
     public destroy(): void {
         this.view.tile.off('pointerenter', this.onPointerEnter, this);
         this.view.tile.off('pointerleave', this.onPointerLeave, this);
-        this.view.tile.off('pointerup', this.onPointerUp, this);        
+        this.view.tile.off('pointerup', this.onPointerUp, this);       
         this.view.destroy();
     }
 }

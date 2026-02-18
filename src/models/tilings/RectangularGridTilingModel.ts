@@ -66,7 +66,7 @@ export abstract class RectangularGridTilingModel extends TilingModel {
         columnIndex: number,
         edgeDistanceIndex: number,
         tilePositions: TilePosition[]
-    ) {
+    ): void {
         const tilePosition = new RectangularGridTilePosition(rowIndex, columnIndex);
         this.addTilePosition(tilePosition, edgeDistanceIndex, tilePositions);
     }

@@ -299,7 +299,7 @@ export class ViewportContainer extends Container {
         this.lastMousePosition.x += actualDeltaX;
         this.lastMousePosition.y += actualDeltaY;
     }
-    
+
     private onMouseUp(e: MouseEvent): void {
         const isRightMouseButton = e.button === 2;
         if (isRightMouseButton) {

@@ -20,7 +20,7 @@ async function main(): Promise<void> {
     const containerHeight = 400;
 
     const textureMinSideTileCount = 4;
-    const tilingType = TilingType.HexagonWithSingleLock;
+    const tilingType = TilingType.OctagonAndSquare;
 
     //#endregion test data end
 
@@ -110,7 +110,7 @@ async function main(): Promise<void> {
       });
     imageContainer.addChild(image);
 
-    const tilingView = new RectangularGridTilingView(viewSettings, tilingModel);
+    const tilingView = new RectangularGridTilingView(viewSettings, viewportContainer, tilingModel);
     tilingView.setExampleTiling(app.renderer, app.ticker);
     imageContainer.addChild(tilingView.tilingContainer);
     viewportContainer.setContentSize(imageContainerModel.width, imageContainerModel.height);

@@ -8,17 +8,22 @@ import { RectangularGridTilePosition } from "../../models/tiles/RectangularGridT
 import { TileViewParameters } from "../tiles/TileViewParameters.ts";
 import { StaticTileView } from "../tile-decorators/StaticTileView.ts";
 import { DraggableTileView } from "../tile-decorators/DraggableTileView.ts";
+import { ViewportContainer } from "../ViewportContainer.ts";
 
 /**
  * Класс представления замощения, представляющего собой прямоугольную сетку,
  * где фигуры размещаются в строках и столбцах
  */
 export class RectangularGridTilingView extends TilingView {
-    constructor(viewSettings: ViewSettings, model: TilingModel) {
+    constructor(
+        viewSettings: ViewSettings,
+        viewport: ViewportContainer,
+        model: TilingModel
+    ) {
         if (!(model instanceof RectangularGridTilingModel)) {
             throw new Error("The tiling model is not an instance of RectangularGridTilingModel");
         }
-        super(viewSettings, model);
+        super(viewSettings, viewport, model);
     }
 
     public setExampleTiling(renderer: Renderer, ticker: Ticker): void {
@@ -39,7 +44,7 @@ export class RectangularGridTilingView extends TilingView {
                 }
                 staticTileModel.currentRotationAngle = staticTileModel.targetRotationAngle;
                 staticTileModel.currentTargetRotationAngle = staticTileModel.targetRotationAngle;
-                staticTileModel.currentPositionPoint = staticTileModel.targetPositionPoint.clone();
+                staticTileModel.currentPositionPoint.copyFrom(staticTileModel.targetPositionPoint);
 
                 const staticTileViewParameters: TileViewParameters = {
                     viewSettings: this.viewSettings,
@@ -78,7 +83,7 @@ export class RectangularGridTilingView extends TilingView {
                         this.selectedTileContainer,
                         ticker,
                         this.draggingTileData);
-                    decoratedDraggableTileView.setDragSource(decoratedStaticTileView);
+                    decoratedDraggableTileView.setInitialDragSource(decoratedStaticTileView);
                 }
             }
         }

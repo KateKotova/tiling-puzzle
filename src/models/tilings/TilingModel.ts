@@ -96,7 +96,7 @@ export abstract class TilingModel {
         tilePosition: TilePosition,
         edgeDistanceIndex: number,
         tilePositions: TilePosition[]
-    ) {
+    ): void {
         tilePosition.edgeDistanceIndex = edgeDistanceIndex;
         this.edgeDistanceIndicesByTilePositionStrings.set(tilePosition.toString(), edgeDistanceIndex);
         tilePositions.push(tilePosition);

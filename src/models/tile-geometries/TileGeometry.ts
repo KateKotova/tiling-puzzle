@@ -67,12 +67,12 @@ export abstract class TileGeometry {
         this.baseValue = baseValue;
     }
 
-    protected setLockHeight() {
+    protected setLockHeight(): void {
         this.lockHeightToBaseValueRatio = TileLockHeightToBaseValueRatios[this.lockType];
         this.lockHeight = this.baseValue * this.lockHeightToBaseValueRatio;
     } 
 
-    protected getFreedomDegreeRotationAngle() {
+    protected getFreedomDegreeRotationAngle(): number {
         return 2 * Math.PI / this.freedomDegree;
     }
 }
