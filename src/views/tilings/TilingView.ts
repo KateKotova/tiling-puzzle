@@ -30,7 +30,7 @@ export abstract class TilingView {
 
         this.viewSettings = viewSettings;
         this.draggingTileData = {
-            view: null,
+            view: undefined,
             viewport: viewport,
             animatingViews: new Set<TileView>()
         };

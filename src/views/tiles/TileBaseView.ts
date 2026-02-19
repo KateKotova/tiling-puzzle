@@ -8,7 +8,7 @@ import { TileViewParameters } from "./TileViewParameters.ts";
 /**
  * Базовый класс представления элемента замощения
  */
-export abstract class TileViewBase implements TileView {
+export abstract class TileBaseView implements TileView {
     protected readonly viewSettings: ViewSettings;
     public model: TileModel;
     public texture?: Texture;

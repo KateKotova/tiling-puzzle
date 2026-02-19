@@ -7,7 +7,7 @@ import { TileView } from "../tiles/TileView.ts";
  * Такой объект должен быть один на всех.
  */
 export interface DraggingTileData {
-    view: DraggableTileView | null;
+    view?: DraggableTileView;
     viewport: ViewportContainer;
     animatingViews: Set<TileView>;
 }

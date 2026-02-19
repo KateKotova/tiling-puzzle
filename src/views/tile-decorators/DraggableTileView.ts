@@ -506,7 +506,7 @@ export class DraggableTileView implements TileView {
         }
         
         this.dragTarget = undefined;
-        this.draggingTileData.view = null;        
+        this.draggingTileData.view = undefined;        
 
         this.view.tile.off('globalpointermove', this.onPointerMove, this);
         window.removeEventListener('pointerup', this.boundGlobalPointerUp);

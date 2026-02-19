@@ -7,14 +7,14 @@ import {
     Sprite,
     Texture
 } from "pixi.js";
-import { TileViewBase } from "./TileViewBase.ts";
+import { TileBaseView } from "./TileBaseView.ts";
 import { TileViewParameters } from "./TileViewParameters.ts";
 import { Size } from "../../math/Size.ts";
 
 /**
  * Представление элемента замощения, который представляет собой svg-путь
  */
-export class SvgPathTileView extends TileViewBase {
+export class SvgPathTileView extends TileBaseView {
     private spriteBoundingSize: Size = new Size();
 
     constructor (parameters: TileViewParameters) {

@@ -1,5 +1,5 @@
 import { Container, Graphics, Sprite } from "pixi.js";
-import { TileViewBase } from "./TileViewBase.ts";
+import { TileBaseView } from "./TileBaseView.ts";
 import { TileViewParameters } from "./TileViewParameters.ts";
 import { RegularPolygonTileGeometry } from "../../models/tile-geometries/RegularPolygonTileGeometry.ts";
 import { TileLockType } from "../../models/tile-locks/TileLockType.ts";
@@ -7,7 +7,7 @@ import { TileLockType } from "../../models/tile-locks/TileLockType.ts";
 /**
  * Представление элемента замощения, который представляет собой правильный многоугольник
  */
-export class RegularPolygonTileView extends TileViewBase {
+export class RegularPolygonTileView extends TileBaseView {
     constructor (parameters: TileViewParameters) {
         if (!(parameters.model.geometry instanceof RegularPolygonTileGeometry)) {
             throw new Error("The tile geometry is not an instance of RegularPolygonTileGeometry");
