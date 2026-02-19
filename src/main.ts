@@ -122,7 +122,9 @@ async function main(): Promise<void> {
     tilingView.setExampleTiling(app.renderer, app.ticker);
     imageContainer.addChild(tilingView.tilingContainer);
     viewportContainer.setContentSize(imageContainerModel.width, imageContainerModel.height);
-    viewportContainer.setDraggingTileData(tilingView.draggingTileData);
+    viewportContainer.getShouldPreventEvents = (): boolean => {
+      return !!tilingView.draggingTileData?.animatingViews.size;
+    };
 
     /*
     // Bunny

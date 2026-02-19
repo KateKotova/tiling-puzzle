@@ -9,7 +9,6 @@ import {
 import { ViewSettings } from './ViewSettings.ts';
 import { AdditionalMath } from '../math/AdditionalMath.ts';
 import { Size } from '../math/Size.ts';
-import { DraggingTileData } from './tile-decorators/DraggingTileData.ts';
 
 /**
  * Класс контейнера-viewport-а,
@@ -50,10 +49,9 @@ export class ViewportContainer extends Container {
     private scaleOfContentFitToViewport: number = 1;
 
     /**
-     * Информация о фигуре, которая перетаскивается в данный момент.
-     * Этот объект один на всех.
+     * Функция, которая показывает, что следует предотвращать события
      */
-    private draggingTileData?: DraggingTileData;
+    public getShouldPreventEvents: () => boolean = () => false;
     
     private boundOnMouseDown: (e: MouseEvent) => void = this.onMouseDown.bind(this);
     private boundOnMouseMove: (e: MouseEvent) => void = this.onMouseMove.bind(this);
@@ -92,10 +90,6 @@ export class ViewportContainer extends Container {
      */
     private get maxScale(): number {
         return this.viewSettings.viewportMaxScale * this.scaleOfContentFitToViewport;
-    }
-
-    public setDraggingTileData(draggingTileData: DraggingTileData) {
-        this.draggingTileData = draggingTileData;
     }
 
     private createContentMask(): void {
@@ -282,7 +276,7 @@ export class ViewportContainer extends Container {
     }
 
     private onMouseDown(e: MouseEvent): void {
-        if (this.draggingTileData?.animatingViews.size) {
+        if (this.getShouldPreventEvents()) {
             return;
         }
         
@@ -296,7 +290,7 @@ export class ViewportContainer extends Container {
     }
     
     private onMouseMove(e: MouseEvent): void {
-        if (!this.isDragging || this.draggingTileData?.animatingViews.size) {
+        if (!this.isDragging || this.getShouldPreventEvents()) {
             return;
         }
         
@@ -326,7 +320,7 @@ export class ViewportContainer extends Container {
     private onWheel(e: WheelEvent): void {
         e.preventDefault();
 
-        if (this.draggingTileData?.animatingViews.size) {
+        if (this.getShouldPreventEvents()) {
             return;
         }
         
@@ -355,7 +349,7 @@ export class ViewportContainer extends Container {
     private onTouchStart(e: TouchEvent): void {
         e.preventDefault();
 
-        if (e.touches.length !== 2 || this.draggingTileData?.animatingViews.size) {
+        if (e.touches.length !== 2 || this.getShouldPreventEvents()) {
             return;
         }
 
@@ -376,7 +370,7 @@ export class ViewportContainer extends Container {
         if (
             e.touches.length !== 2
             || !this.isPinching
-            || this.draggingTileData?.animatingViews.size
+            || this.getShouldPreventEvents()
         ) {
             return;
         }
