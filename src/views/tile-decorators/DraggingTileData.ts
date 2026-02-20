@@ -1,5 +1,5 @@
 import { DraggableTileView } from "./DraggableTileView";
-import { ViewportContainer } from "../ViewportContainer.ts";
+import { ZoomAndPanContainer } from "../components/ZoomAndPanContainer.ts";
 import { TileView } from "../tiles/TileView.ts";
 
 /**
@@ -8,6 +8,6 @@ import { TileView } from "../tiles/TileView.ts";
  */
 export interface DraggingTileData {
     view?: DraggableTileView;
-    viewport: ViewportContainer;
+    viewport: ZoomAndPanContainer;
     animatingViews: Set<TileView>;
 }

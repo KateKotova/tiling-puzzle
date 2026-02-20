@@ -1,24 +1,21 @@
 import {
-    Container,
     ContainerChild,
     ContainerOptions,
     DestroyOptions,
-    Graphics,
     Point
 } from 'pixi.js';
-import { ViewSettings } from './ViewSettings.ts';
-import { AdditionalMath } from '../math/AdditionalMath.ts';
-import { Size } from '../math/Size.ts';
+import { ViewSettings } from '../ViewSettings.ts';
+import { AdditionalMath } from '../../math/AdditionalMath.ts';
+import { ViewportContainer } from './ViewportContainer.ts';
 
 /**
- * Класс контейнера-viewport-а,
+ * Класс контейнера-viewport-а с возможностью масштабирования и панорамирования,
  * то есть окошка для просмотра содержимого данного контейнера.
  * Масштабирование: сведение или разведение двух пальцев или колёсиком мышки.
  * Перемещение (панорамирование):
  * параллельные движения двумя пальцами или мышкой при удержании правой кнопки.
  */
-export class ViewportContainer extends Container {
-    private static readonly coordinateEpsilon = 0.1;
+export class ZoomAndPanContainer extends ViewportContainer {
     private readonly viewSettings: ViewSettings;
     private isDragging = false;
     private lastMousePosition = new Point();
@@ -27,22 +24,6 @@ export class ViewportContainer extends Container {
     private lastTouch1 = new Point();
     private lastTouch2 = new Point();
     
-    /**
-     * Позиция viewport-а, координаты левого верхнего угла относительно родительского контейнера
-     */
-    private viewportPosition: Point;
-    /**
-     * Размеры viewport-а, то есть окошка просмотра содержимого
-     */
-    private viewportSize: Size;
-    /**
-     * Оригинальные размеры контента без масштабирования
-     */
-    private contentOriginalSize: Size = new Size(0, 0);
-    /**
-     * Маска для сокрытия содержимого контента вне viewport-а
-     */
-    private contentMaskGraphics?: Graphics;    
     /**
      * Начальный масштаб, такой, чтобы контент помещался во viewport
      */
@@ -69,12 +50,7 @@ export class ViewportContainer extends Container {
         options?: ContainerOptions<ContainerChild>        
     ) {
         super(options);
-        this.viewSettings = viewSettings;
-        
-        this.viewportPosition = new Point(options?.x ?? 0, options?.y ?? 0);
-        this.viewportSize = new Size(options?.width ?? 0, options?.height ?? 0);
-
-        this.createContentMask();
+        this.viewSettings = viewSettings;        
         this.addEventListeners();
     }
 
@@ -92,51 +68,8 @@ export class ViewportContainer extends Container {
         return this.viewSettings.viewportMaxScale * this.scaleOfContentFitToViewport;
     }
 
-    private createContentMask(): void {
-        this.contentMaskGraphics = new Graphics();
-        this.contentMaskGraphics
-            .rect(
-                this.viewportPosition.x,
-                this.viewportPosition.y,
-                this.viewportSize.width,
-                this.viewportSize.height
-            )
-            .fill({
-                color: 0xFF0000,
-                alpha: 0
-            });
-        
-        // Маска не должна быть дочерним элементом viewport-а.
-        // Просто устанавливаем её как маску для контейнера
-        this.mask = this.contentMaskGraphics;        
-        if (this.parent) {
-            this.parent.addChild(this.contentMaskGraphics);
-        }
-    }
-
-    /**
-     * Метод, который нужно вызывать после добавления viewport-а к родителю.
-     * Добавляет маску в родительский контейнер
-     */
-    public onAddedToParent(): void {
-        if (
-            this.parent
-            && this.contentMaskGraphics
-            && !this.contentMaskGraphics.parent
-        ) {
-            this.parent.addChild(this.contentMaskGraphics);
-        }
-    }
-    
-    /**
-     * Установка размеров контента.
-     * Этот метод нужно вызывать после добавления контента
-     * @param contentWidth Ширина контента
-     * @param contentHeight Высота контента
-     */
     public setContentSize(contentWidth: number, contentHeight: number): void {
-        this.contentOriginalSize.width = contentWidth;
-        this.contentOriginalSize.height = contentHeight;
+        super.setContentSize(contentWidth, contentHeight);
         
         this.resetScaleOfContentFitToViewport();
         
@@ -151,25 +84,9 @@ export class ViewportContainer extends Container {
         this.clampPosition(x, y);
     }
     
-    /**
-     * Установка размера viewport-а. Вызывается, если нужно переустановить.
-     * @param viewportWidth Ширина viewport-а
-     * @param viewportHeight Высота viewport-а
-     */
     public setViewportSize(viewportWidth: number, viewportHeight: number): void {
-        this.viewportSize.width = viewportWidth;
-        this.viewportSize.height = viewportHeight;
-        
-        if (this.contentMaskGraphics) {
-            this.contentMaskGraphics.clear();
-            this.contentMaskGraphics
-                .rect(0, 0, viewportWidth, viewportHeight)
-                .fill({
-                    color: 0xFF0000,
-                    alpha: 0
-                });
-        }
-        
+        super.setViewportSize(viewportWidth, viewportHeight);
+
         if (
             this.contentOriginalSize.width > 0
             && this.contentOriginalSize.height > 0
@@ -186,16 +103,6 @@ export class ViewportContainer extends Container {
     }
 
     /**
-     * Установка позиции viewport-а. Вызывается, если нужно переустановить.
-     * @param x Абсцисса левого верхнего угла относительно родительского контейнера
-     * @param y Ордината левого верхнего угла относительно родительского контейнера
-     */
-    public setViewportPosition(x: number, y: number): void {
-        this.viewportPosition.set(x, y);
-        this.clampPosition(this.x, this.y);
-    }
-
-    /**
      * Установка исходного масштаба (чтобы контент помещался во viewport)
      * и центрирование контента
      */
@@ -209,43 +116,6 @@ export class ViewportContainer extends Container {
         const y = this.viewportPosition.y + (this.viewportSize.height - scaledHeight) / 2;
         
         this.clampPosition(x, y);
-    }
-
-    /**
-     * Корректировка позиции с учетом текущего масштаба,
-     * чтобы границы контента не вылезали за границы viewport-а
-     */
-    private clampPosition(x: number, y: number): void {
-        if (
-            this.contentOriginalSize.width <= ViewportContainer.coordinateEpsilon
-            || this.contentOriginalSize.height <= ViewportContainer.coordinateEpsilon
-        ) {
-            return;
-        }
-
-        const contentScaledWidth = this.contentOriginalSize.width * this.scale.x;
-        const contentScaledHeight = this.contentOriginalSize.height * this.scale.y;
-
-        const viewportLeft = this.viewportPosition.x;
-        const viewportRight = this.viewportPosition.x + this.viewportSize.width;
-        const viewportTop = this.viewportPosition.y;
-        const viewportBottom = this.viewportPosition.y + this.viewportSize.height;
-
-        x = contentScaledWidth < this.viewportSize.width
-            ? (viewportLeft + viewportRight - contentScaledWidth) / 2.0
-            : x > viewportLeft
-                ? viewportLeft
-                : x + contentScaledWidth < viewportRight
-                    ? viewportRight - contentScaledWidth
-                    : x;
-        y = contentScaledHeight < this.viewportSize.height
-            ? (viewportTop + viewportBottom - contentScaledHeight) / 2.0
-            : y > viewportTop
-                ? viewportTop
-                : y + contentScaledHeight < viewportBottom
-                    ? viewportBottom - contentScaledHeight
-                    : y;
-        this.position.set(x, y);
     }
 
     private addEventListeners(): void {
@@ -470,10 +340,6 @@ export class ViewportContainer extends Container {
     
     public destroy(options?: DestroyOptions): void {
         this.removeEventListeners();
-        if (this.contentMaskGraphics) {
-            this.contentMaskGraphics.destroy();
-            this.contentMaskGraphics = undefined;
-        }
         super.destroy(options);
     }
 }

@@ -2,7 +2,7 @@ import { Color, Container, Renderer, Ticker } from "pixi.js";
 import { TilingModel } from "../../models/tilings/TilingModel.ts";
 import { ViewSettings } from "../ViewSettings.ts";
 import { DraggingTileData } from "../tile-decorators/DraggingTileData.ts";
-import { ViewportContainer } from "../ViewportContainer.ts";
+import { ZoomAndPanContainer } from "../components/ZoomAndPanContainer.ts";
 import { TileView } from "../tiles/TileView.ts";
 
 /**
@@ -20,7 +20,7 @@ export abstract class TilingView {
 
     constructor(
         viewSettings: ViewSettings,
-        viewport: ViewportContainer,
+        viewport: ZoomAndPanContainer,
         selectedTileContainer: Container,
         model: TilingModel
     ) {

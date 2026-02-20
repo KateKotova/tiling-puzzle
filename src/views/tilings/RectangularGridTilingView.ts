@@ -8,7 +8,7 @@ import { RectangularGridTilePosition } from "../../models/tiles/RectangularGridT
 import { TileViewParameters } from "../tiles/TileViewParameters.ts";
 import { StaticTileView } from "../tile-decorators/StaticTileView.ts";
 import { DraggableTileView } from "../tile-decorators/DraggableTileView.ts";
-import { ViewportContainer } from "../ViewportContainer.ts";
+import { ZoomAndPanContainer } from "../components/ZoomAndPanContainer.ts";
 
 /**
  * Класс представления замощения, представляющего собой прямоугольную сетку,
@@ -17,7 +17,7 @@ import { ViewportContainer } from "../ViewportContainer.ts";
 export class RectangularGridTilingView extends TilingView {
     constructor(
         viewSettings: ViewSettings,
-        viewport: ViewportContainer,
+        viewport: ZoomAndPanContainer,
         selectedTileContainer: Container,
         model: TilingModel
     ) {

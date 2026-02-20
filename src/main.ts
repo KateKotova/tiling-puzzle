@@ -7,7 +7,7 @@ import { ImageContainerModel } from "./models/ImageContainerModel.ts";
 import { RectangularGridTilingModelFactory } from "./models/tilings/RectangularGridTilingModelFactory.ts";
 import { RectangularGridTilingModel } from "./models/tilings/RectangularGridTilingModel.ts";
 import { RectangularGridTilingView } from "./views/tilings/RectangularGridTilingView.ts";
-import { ViewportContainer } from "./views/ViewportContainer.ts";
+import { ZoomAndPanContainer } from "./views/components/ZoomAndPanContainer.ts";
 
 async function main(): Promise<void> {
   try {
@@ -84,7 +84,7 @@ async function main(): Promise<void> {
     const containerCenterX = containerWidth / 2.0;
     const containerCenterY = containerHeight / 2.0;
 
-    const viewportContainer = new ViewportContainer(      
+    const zoomAndPanContainer = new ZoomAndPanContainer(      
       viewSettings,
       {
         x: containerCenterX - imageContainerModel.width / 2.0,
@@ -93,8 +93,8 @@ async function main(): Promise<void> {
         height: imageContainerModel.height,
       }
     );
-    container.addChild(viewportContainer);
-    viewportContainer.onAddedToParent();
+    container.addChild(zoomAndPanContainer);
+    zoomAndPanContainer.onAddedToParent();
 
     const imageContainer = new Container({
       x: 0,
@@ -102,7 +102,7 @@ async function main(): Promise<void> {
       width: imageContainerModel.width,
       height: imageContainerModel.height,
     });
-    viewportContainer.addChild(imageContainer);
+    zoomAndPanContainer.addChild(imageContainer);
     
     const image = new Graphics()
       .rect(0, 0, imageContainerModel.width, imageContainerModel.height)
@@ -115,14 +115,14 @@ async function main(): Promise<void> {
 
     const tilingView = new RectangularGridTilingView(
       viewSettings,
-      viewportContainer,
+      zoomAndPanContainer,
       selectedTileContainer,
       tilingModel
     );
     tilingView.setExampleTiling(app.renderer, app.ticker);
     imageContainer.addChild(tilingView.tilingContainer);
-    viewportContainer.setContentSize(imageContainerModel.width, imageContainerModel.height);
-    viewportContainer.getShouldPreventEvents = (): boolean => {
+    zoomAndPanContainer.setContentSize(imageContainerModel.width, imageContainerModel.height);
+    zoomAndPanContainer.getShouldPreventEvents = (): boolean => {
       return !!tilingView.draggingTileData?.animatingViews.size;
     };
 
