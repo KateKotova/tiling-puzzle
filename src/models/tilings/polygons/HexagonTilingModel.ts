@@ -97,6 +97,7 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
     protected initializeImageTileInfo(): void {
         const tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
         this.tileGeometry = new HexagonGeometry(tileSide);
+        this.maxTileBoundingSize = this.tileGeometry.maxBoundingSize;
     }
 
     protected getProtectedTileModel(targetTilePosition: RectangularGridTilePosition): TileModel {

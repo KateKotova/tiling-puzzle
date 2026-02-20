@@ -64,5 +64,9 @@ export class OctagonWithSingleLockGeometry extends OctagonBaseGeometry {
             8,
             this.regularPolygonInitialRotationAngle
         );
+        this.maxBoundingSize = Math.max(
+            2 * this.circumscribedCircleRadius,
+            2 * (this.inscribedCircleRadius + this.lockHeight)
+        );
     }
 }

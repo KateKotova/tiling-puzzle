@@ -96,6 +96,7 @@ export class SquareWithSingleLockTilingModel extends RectangularGridTilingModel 
     protected initializeImageTileInfo(): void {
         const tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
         this.tileGeometry = new SquareWithSingleLockGeometry(tileSide);
+        this.maxTileBoundingSize = this.tileGeometry.maxBoundingSize;
     }
 
     protected getProtectedTileModel(targetTilePosition: RectangularGridTilePosition): TileModel {

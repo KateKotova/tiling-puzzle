@@ -48,5 +48,9 @@ export class SquareWithSingleLockGeometry extends SquareBaseGeometry {
             new Point(this.side, this.side + this.lockHeight),
             new Point(0, this.side + this.lockHeight)
         ]);
+        this.maxBoundingSize = Math.max(
+            2 * this.circumscribedCircleRadius,
+            2 * (this.inscribedCircleRadius + this.lockHeight)
+        );
     }
 }

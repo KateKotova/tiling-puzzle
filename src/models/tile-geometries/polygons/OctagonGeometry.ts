@@ -33,5 +33,6 @@ export class OctagonGeometry extends OctagonBaseGeometry {
             8,
             this.regularPolygonInitialRotationAngle
         );
+        this.maxBoundingSize = this.circumscribedCircleRadius * 2;
     }
 }

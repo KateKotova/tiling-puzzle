@@ -97,6 +97,7 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
     protected initializeImageTileInfo(): void {
         const tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
         this.tileGeometry = new TriangleGeometry(tileSide);
+        this.maxTileBoundingSize = this.tileGeometry.maxBoundingSize;
     }
 
     protected getProtectedTileModel(targetTilePosition: RectangularGridTilePosition): TileModel {

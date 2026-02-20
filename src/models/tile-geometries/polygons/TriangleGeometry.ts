@@ -30,5 +30,6 @@ export class TriangleGeometry extends TriangleBaseGeometry {
             new Point(this.side, this.height),
             new Point(0, this.height)
         ]);
+        this.maxBoundingSize = this.circumscribedCircleRadius * 2;
     }
 }

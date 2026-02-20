@@ -138,6 +138,10 @@ export class OctagonAndSquareWithSpiralLockTilingModel
         const tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
         this.octagonTileGeometry = new OctagonWithSingleLockGeometry(tileSide);
         this.squareTileGeometry = new SquareWithSingleLockGeometry(tileSide);
+        this.maxTileBoundingSize = Math.max(
+            this.octagonTileGeometry.maxBoundingSize,
+            this.squareTileGeometry.maxBoundingSize
+        );
     }
 
     protected getProtectedTileModel(targetTilePosition: RectangularGridTilePosition): TileModel {

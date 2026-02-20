@@ -112,6 +112,10 @@ export class OctagonAndSquareTilingModel extends OctagonAndSquareTilingBaseModel
         const tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
         this.octagonTileGeometry = new OctagonGeometry(tileSide);
         this.squareTileGeometry = new SquareGeometry(tileSide);
+        this.maxTileBoundingSize = Math.max(
+            this.octagonTileGeometry.maxBoundingSize,
+            this.squareTileGeometry.maxBoundingSize
+        );
     }
 
     protected getProtectedTileModel(targetTilePosition: RectangularGridTilePosition): TileModel {
