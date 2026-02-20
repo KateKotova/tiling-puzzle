@@ -78,8 +78,8 @@ export class ZoomAndPanContainer extends ViewportContainer {
         const scaledWidth = contentWidth * this.scale.x;
         const scaledHeight = contentHeight * this.scale.y;
         
-        const x = (this.viewportSize.width - scaledWidth) / 2.0;
-        const y = (this.viewportSize.height - scaledHeight) / 2.0;
+        const x = (this.viewportRectangle.width - scaledWidth) / 2.0;
+        const y = (this.viewportRectangle.height - scaledHeight) / 2.0;
         
         this.clampPosition(x, y);
     }
@@ -97,8 +97,8 @@ export class ZoomAndPanContainer extends ViewportContainer {
     }
 
     private resetScaleOfContentFitToViewport() {
-        const widthRatio = this.viewportSize.width / this.contentOriginalSize.width;
-        const heightRatio = this.viewportSize.height / this.contentOriginalSize.height;
+        const widthRatio = this.viewportRectangle.width / this.contentOriginalSize.width;
+        const heightRatio = this.viewportRectangle.height / this.contentOriginalSize.height;
         this.scaleOfContentFitToViewport = Math.min(widthRatio, heightRatio);
     }
 
@@ -112,8 +112,8 @@ export class ZoomAndPanContainer extends ViewportContainer {
         const scaledWidth = this.contentOriginalSize.width * this.scale.x;
         const scaledHeight = this.contentOriginalSize.height * this.scale.y;
         
-        const x = this.viewportPosition.x + (this.viewportSize.width - scaledWidth) / 2;
-        const y = this.viewportPosition.y + (this.viewportSize.height - scaledHeight) / 2;
+        const x = this.viewportRectangle.x + (this.viewportRectangle.width - scaledWidth) / 2;
+        const y = this.viewportRectangle.y + (this.viewportRectangle.height - scaledHeight) / 2;
         
         this.clampPosition(x, y);
     }
@@ -199,8 +199,8 @@ export class ZoomAndPanContainer extends ViewportContainer {
             return;
         }
         
-        const mouseX = e.clientX - parentBounds.left - this.viewportPosition.x;
-        const mouseY = e.clientY - parentBounds.top - this.viewportPosition.y;
+        const mouseX = e.clientX - parentBounds.left - this.viewportRectangle.x;
+        const mouseY = e.clientY - parentBounds.top - this.viewportRectangle.y;
         
         const contentX = (mouseX - this.x) / this.scale.x;
         const contentY = (mouseY - this.y) / this.scale.y;

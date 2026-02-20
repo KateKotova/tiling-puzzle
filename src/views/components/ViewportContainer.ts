@@ -4,7 +4,7 @@ import {
     ContainerOptions,
     DestroyOptions,
     Graphics,
-    Point
+    Rectangle
 } from 'pixi.js';
 import { Size } from '../../math/Size.ts';
 
@@ -15,13 +15,10 @@ import { Size } from '../../math/Size.ts';
 export class ViewportContainer extends Container {
     private static readonly coordinateEpsilon = 0.1;
     /**
-     * Позиция viewport-а, координаты левого верхнего угла относительно родительского контейнера
+     * Позиция и размеры viewport-а, то есть окошка просмотра содержимого.
+     * Здесь позиция - координаты левого верхнего угла относительно родительского контейнера.
      */
-    protected viewportPosition: Point;
-    /**
-     * Размеры viewport-а, то есть окошка просмотра содержимого
-     */
-    protected viewportSize: Size;
+    protected viewportRectangle: Rectangle;
     /**
      * Оригинальные размеры контента без масштабирования
      */
@@ -33,8 +30,12 @@ export class ViewportContainer extends Container {
     
     constructor(options?: ContainerOptions<ContainerChild>) {
         super(options);
-        this.viewportPosition = new Point(options?.x ?? 0, options?.y ?? 0);
-        this.viewportSize = new Size(options?.width ?? 0, options?.height ?? 0);
+        this.viewportRectangle = new Rectangle(
+            options?.x ?? 0,
+            options?.y ?? 0,
+            options?.width ?? 0,
+            options?.height ?? 0
+        );
         this.createContentMask();
     }
 
@@ -42,10 +43,10 @@ export class ViewportContainer extends Container {
         this.contentMaskGraphics = new Graphics();
         this.contentMaskGraphics
             .rect(
-                this.viewportPosition.x,
-                this.viewportPosition.y,
-                this.viewportSize.width,
-                this.viewportSize.height
+                this.viewportRectangle.x,
+                this.viewportRectangle.y,
+                this.viewportRectangle.width,
+                this.viewportRectangle.height
             )
             .fill({
                 color: 0xFF0000,
@@ -91,8 +92,8 @@ export class ViewportContainer extends Container {
      * @param viewportHeight Высота viewport-а
      */
     public setViewportSize(viewportWidth: number, viewportHeight: number): void {
-        this.viewportSize.width = viewportWidth;
-        this.viewportSize.height = viewportHeight;
+        this.viewportRectangle.width = viewportWidth;
+        this.viewportRectangle.height = viewportHeight;
         
         if (this.contentMaskGraphics) {
             this.contentMaskGraphics.clear();
@@ -111,7 +112,8 @@ export class ViewportContainer extends Container {
      * @param y Ордината левого верхнего угла относительно родительского контейнера
      */
     public setViewportPosition(x: number, y: number): void {
-        this.viewportPosition.set(x, y);
+        this.viewportRectangle.x = x;
+        this.viewportRectangle.x = y;
         this.clampPosition(this.x, this.y);
     }
 
@@ -129,29 +131,75 @@ export class ViewportContainer extends Container {
             return;
         }
 
+        this.position.set(this.getClampedX(x), this.getClampedY(y));
+    }
+
+    /**
+     * Корректировка абсциссы с учетом текущего масштаба,
+     * чтобы границы контента не вылезали за границы viewport-а
+     * @param x Предполагающаяся абсцисса
+     */
+    protected clampX(x: number): void {
+        if (this.contentOriginalSize.width <= ViewportContainer.coordinateEpsilon) {
+            return;
+        }
+
+        this.position.x = this.getClampedX(x);
+    }
+
+    /**
+     * Корректировка ординаты с учетом текущего масштаба,
+     * чтобы границы контента не вылезали за границы viewport-а
+     * @param y Предполагающаяся ордината
+     */
+    protected clampY(y: number): void {
+        if (this.contentOriginalSize.height <= ViewportContainer.coordinateEpsilon) {
+            return;
+        }
+        
+        this.position.y = this.getClampedY(y);
+    }
+
+    /**
+     * Получение откорректированной абсциссы с учетом текущего масштаба,
+     * чтобы границы контента не вылезали за границы viewport-а
+     * @param x Предполагающаяся абсцисса
+     * @returns Скорректированная абсцисса
+     */
+    private getClampedX(x: number): number {
         const contentScaledWidth = this.contentOriginalSize.width * this.scale.x;
-        const contentScaledHeight = this.contentOriginalSize.height * this.scale.y;
 
-        const viewportLeft = this.viewportPosition.x;
-        const viewportRight = this.viewportPosition.x + this.viewportSize.width;
-        const viewportTop = this.viewportPosition.y;
-        const viewportBottom = this.viewportPosition.y + this.viewportSize.height;
+        const viewportLeft = this.viewportRectangle.left;
+        const viewportRight = this.viewportRectangle.right;
 
-        x = contentScaledWidth < this.viewportSize.width
+        return contentScaledWidth < this.viewportRectangle.width
             ? (viewportLeft + viewportRight - contentScaledWidth) / 2.0
             : x > viewportLeft
                 ? viewportLeft
                 : x + contentScaledWidth < viewportRight
                     ? viewportRight - contentScaledWidth
                     : x;
-        y = contentScaledHeight < this.viewportSize.height
+    }
+
+    /**
+     * Получение откорректированной ординаты с учетом текущего масштаба,
+     * чтобы границы контента не вылезали за границы viewport-а
+     * @param y Предполагающаяся ордината
+     * @returns Скорректированная ордината
+     */
+    private getClampedY(y: number): number {
+        const contentScaledHeight = this.contentOriginalSize.height * this.scale.y;
+
+        const viewportTop = this.viewportRectangle.top;
+        const viewportBottom = this.viewportRectangle.bottom;
+
+        return contentScaledHeight < this.viewportRectangle.height
             ? (viewportTop + viewportBottom - contentScaledHeight) / 2.0
             : y > viewportTop
                 ? viewportTop
                 : y + contentScaledHeight < viewportBottom
                     ? viewportBottom - contentScaledHeight
                     : y;
-        this.position.set(x, y);
     }
 
     public destroy(options?: DestroyOptions): void {
