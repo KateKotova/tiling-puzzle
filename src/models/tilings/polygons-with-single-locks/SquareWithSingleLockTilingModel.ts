@@ -1,6 +1,5 @@
 import { Point, Renderer } from "pixi.js";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
-import { ModelSettings } from "../../ModelSettings.ts";
 import { SquareWithSingleLockGeometry }
     from "../../tile-geometries/polygons-with-single-locks/SquareWithSingleLockGeometry.ts";
 import { TileLockType } from "../../tile-locks/TileLockType.ts";
@@ -9,6 +8,7 @@ import { RectangularGridTilingModel } from "../RectangularGridTilingModel.ts";
 import { TilingType } from "../TilingType.ts";
 import { TileModel } from "../../tiles/TileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
+import { TileParameters } from "../../tiles/TileParameters.ts";
 
 /**
  * Класс модели замощения, представляющего собой прямоугольную сетку,
@@ -53,7 +53,7 @@ export class SquareWithSingleLockTilingModel extends RectangularGridTilingModel 
 
     /**
      * Создание замощения квадратами c одинарными замками
-     * @param modelSettings Модель настроек
+     * @param tileParameters Параметры элементов замощения
      * @param textureModel Модель текстуры
      * @param textureMinSideTilePairCount Количество пар элементов замощения,
      * укладывающихся в минимальную сторону текстуры, в ширину или в высоту,
@@ -62,13 +62,13 @@ export class SquareWithSingleLockTilingModel extends RectangularGridTilingModel 
      * @param renderer Объект, ответственный за отображение
      */
     constructor(
-        modelSettings: ModelSettings,
+        tileParameters: TileParameters,
         textureModel: TilingTextureModel,
         textureMinSideTilePairCount: number,
         imageContainerModel: ImageContainerModel,
         renderer: Renderer
     ) {
-        super(modelSettings, textureModel, imageContainerModel, renderer);
+        super(tileParameters, textureModel, imageContainerModel, renderer);
         this.textureMinSideTilePairCount
             = textureMinSideTilePairCount
             < SquareWithSingleLockTilingModel.textureMinSideMinTilePairCount
@@ -104,7 +104,7 @@ export class SquareWithSingleLockTilingModel extends RectangularGridTilingModel 
             throw new Error('tileGeometry is not defined');
         }
             
-        const result = new TileModel(this.modelSettings, this.tileGeometry);
+        const result = new TileModel(this.tileParameters, this.tileGeometry);
         result.targetTilePosition = targetTilePosition.clone();
 
         const tileIsRotated = (targetTilePosition.rowIndex + targetTilePosition.columnIndex)

@@ -4,7 +4,8 @@ import { ModelSettings } from "./models/ModelSettings.ts";
 import { ViewSettings } from "./views/ViewSettings.ts";
 import { TilingTextureModel } from "./models/TilingTextureModel.ts";
 import { ImageContainerModel } from "./models/ImageContainerModel.ts";
-import { RectangularGridTilingModelFactory } from "./models/tilings/RectangularGridTilingModelFactory.ts";
+import { RectangularGridTilingModelFactory }
+  from "./models/tilings/RectangularGridTilingModelFactory.ts";
 import { RectangularGridTilingModel } from "./models/tilings/RectangularGridTilingModel.ts";
 import { RectangularGridTilingView } from "./views/tilings/RectangularGridTilingView.ts";
 import { ZoomAndPanContainer } from "./views/components/ZoomAndPanContainer.ts";
@@ -52,7 +53,7 @@ async function main(): Promise<void> {
     const rectangularGridTilingModelFactory = new RectangularGridTilingModelFactory();
     const tilingModel: RectangularGridTilingModel | null
       = rectangularGridTilingModelFactory.getTilingModel(
-        modelSettings,
+        modelSettings.tileParameters,
         tilingType,
         textureMinSideTileCount,
         textureModel,
@@ -85,7 +86,7 @@ async function main(): Promise<void> {
     const containerCenterY = containerHeight / 2.0;
 
     const zoomAndPanContainer = new ZoomAndPanContainer(      
-      viewSettings,
+      viewSettings.zoomAndPanParameters,
       {
         x: containerCenterX - imageContainerModel.width / 2.0,
         y: containerCenterY - imageContainerModel.height / 2.0,

@@ -10,18 +10,18 @@ import {
     IHitArea
 } from "pixi.js";
 import { TileModel } from "../../models/tiles/TileModel.ts";
-import { ViewSettings } from "../ViewSettings.ts";
 import { StaticTileView } from "./StaticTileView.ts";
 import { DraggingTileData } from "./DraggingTileData.ts";
 import { TileView } from "../tiles/TileView.ts";
 import { GlowFilter } from "pixi-filters";
 import { AdditionalMath } from "../../math/AdditionalMath.ts";
+import { DraggableTileParameters } from "./DraggableTileParameters.ts";
 
 /**
  * Класс декоратора представления подвижного элемента замощения
  */
 export class DraggableTileView implements TileView {
-    private readonly viewSettings: ViewSettings;
+    private readonly parameters: DraggableTileParameters;
     /**
      * Композиция: элемент замощения, который декорируется
      */
@@ -94,7 +94,8 @@ export class DraggableTileView implements TileView {
 
     /**
      * Создание подвижного элемента замощения
-     * @param viewSettings Настройки представления
+     * @param parameters Параметры подвижного элемента замощения
+     * @param tapParameters Параметры тапа
      * @param view Элемент замощения, который декорируется
      * @param selectedTileContainer Контейнер, в который фигура переносится
      * на время вращения и/или перетаскивания
@@ -103,13 +104,13 @@ export class DraggableTileView implements TileView {
      * Этот объект один на всех.
      */
     constructor (
-        viewSettings: ViewSettings,
+        parameters: DraggableTileParameters,
         view: TileView,
         selectedTileContainer: Container,
         ticker: Ticker,
         draggingTileData: DraggingTileData
     ) {            
-        this.viewSettings = viewSettings;
+        this.parameters = parameters;
         this.view = view;
         this.parentContainer = this.view.tile.parent;
         this.selectedTileContainer = selectedTileContainer;
@@ -257,7 +258,7 @@ export class DraggableTileView implements TileView {
         this.addTileToSelectedContainer();
         
         if (!this.isDragging) {
-            const filter = new GlowFilter(this.viewSettings.selectedTileGlowFilterOptions);
+            const filter = new GlowFilter(this.parameters.selectedGlowFilterOptions);
             this.view.setFilter(filter);
         }
     }
@@ -270,7 +271,7 @@ export class DraggableTileView implements TileView {
             this.addTileToSelectedContainer();
         }
 
-        const filter = new GlowFilter(this.viewSettings.selectedTileGlowFilterOptions);
+        const filter = new GlowFilter(this.parameters.selectedGlowFilterOptions);
         this.view.setFilter(filter);
     }
 
@@ -389,7 +390,7 @@ export class DraggableTileView implements TileView {
         );
         this.view.tile.position.copyFrom(this.view.model.currentPositionPoint);
         
-        const filter = new GlowFilter(this.viewSettings.selectedTileGlowFilterOptions);
+        const filter = new GlowFilter(this.parameters.selectedGlowFilterOptions);
         this.view.setFilter(filter);
 
         // Убираем зону попадания, чтобы события указателя были видны
@@ -475,12 +476,13 @@ export class DraggableTileView implements TileView {
             parentPosition = this.view.tile.position.clone();
         }
 
+        const tapParameters = this.parameters.tapParameters;
         const tapWasExecuted
-            = (event.timeStamp - this.dragStartTime <= this.viewSettings.tapMaxDuration)
+            = (event.timeStamp - this.dragStartTime <= tapParameters.maxDuration)
             && Math.abs(parentPosition.x - this.dragStartPosition.x)
-                <= this.viewSettings.tapMaxDistance
+                <= tapParameters.maxDistance
             && Math.abs(parentPosition.y - this.dragStartPosition.y)
-                <= this.viewSettings.tapMaxDistance;
+                <= tapParameters.maxDistance;
 
         const moveTargetModel = finalTarget?.model ?? finalSource?.model;
         
@@ -666,7 +668,7 @@ export class DraggableTileView implements TileView {
         this.dragSource?.removeInteractivity();
 
         this.addTileToSelectedContainer();
-        const filter = new GlowFilter(this.viewSettings.correctLocatedTileGlowFilterOptions);
+        const filter = new GlowFilter(this.parameters.correctLocatedGlowFilterOptions);
         this.view.setFilter(filter);
 
         setTimeout(() => {
@@ -674,7 +676,7 @@ export class DraggableTileView implements TileView {
             this.addTileToParentContainer();
             const contentWithoutBevelFilter = this.view.createContent(false);
             this.view.replaceContent(contentWithoutBevelFilter);
-        },  this.viewSettings.correctLocatedTileFilterShowTime);
+        },  this.parameters.correctLocatedFilterShowTime);
     }
 
     private removeInteractivity(): void {

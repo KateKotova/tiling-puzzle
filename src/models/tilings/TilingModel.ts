@@ -1,5 +1,4 @@
 import { Graphics, Matrix, Renderer, Texture } from "pixi.js";
-import { ModelSettings } from "../ModelSettings.ts";
 import { ImageContainerModel } from "../ImageContainerModel.ts";
 import { TileLockType } from "../tile-locks/TileLockType.ts";
 import { TilingContainerModel } from "../TilingContainerModel.ts";
@@ -10,6 +9,7 @@ import { TileModel } from "../tiles/TileModel.ts";
 import { TilePosition } from "../tiles/TilePosition.ts";
 import { TilingLayoutStrategyType } from "./TilingLayoutStrategyType.ts";
 import { Algorithm } from "../../math/Algorithm.ts";
+import { TileParameters } from "../tiles/TileParameters.ts";
 
 /**
  * Класс модели замощения
@@ -18,7 +18,7 @@ export abstract class TilingModel {
     public readonly tilingType: TilingType = TilingType.Unknown;
     public readonly lockType: TileLockType = TileLockType.None;
 
-    protected readonly modelSettings: ModelSettings;
+    protected readonly tileParameters: TileParameters;
     public isInitialized: boolean = false;
     public textureModel: TilingTextureModel;
     public tilingContainerModel?: TilingContainerModel;
@@ -61,18 +61,20 @@ export abstract class TilingModel {
      */
     protected tilePositionsByEdgeDistanceIndices: TilePosition[][] = [];
     /**
-     * Массив, где элементы замощения перемешаны в зависимости
-     * от выбранной стратегии сборки мозаики
+     * Массив, где элементы замощения изначально перемешаны в зависимости
+     * от выбранной стратегии сборки мозаики.
+     * По мере сборки мозаики и иногда по мере возвращения элементов замещения обратно
+     * этот массив может изменять. Когда мозаика собрана, массив оказывается пустым.
      */
-    private shuffledTilePositions: TilePosition[] = [];
+    public shuffledTilePositions: TilePosition[] = [];
 
     constructor(
-        modelSettings: ModelSettings,
+        tileParameters: TileParameters,
         textureModel: TilingTextureModel,
         imageContainerModel: ImageContainerModel,
         renderer: Renderer
     ) {
-        this.modelSettings = modelSettings;
+        this.tileParameters = tileParameters;
         this.textureModel = textureModel;
         this.imageContainerModel = imageContainerModel;
         this.renderer = renderer;
@@ -189,7 +191,7 @@ export abstract class TilingModel {
                         this.tilePositionsByEdgeDistanceIndices[edgeDistanceIndex]);
                     this.shuffledTilePositions.push(...shuffledTilePositions);
                 }
-                return;
+                break;
             case TilingLayoutStrategyType.FromCenterToEdges:
                 for (
                     let edgeDistanceIndex = this.tilePositionsByEdgeDistanceIndices.length - 1;
@@ -200,7 +202,7 @@ export abstract class TilingModel {
                         this.tilePositionsByEdgeDistanceIndices[edgeDistanceIndex]);
                     this.shuffledTilePositions.push(...shuffledTilePositions);
                 }
-                return;
+                break;
             case TilingLayoutStrategyType.Random:
                 for (
                     let edgeDistanceIndex = 0;
@@ -211,9 +213,14 @@ export abstract class TilingModel {
                         .push(...this.tilePositionsByEdgeDistanceIndices[edgeDistanceIndex]);
                 }
                 this.shuffledTilePositions = Algorithm.getShuffledArray(this.shuffledTilePositions);
-                return;
+                break;
             default:
-                return;
+                break;
         }
+
+        let shuffledIndex: number = 0;
+        this.shuffledTilePositions.forEach((position: TilePosition) => {
+            position.shuffledIndex = shuffledIndex++;
+        });
     }
 }

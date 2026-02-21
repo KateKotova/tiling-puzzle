@@ -1,6 +1,5 @@
 import { Point, Renderer } from "pixi.js";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
-import { ModelSettings } from "../../ModelSettings.ts";
 import { OctagonGeometry } from "../../tile-geometries/polygons/OctagonGeometry.ts";
 import { SquareGeometry } from "../../tile-geometries/polygons/SquareGeometry.ts";
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
@@ -10,6 +9,7 @@ import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosi
 import { TileGeometry } from "../../tile-geometries/TileGeometry.ts";
 import { OctagonBaseGeometry } from "../../tile-geometries/polygon-bases/OctagonBaseGeometry.ts";
 import { OctagonAndSquareTilingBaseModel } from "../OctagonAndSquareTilingBaseModel.ts";
+import { TileParameters } from "../../tiles/TileParameters.ts";
 
 /**
  * Класс модели замощения, представляющего собой прямоугольную сетку,
@@ -60,7 +60,7 @@ export class OctagonAndSquareTilingModel extends OctagonAndSquareTilingBaseModel
 
     /**
      * Создание замощения правильными восьмиугольниками и квадратами
-     * @param modelSettings Модель настроек
+     * @param tileParameters Параметры элемента замощения
      * @param textureModel Модель текстуры
      * @param textureMinSideOctagonTileCount Количество восьмиугольников,
      * укладывающихся в минимальную сторону текстуры,
@@ -71,14 +71,14 @@ export class OctagonAndSquareTilingModel extends OctagonAndSquareTilingBaseModel
      * @param renderer Объект, ответственный за отображение
      */
     constructor(
-        modelSettings: ModelSettings,
+        tileParameters: TileParameters,
         textureModel: TilingTextureModel,
         textureMinSideOctagonTileCount: number,
         imageContainerModel: ImageContainerModel,
         renderer: Renderer
     ) {
 
-        super(modelSettings, textureModel, imageContainerModel, renderer);
+        super(tileParameters, textureModel, imageContainerModel, renderer);
         this.textureMinSideOctagonTileCount
             = textureMinSideOctagonTileCount
                 < OctagonAndSquareTilingModel.textureMinSideMinOctagonTileCount
@@ -127,7 +127,7 @@ export class OctagonAndSquareTilingModel extends OctagonAndSquareTilingBaseModel
         const tileGeometry: TileGeometry = tileIsOctagon
             ? this.octagonTileGeometry
             : this.squareTileGeometry;
-        const result = new TileModel(this.modelSettings, tileGeometry);
+        const result = new TileModel(this.tileParameters, tileGeometry);
         result.targetTilePosition = targetTilePosition.clone();
         result.targetRotationAngle = tileIsOctagon ? 0 : Math.PI / 4.0;
         

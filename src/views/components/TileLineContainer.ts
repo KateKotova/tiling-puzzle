@@ -1,34 +1,85 @@
-import { Container, ContainerChild, ContainerOptions } from "pixi.js";
+import { Container, ContainerChild, ContainerOptions, Point } from "pixi.js";
+import { TileLineParameters } from "./TileLineParameters.ts";
+import { TilingView } from "../tilings/TilingView.ts";
 import { TileLineDirectionType } from "./TileLineDirectionType.ts";
+import { TilePosition } from "../../models/tiles/TilePosition.ts";
 
 /**
  * Класс контейнера линии, в которой содержатся элементы мозаики для сборки.
  * Может быть вертикальной (сверху вниз) или горизонтальной (слева направо).
  */
 export class TileLineContainer extends Container {
-    public readonly directionType: TileLineDirectionType;
+    public readonly parameters: TileLineParameters;
+    private readonly tilingView: TilingView;
     /**
-     * Продольный отступ содержимого от края.
-     * Для направления слева направо этот отступ применяется слева и справа.
-     * Для направления сверху вниз этот отступ применяется сверху и снизу.
+     * Продольный размер.
+     * Для направления слева направо это ширина.
+     * Для направления сверху вниз это высота.
      */
-    public longitudinalContentOffset: number = 0;
+    private readonly longitudinalSize: number;
     /**
-     * Поперечный отступ содержимого от края.
-     * Для направления слева направо этот отступ применяется сверху и снизу.
-     * Для направления сверху вниз этот отступ применяется слева и справа.
+     * Поперечный размер.
+     * Для направления слева направо это высота.
+     * Для направления сверху вниз это ширина.
      */
-    public transverseContentOffset: number = 0;
+    private readonly transverseSize: number;
     /**
-     * Отступ между элементами мозаики.
+     * Масштаб элемента мозаики, чтобы он списывался в ленту
      */
-    public betweenTilesOffset: number = 0;
+    private readonly tileScale: number;
+    /**
+     * Максимальный предельный размер масштабированного элемента мозаики.
+     */
+    private readonly maxScaledTileBoundingSize: number;
 
     constructor(
-        directionType: TileLineDirectionType,
+        parameters: TileLineParameters,
+        tilingView: TilingView,
         options?: ContainerOptions<ContainerChild>        
     ) {
         super(options);
-        this.directionType = directionType;
+        this.parameters = parameters;
+        this.tilingView = tilingView;        
+
+        const lineIsHorizontal = this.parameters.directionType
+            == TileLineDirectionType.FromLeftToRight;            
+        this.transverseSize = lineIsHorizontal
+            ? options?.height ?? 0
+            : options?.width ?? 0;
+
+        this.maxScaledTileBoundingSize = this.transverseSize
+            - 2 * this.parameters.transverseContentOffset;
+
+        const tileCount = this.tilingView.model.shuffledTilePositions.length;
+        this.longitudinalSize = 2 * this.parameters.longitudinalContentOffset
+            + tileCount * this.maxScaledTileBoundingSize
+            + (tileCount - 1) * this.parameters.betweenTilesOffset;
+
+        if (lineIsHorizontal) {
+           this.width = this.longitudinalSize; 
+        } else {
+            this.height = this.longitudinalSize;
+        }
+        
+        this.tileScale = this.maxScaledTileBoundingSize
+            / this.tilingView.model.maxTileBoundingSize;
+    }
+
+    // public createTiles() {
+
+    // }
+
+    public getTileCurrentPositionPoint(tilePosition: TilePosition): Point {
+        const maxScaledTileBoundingSizeHalf = this.maxScaledTileBoundingSize / 2.0;
+        const transverseCoordinate = this.parameters.transverseContentOffset
+           + maxScaledTileBoundingSizeHalf;
+        const longitudinalCoordinate = this.parameters.longitudinalContentOffset
+            + tilePosition.shuffledIndex
+            * (this.maxScaledTileBoundingSize + this.parameters.betweenTilesOffset)
+            + maxScaledTileBoundingSizeHalf;
+
+        return this.parameters.directionType == TileLineDirectionType.FromLeftToRight
+            ? new Point(longitudinalCoordinate, transverseCoordinate)
+            : new Point(transverseCoordinate, longitudinalCoordinate);
     }
 }

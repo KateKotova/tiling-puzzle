@@ -5,10 +5,10 @@ import { ViewSettings } from "../ViewSettings.ts";
 import { TilingView } from "./TilingView.ts";
 import { TileViewFactory } from "../tiles/TileViewFactory.ts";
 import { RectangularGridTilePosition } from "../../models/tiles/RectangularGridTilePosition.ts";
-import { TileViewParameters } from "../tiles/TileViewParameters.ts";
 import { StaticTileView } from "../tile-decorators/StaticTileView.ts";
 import { DraggableTileView } from "../tile-decorators/DraggableTileView.ts";
 import { ZoomAndPanContainer } from "../components/ZoomAndPanContainer.ts";
+import { TileViewCreationParameters } from "../tiles/TileViewCreationParameters.ts";
 
 /**
  * Класс представления замощения, представляющего собой прямоугольную сетку,
@@ -47,18 +47,23 @@ export class RectangularGridTilingView extends TilingView {
                 staticTileModel.currentTargetRotationAngle = staticTileModel.targetRotationAngle;
                 staticTileModel.currentPositionPoint.copyFrom(staticTileModel.targetPositionPoint);
 
-                const staticTileViewParameters: TileViewParameters = {
-                    viewSettings: this.viewSettings,
+                const staticTileCreationViewParameters: TileViewCreationParameters = {
                     model: staticTileModel,
                     texture: undefined,
                     renderer,
                     replacingTextureFillColor: this.staticTileFillColor
                 };
-                const staticTileView = tileViewFactory.getView(staticTileViewParameters);
+                const staticTileView = tileViewFactory.getView(
+                    this.viewSettings.tileParameters,
+                    staticTileCreationViewParameters
+                );
                 //staticTileView.content.alpha = 0.7;
                 this.staticTilesContainer.addChild(staticTileView.tile);
-                const decoratedStaticTileView = new StaticTileView(this.viewSettings,
-                    staticTileView, this.draggingTileData);
+                const decoratedStaticTileView = new StaticTileView(
+                    this.viewSettings.staticTileParameters,
+                    staticTileView,
+                    this.draggingTileData
+                );
 
                 const shouldCreateDraggableTile = Math.random() >= 0.5;
                 if (shouldCreateDraggableTile) {
@@ -69,17 +74,19 @@ export class RectangularGridTilingView extends TilingView {
                     draggableTileModel.currentTargetRotationAngle = currentRotationAngle;
                     draggableTileModel.currentPositionPoint
                         = draggableTileModel.targetPositionPoint.clone();
-                    const draggableTileViewParameters: TileViewParameters = {
-                        viewSettings: this.viewSettings,
+                    const draggableTileViewCreationParameters: TileViewCreationParameters = {
                         model: draggableTileModel,
                         texture: model.getTileTexture(draggableTileModel),
                         renderer,
                         replacingTextureFillColor: this.staticTileFillColor
                     };
-                    const draggableTileView = tileViewFactory.getView(draggableTileViewParameters);
+                    const draggableTileView = tileViewFactory.getView(
+                        this.viewSettings.tileParameters,
+                        draggableTileViewCreationParameters
+                    );
                     this.draggableTilesContainer.addChild(draggableTileView.tile);
                     const decoratedDraggableTileView = new DraggableTileView(
-                        this.viewSettings,
+                        this.viewSettings.draggableTileParameters,
                         draggableTileView,
                         this.selectedTileContainer,
                         ticker,

@@ -1,12 +1,12 @@
 import { Point, Renderer } from "pixi.js";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
-import { ModelSettings } from "../../ModelSettings.ts";
 import { TilingTextureModel } from "../../TilingTextureModel.ts";
 import { RectangularGridTilingModel } from "../RectangularGridTilingModel.ts";
 import { TilingType } from "../TilingType.ts";
 import { SquareGeometry } from "../../tile-geometries/polygons/SquareGeometry.ts";
 import { TileModel } from "../../tiles/TileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
+import { TileParameters } from "../../tiles/TileParameters.ts";
 
 /**
  * Класс модели замощения, представляющего собой прямоугольную сетку,
@@ -38,7 +38,7 @@ export class SquareTilingModel extends RectangularGridTilingModel {
 
     /**
      * Создание замощения квадратами
-     * @param modelSettings Модель настроек
+     * @param tileParameters Параметры элемента замощения
      * @param textureModel Модель текстуры
      * @param textureMinSideTileCount Количество элементов замощения,
      * укладывающихся в минимальную сторону текстуры, в ширину или в высоту,
@@ -47,13 +47,13 @@ export class SquareTilingModel extends RectangularGridTilingModel {
      * @param renderer Объект, ответственный за отображение
      */
     constructor(
-        modelSettings: ModelSettings,
+        tileParameters: TileParameters,
         textureModel: TilingTextureModel,
         textureMinSideTileCount: number,
         imageContainerModel: ImageContainerModel,
         renderer: Renderer
     ) {
-        super(modelSettings, textureModel, imageContainerModel, renderer);
+        super(tileParameters, textureModel, imageContainerModel, renderer);
         this.textureMinSideTileCount
             = textureMinSideTileCount < SquareTilingModel.textureMinSideMinTileCount
                 ? SquareTilingModel.textureMinSideMinTileCount
@@ -83,7 +83,7 @@ export class SquareTilingModel extends RectangularGridTilingModel {
             throw new Error('tileGeometry is not defined');
         }
 
-        const result = new TileModel(this.modelSettings, this.tileGeometry);
+        const result = new TileModel(this.tileParameters, this.tileGeometry);
         result.targetTilePosition = targetTilePosition.clone();
         result.targetRotationAngle = 0;
         const sideHalf = this.tileGeometry.side / 2.0;

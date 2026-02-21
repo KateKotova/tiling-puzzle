@@ -1,18 +1,23 @@
-import { RegularPolygonTileGeometry } from "../../models/tile-geometries/RegularPolygonTileGeometry.ts";
+import { RegularPolygonTileGeometry }
+    from "../../models/tile-geometries/RegularPolygonTileGeometry.ts";
 import { TileLockType } from "../../models/tile-locks/TileLockType.ts";
 import { RegularPolygonTileView } from "./RegularPolygonTileView.ts";
 import { SvgPathTileView } from "./SvgPathTileView.ts";
+import { TileParameters } from "./TileParameters.ts";
 import { TileView } from "./TileView.ts";
-import { TileViewParameters } from "./TileViewParameters.ts";
+import { TileViewCreationParameters } from "./TileViewCreationParameters.ts";
 
 /**
  * Класс фабрики создания представлений элементов замощений
  */
 export class TileViewFactory {
-    public getView(tileViewParameters: TileViewParameters): TileView {
-        return tileViewParameters.model.geometry instanceof RegularPolygonTileGeometry
-            && tileViewParameters.model.geometry.lockType == TileLockType.None
-            ? new RegularPolygonTileView(tileViewParameters)
-            : new SvgPathTileView(tileViewParameters);
+    public getView(
+        tileParameters: TileParameters,
+        tileViewCreationParameters: TileViewCreationParameters
+    ): TileView {
+        return tileViewCreationParameters.model.geometry instanceof RegularPolygonTileGeometry
+            && tileViewCreationParameters.model.geometry.lockType == TileLockType.None
+            ? new RegularPolygonTileView(tileParameters, tileViewCreationParameters)
+            : new SvgPathTileView(tileParameters, tileViewCreationParameters);
     }
 }

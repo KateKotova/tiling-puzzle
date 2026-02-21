@@ -4,9 +4,9 @@ import {
     DestroyOptions,
     Point
 } from 'pixi.js';
-import { ViewSettings } from '../ViewSettings.ts';
 import { AdditionalMath } from '../../math/AdditionalMath.ts';
 import { ViewportContainer } from './ViewportContainer.ts';
+import { ZoomAndPanParameters } from './ZoomAndPanParameters.ts';
 
 /**
  * Класс контейнера-viewport-а с возможностью масштабирования и панорамирования,
@@ -16,7 +16,7 @@ import { ViewportContainer } from './ViewportContainer.ts';
  * параллельные движения двумя пальцами или мышкой при удержании правой кнопки.
  */
 export class ZoomAndPanContainer extends ViewportContainer {
-    private readonly viewSettings: ViewSettings;
+    private readonly parameters: ZoomAndPanParameters;
     private isDragging = false;
     private lastMousePosition = new Point();
     private pinchDistance = 0;
@@ -46,11 +46,11 @@ export class ZoomAndPanContainer extends ViewportContainer {
     private boundOnContextMenu: (e: Event) => void = this.onContextMenu.bind(this);
     
     constructor(
-        viewSettings: ViewSettings,
+        parameters: ZoomAndPanParameters,
         options?: ContainerOptions<ContainerChild>        
     ) {
         super(options);
-        this.viewSettings = viewSettings;        
+        this.parameters = parameters;        
         this.addEventListeners();
     }
 
@@ -58,14 +58,14 @@ export class ZoomAndPanContainer extends ViewportContainer {
      * Минимальный масштаб относительно начального
      */
     private get minScale(): number {
-        return this.viewSettings.viewportMinScale * this.scaleOfContentFitToViewport;
+        return this.parameters.minScale * this.scaleOfContentFitToViewport;
     }
     
     /**
      * Максимальный масштаб относительно начального
      */
     private get maxScale(): number {
-        return this.viewSettings.viewportMaxScale * this.scaleOfContentFitToViewport;
+        return this.parameters.maxScale * this.scaleOfContentFitToViewport;
     }
 
     public setContentSize(contentWidth: number, contentHeight: number): void {
@@ -205,7 +205,7 @@ export class ZoomAndPanContainer extends ViewportContainer {
         const contentX = (mouseX - this.x) / this.scale.x;
         const contentY = (mouseY - this.y) / this.scale.y;
         
-        const zoomFactor = 1 - e.deltaY * this.viewSettings.viewportMouseWheelScaleSensitivity;
+        const zoomFactor = 1 - e.deltaY * this.parameters.mouseWheelScaleSensitivity;
         const newScale = Math.max(this.minScale, Math.min(this.maxScale, this.scale.x * zoomFactor));
         
         this.scale.set(newScale);
@@ -281,9 +281,9 @@ export class ZoomAndPanContainer extends ViewportContainer {
         const isScrolling = Math.abs(angle) < Math.PI / 6;
         if (isScrolling) {
             const panX = (moveVector1.x + moveVector2.x) / 2.0
-                * this.viewSettings.viewportTouchPanSensitivity;
+                * this.parameters.touchPanSensitivity;
             const panY = (moveVector1.y + moveVector2.y) / 2.0
-                * this.viewSettings.viewportTouchPanSensitivity;
+                * this.parameters.touchPanSensitivity;
 
             const x = this.x + panX;
             const y = this.y + panY;
@@ -300,7 +300,7 @@ export class ZoomAndPanContainer extends ViewportContainer {
             const relativeY = (centerViewportY - this.y) / this.scale.y;
             
             const scaleDelta = 1 + (currentDistance / this.pinchDistance - 1)
-                * this.viewSettings.viewportTouchScaleSensitivity;
+                * this.parameters.touchScaleSensitivity;
             const newScale = this.scale.x * scaleDelta;
             
             if (newScale >= this.minScale && newScale <= this.maxScale) {
