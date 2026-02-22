@@ -1,4 +1,4 @@
-import { Application, Assets, Container, Graphics } from "pixi.js";
+import { Application, Assets, Container, ContainerChild, ContainerOptions, Graphics } from "pixi.js";
 import { TilingType } from "./models/tilings/TilingType.ts";
 import { ModelSettings } from "./models/ModelSettings.ts";
 import { ViewSettings } from "./views/ViewSettings.ts";
@@ -7,8 +7,14 @@ import { ImageContainerModel } from "./models/ImageContainerModel.ts";
 import { RectangularGridTilingModelFactory }
   from "./models/tilings/RectangularGridTilingModelFactory.ts";
 import { RectangularGridTilingModel } from "./models/tilings/RectangularGridTilingModel.ts";
-import { RectangularGridTilingView } from "./views/tilings/RectangularGridTilingView.ts";
+import { TilingView } from "./views/tilings/TilingView.ts";
 import { ZoomAndPanContainer } from "./views/components/ZoomAndPanContainer.ts";
+import { TilingLayoutStrategyType } from "./models/tilings/TilingLayoutStrategyType.ts";
+import { DraggingTileData } from "./views/tile-decorators/DraggingTileData.ts";
+import { TileView } from "./views/tiles/TileView.ts";
+import { TileLineContainer } from "./views/components/TileLineContainer.ts";
+import { TileLineDirectionType } from "./views/components/TileLineDirectionType.ts";
+import { CarouselContainer } from "./views/components/CarouselContainer.ts";
 
 async function main(): Promise<void> {
   try {
@@ -21,7 +27,7 @@ async function main(): Promise<void> {
     const containerHeight = 400;
 
     const textureMinSideTileCount = 4;
-    const tilingType = TilingType.OctagonAndSquareWithSingleLock;
+    const tilingType = TilingType.HexagonWithSingleLock;
 
     //#endregion test data end
 
@@ -62,6 +68,7 @@ async function main(): Promise<void> {
     if (!tilingModel) {
       return;
     }
+    tilingModel.setShuffledTilePositions(TilingLayoutStrategyType.FromEdgesToCenter);
 
     const screenCenterX = app.screen.width / 2.0;
     const screenCenterY = app.screen.height / 2.0;
@@ -75,7 +82,6 @@ async function main(): Promise<void> {
     app.stage.addChild(container);
 
     const selectedTileContainer = new Container();
-    app.stage.addChild(selectedTileContainer);
 
     const greenBackground = new Graphics()
       .rect(0, 0, containerWidth, containerHeight)
@@ -114,31 +120,56 @@ async function main(): Promise<void> {
       });
     imageContainer.addChild(image);
 
-    const tilingView = new RectangularGridTilingView(
-      viewSettings,
-      zoomAndPanContainer,
-      selectedTileContainer,
+    const draggingTileData: DraggingTileData = {
+        view: undefined,
+        viewport: zoomAndPanContainer,
+        animatingViews: new Set<TileView>()
+    };
+
+    const tilingView = new TilingView(
+      viewSettings.tilingParameters,
+      draggingTileData,
       tilingModel
     );
-    tilingView.setExampleTiling(app.renderer, app.ticker);
+    tilingView.createStaticTileViews(app.renderer);
     imageContainer.addChild(tilingView.tilingContainer);
     zoomAndPanContainer.setContentSize(imageContainerModel.width, imageContainerModel.height);
     zoomAndPanContainer.getShouldPreventEvents = (): boolean => {
       return !!tilingView.draggingTileData?.animatingViews.size;
     };
 
-    /*
-    // Bunny
-    const texture = await Assets.load("/assets/bunny.png");
-    const bunny = new Sprite(texture);
-    bunny.anchor.set(0.5);
-    bunny.position.set(app.screen.width / 2, app.screen.height / 2);
-    app.stage.addChild(bunny);
+    const tileLineContainer = new TileLineContainer(
+      viewSettings.tileLineParameters,
+      80,
+      tilingView,
+      selectedTileContainer,
+      draggingTileData
+    );
+    tileLineContainer.createDraggableTileViews(app.renderer, app.ticker);
+    const tileLineContainerSize = tileLineContainer.getSizeByDirection();
 
-    app.ticker.add((time) => {
-      bunny.rotation += 0.1 * time.deltaTime;
-    });
-    */
+    const carouselContainerOptions: ContainerOptions<ContainerChild> =
+      viewSettings.tileLineParameters.directionType == TileLineDirectionType.FromLeftToRight
+      ? {
+        x: 25,
+        y: app.screen.height - tileLineContainerSize.height - 25,
+        width: app.screen.width - 50,
+        height: tileLineContainerSize.height
+      }
+      : {
+        x: 25,
+        y: 25,
+        width: tileLineContainerSize.width,
+        height: app.screen.height - 50
+      };
+    
+    const carouselContainer = new CarouselContainer(carouselContainerOptions);
+    carouselContainer.addChild(tileLineContainer);
+    carouselContainer.setContentSize(tileLineContainerSize.width, tileLineContainerSize.height);
+    app.stage.addChild(carouselContainer);
+    carouselContainer.onAddedToParent();
+
+    app.stage.addChild(selectedTileContainer);
   } catch (error) {
     console.error(`Failed to start application: ${error}`);
   }

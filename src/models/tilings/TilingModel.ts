@@ -59,7 +59,7 @@ export abstract class TilingModel {
      * По каждому индексу хранится массив позиций элементов замощения,
      * соответствующих данному индексу удалённости от края картинки.
      */
-    protected tilePositionsByEdgeDistanceIndices: TilePosition[][] = [];
+    public tilePositionsByEdgeDistanceIndices: TilePosition[][] = [];
     /**
      * Массив, где элементы замощения изначально перемешаны в зависимости
      * от выбранной стратегии сборки мозаики.
@@ -96,6 +96,8 @@ export abstract class TilingModel {
     protected abstract initializeTextureTileInfo(): void;
 
     protected abstract initializeImageTileInfo(): void;
+
+    public abstract getTileModel(targetTilePosition: TilePosition): TileModel | undefined;
 
     /**
      * Заполнение массива, где по индексам удалённости элементов замощения от края картинки
@@ -178,7 +180,7 @@ export abstract class TilingModel {
      * @param tilingLayoutStrategyType Стратегия укладки мозаики
      * @returns 
      */
-    protected setShuffledTilePositions(tilingLayoutStrategyType: TilingLayoutStrategyType) {
+    public setShuffledTilePositions(tilingLayoutStrategyType: TilingLayoutStrategyType) {
         this.shuffledTilePositions = [];
         switch (tilingLayoutStrategyType) {
             case TilingLayoutStrategyType.FromEdgesToCenter:

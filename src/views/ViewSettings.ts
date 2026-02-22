@@ -6,6 +6,7 @@ import { TapParameters } from "./TapParameters.ts";
 import { TileParameters } from "./tiles/TileParameters.ts";
 import { TileLineDirectionType } from "./components/TileLineDirectionType.ts";
 import { TileLineParameters } from "./components/TileLineParameters.ts";
+import { TilingParameters } from "./tilings/TilingParameters.ts";
 
 /**
  * Класс настроек представления.
@@ -70,10 +71,17 @@ export class ViewSettings {
         tapParameters: this.tapParameters
     };
 
+    public readonly tilingParameters: TilingParameters = {
+        tileParameters: this.tileParameters,
+        staticTileParameters: this.staticTileParameters
+    };
+
     public readonly tileLineParameters: TileLineParameters = {
         directionType: TileLineDirectionType.FromLeftToRight,
         longitudinalContentOffset: 12,
         transverseContentOffset: 12,
-        betweenTilesOffset: 12
+        betweenTilesOffset: 12,
+        tileParameters: this.tileParameters,
+        draggableTileParameters: this.draggableTileParameters
     }
 }

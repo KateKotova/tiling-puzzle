@@ -1,39 +1,42 @@
-import { Color, Container, Renderer, Ticker } from "pixi.js";
+import { Color, Container, Renderer } from "pixi.js";
 import { TilingModel } from "../../models/tilings/TilingModel.ts";
-import { ViewSettings } from "../ViewSettings.ts";
 import { DraggingTileData } from "../tile-decorators/DraggingTileData.ts";
-import { ZoomAndPanContainer } from "../components/ZoomAndPanContainer.ts";
-import { TileView } from "../tiles/TileView.ts";
+import { StaticTileView } from "../tile-decorators/StaticTileView.ts";
+import { TileViewFactory } from "../tiles/TileViewFactory.ts";
+import { TileViewCreationParameters } from "../tiles/TileViewCreationParameters.ts";
+import { TilingParameters } from "./TilingParameters.ts";
 
 /**
  * Класс представления замощения
  */
-export abstract class TilingView {
-    protected readonly viewSettings: ViewSettings;
+export class TilingView {
+    private readonly parameters: TilingParameters;
     public model: TilingModel;
     public tilingContainer: Container;
     public staticTilesContainer: Container;
     public draggableTilesContainer: Container;
-    protected staticTileFillColor: Color = new Color(0x00AA00);
-    protected selectedTileContainer: Container;
+    public staticTileFillColor: Color = new Color(0x00AA00);
+    private staticTileAlpha: number = 1;
     public draggingTileData: DraggingTileData;
+    /**
+     * Карта, где по строковому представлению позиции
+     * можно найти статический элемент замощения, представляющий собой
+     * ячейку для размещения перетаскиваемой фигуры
+     */
+    public staticTileViewsByTilePositionStrings: Map<string, StaticTileView>
+        = new Map<string, StaticTileView>();
 
     constructor(
-        viewSettings: ViewSettings,
-        viewport: ZoomAndPanContainer,
-        selectedTileContainer: Container,
+        parameters: TilingParameters,
+        draggingTileData: DraggingTileData,
         model: TilingModel
     ) {
         if (!model.isInitialized) {
             throw new Error('The tiling model is not initialized');
         }
 
-        this.viewSettings = viewSettings;
-        this.draggingTileData = {
-            view: undefined,
-            viewport: viewport,
-            animatingViews: new Set<TileView>()
-        };
+        this.parameters = parameters;
+        this.draggingTileData = draggingTileData;
         this.model = model;
         this.tilingContainer = this.createTilingContainer();
 
@@ -42,8 +45,6 @@ export abstract class TilingView {
 
         this.draggableTilesContainer = new Container();
         this.tilingContainer.addChild(this.draggableTilesContainer);
-
-        this.selectedTileContainer = selectedTileContainer;
     }
 
     private createTilingContainer(): Container {
@@ -56,10 +57,55 @@ export abstract class TilingView {
         });
     }
 
-    /**
-     * Создание тестового замощения для примера
-     * @param renderer Инструменты отображения
-     * @param ticker Инструменты контроля времени
-     */
-    public abstract setExampleTiling(renderer: Renderer, ticker: Ticker): void;
+    public createStaticTileViews(renderer: Renderer): void {
+        const tileViewFactory = new TileViewFactory();
+
+        for (
+            let edgeDistanceIndex = 0;
+            edgeDistanceIndex < this.model.tilePositionsByEdgeDistanceIndices.length;
+            edgeDistanceIndex++
+        ) {
+            const tilePositions = this.model
+                .tilePositionsByEdgeDistanceIndices[edgeDistanceIndex];
+            for (
+                let tilePositionIndex = 0;
+                tilePositionIndex < tilePositions.length;
+                tilePositionIndex++
+            ) {
+                const tilePosition = tilePositions[tilePositionIndex];
+                
+                const tileModel = this.model.getTileModel(tilePosition);
+                if (!tileModel) {
+                    continue;
+                }
+                tileModel.currentRotationAngle = tileModel.targetRotationAngle;
+                tileModel.currentTargetRotationAngle = tileModel.targetRotationAngle;
+                tileModel.currentPositionPoint.copyFrom(tileModel.targetPositionPoint);
+
+                const tileViewCreationParameters: TileViewCreationParameters = {
+                    model: tileModel,
+                    texture: undefined,
+                    renderer,
+                    replacingTextureFillColor: this.staticTileFillColor
+                };
+                const tileView = tileViewFactory.getView(
+                    this.parameters.tileParameters,
+                    tileViewCreationParameters
+                );
+                tileView.content.alpha = this.staticTileAlpha;
+
+                this.staticTilesContainer.addChild(tileView.tile);
+
+                const decoratedTileView = new StaticTileView(
+                    this.parameters.staticTileParameters,
+                    tileView,
+                    this.draggingTileData
+                );
+                this.staticTileViewsByTilePositionStrings.set(
+                    tilePosition.toString(),
+                    decoratedTileView
+                );
+            }
+        }
+    }
 }

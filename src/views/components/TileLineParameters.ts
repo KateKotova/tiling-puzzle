@@ -1,3 +1,5 @@
+import { DraggableTileParameters } from "../tile-decorators/DraggableTileParameters.ts";
+import { TileParameters } from "../tiles/TileParameters.ts";
 import { TileLineDirectionType } from "./TileLineDirectionType.ts";
 
 /**
@@ -21,4 +23,6 @@ export interface TileLineParameters {
      * Отступ между элементами мозаики.
      */
     betweenTilesOffset: number;
+    tileParameters: TileParameters;
+    draggableTileParameters: DraggableTileParameters;
 }
