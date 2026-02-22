@@ -1,5 +1,4 @@
 import { Point } from "pixi.js";
-import { ModelSettings } from "../ModelSettings";
 import { TileGeometry } from "../tile-geometries/TileGeometry";
 import { TilePosition } from "./TilePosition";
 import { OverTimePointChangeController }
@@ -7,6 +6,7 @@ import { OverTimePointChangeController }
 import { OverTimeNumberChangeController }
     from "../../math/over-time-value-changes/OverTimeNumberChangeController";
 import { AdditionalMath } from "../../math/AdditionalMath";
+import { TileParameters } from "./TileParameters";
 
 /**
  * Класс элемента замощения.
@@ -17,7 +17,7 @@ export class TileModel {
     private static rotationAngleEpsilon: number = Math.PI / 180;
     private static positionCoordinateEpsilon: number = 2;
 
-    private readonly modelSettings: ModelSettings;
+    private readonly parameters: TileParameters;
     public geometry: TileGeometry;
     /**
      * Целевая позиция элемента замощения в замощении
@@ -68,15 +68,15 @@ export class TileModel {
     private rotationController?: OverTimeNumberChangeController;
 
     constructor(
-        modelSettings: ModelSettings,
+        parameters: TileParameters,
         geometry: TileGeometry
     ) {
-        this.modelSettings = modelSettings;
+        this.parameters = parameters;
         this.geometry = geometry;
     }
 
     public clone(): TileModel {
-        const result = new TileModel(this.modelSettings, this.geometry);
+        const result = new TileModel(this.parameters, this.geometry);
 
         result.targetTilePosition = this.targetTilePosition.clone();
         result.targetPositionPoint = this.targetPositionPoint.clone();
@@ -173,8 +173,8 @@ export class TileModel {
             this.rotationController = new OverTimeNumberChangeController(
                 this.currentRotationAngle,
                 this.currentTargetRotationAngle,
-                this.modelSettings.tileAnimationTime,
-                this.modelSettings.accelerationTimeToTileAnimationTimeRatio
+                this.parameters.animationTime,
+                this.parameters.accelerationTimeToAnimationTimeRatio
             );
         } else {
             this.rotationController.reset(this.currentRotationAngle,
@@ -196,8 +196,8 @@ export class TileModel {
             this.positionPointController = new OverTimePointChangeController(
                 this.currentPositionPoint,
                 this.currentTargetPositionPoint,
-                this.modelSettings.tileAnimationTime,
-                this.modelSettings.accelerationTimeToTileAnimationTimeRatio
+                this.parameters.animationTime,
+                this.parameters.accelerationTimeToAnimationTimeRatio
             );
         } else {
             this.positionPointController.reset(this.currentPositionPoint,

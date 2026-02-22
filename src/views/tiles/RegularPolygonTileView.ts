@@ -1,21 +1,25 @@
 import { Container, Graphics, Sprite } from "pixi.js";
-import { TileViewBase } from "./TileViewBase.ts";
-import { TileViewParameters } from "./TileViewParameters.ts";
+import { TileBaseView } from "./TileBaseView.ts";
 import { RegularPolygonTileGeometry } from "../../models/tile-geometries/RegularPolygonTileGeometry.ts";
 import { TileLockType } from "../../models/tile-locks/TileLockType.ts";
+import { TileParameters } from "./TileParameters.ts";
+import { TileViewCreationParameters } from "./TileViewCreationParameters.ts";
 
 /**
  * Представление элемента замощения, который представляет собой правильный многоугольник
  */
-export class RegularPolygonTileView extends TileViewBase {
-    constructor (parameters: TileViewParameters) {
-        if (!(parameters.model.geometry instanceof RegularPolygonTileGeometry)) {
+export class RegularPolygonTileView extends TileBaseView {
+    constructor (
+        parameters: TileParameters,
+        creationParameters: TileViewCreationParameters
+    ) {
+        if (!(creationParameters.model.geometry instanceof RegularPolygonTileGeometry)) {
             throw new Error("The tile geometry is not an instance of RegularPolygonTileGeometry");
         }
-        if (parameters.model.geometry.lockType != TileLockType.None) {
+        if (creationParameters.model.geometry.lockType != TileLockType.None) {
             throw new Error("The tile lock type is not None");
         }
-        super(parameters);
+        super(parameters, creationParameters);
     }
 
     public createContent(shouldAddBevelFilter: boolean): Container {
@@ -51,7 +55,7 @@ export class RegularPolygonTileView extends TileViewBase {
 
         const graphicsTexture = this.renderer.generateTexture({
             target: graphics,
-            resolution: this.viewSettings.generateTileTextureResolution,
+            resolution: this.parameters.generateTileTextureResolution,
             textureSourceOptions: {
                 scaleMode: "nearest"
             }
@@ -59,11 +63,11 @@ export class RegularPolygonTileView extends TileViewBase {
         graphics.destroy();
 
         const sprite = new Sprite(graphicsTexture);
-        sprite.cacheAsTexture({ resolution: this.viewSettings.cacheTileAsTextureResolution });
+        sprite.cacheAsTexture({ resolution: this.parameters.cacheTileAsTextureResolution });
 
         const result = new Container();        
         result.addChild(sprite);        
-        result.cacheAsTexture({ resolution: this.viewSettings.cacheTileAsTextureResolution });
+        result.cacheAsTexture({ resolution: this.parameters.cacheTileAsTextureResolution });
 
         result.hitArea = this.model.geometry.hitArea.clone();
 

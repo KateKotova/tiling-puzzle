@@ -1,15 +1,15 @@
 import { Texture, Container, Renderer, Color, Filter } from "pixi.js";
 import { BevelFilter } from "pixi-filters";
 import { TileModel } from "../../models/tiles/TileModel.ts";
-import { ViewSettings } from "../ViewSettings.ts";
 import { TileView } from "./TileView.ts";
-import { TileViewParameters } from "./TileViewParameters.ts";
+import { TileViewCreationParameters } from "./TileViewCreationParameters.ts";
+import { TileParameters } from "./TileParameters.ts";
 
 /**
  * Базовый класс представления элемента замощения
  */
-export abstract class TileViewBase implements TileView {
-    protected readonly viewSettings: ViewSettings;
+export abstract class TileBaseView implements TileView {
+    protected readonly parameters: TileParameters;
     public model: TileModel;
     public texture?: Texture;
     public tile: Container;    
@@ -20,12 +20,15 @@ export abstract class TileViewBase implements TileView {
      */
     protected replacingTextureFillColor: Color;
 
-    constructor (parameters: TileViewParameters) {
-        this.viewSettings = parameters.viewSettings;
-        this.model = parameters.model;
-        this.texture = parameters.texture;
-        this.renderer = parameters.renderer;
-        this.replacingTextureFillColor = parameters.replacingTextureFillColor;
+    constructor (
+        parameters: TileParameters,
+        creationParameters: TileViewCreationParameters
+    ) {
+        this.parameters = parameters;
+        this.model = creationParameters.model;
+        this.texture = creationParameters.texture;
+        this.renderer = creationParameters.renderer;
+        this.replacingTextureFillColor = creationParameters.replacingTextureFillColor;
         this.content = this.createContent(true);
         this.tile = this.createTile();
     }
@@ -42,7 +45,7 @@ export abstract class TileViewBase implements TileView {
     protected createTile(): Container {
         const result = new Container();       
         result.addChild(this.content);        
-        result.cacheAsTexture({ resolution: this.viewSettings.cacheTileAsTextureResolution });
+        result.cacheAsTexture({ resolution: this.parameters.cacheTileAsTextureResolution });
         result.pivot.set(this.model.geometry.pivotPoint.x, this.model.geometry.pivotPoint.y);        
         result.rotation = this.model.currentRotationAngle;   
         result.position.copyFrom(this.model.currentPositionPoint);
@@ -51,7 +54,7 @@ export abstract class TileViewBase implements TileView {
     }
 
     protected getBevelFilter(graphicsSideToSpriteSideRatio: number): BevelFilter {
-        const options = this.viewSettings.bevelFilterOptions;
+        const options = this.parameters.bevelFilterOptions;
         return new BevelFilter({ 
             rotation: (options.rotation ?? 0)
                 + (this.texture ? 0 : 180)

@@ -33,5 +33,6 @@ export class HexagonGeometry extends HexagonBaseGeometry {
             6,
             this.regularPolygonInitialRotationAngle
         );
+        this.maxBoundingSize = this.circumscribedCircleRadius * 2;
     }
 }

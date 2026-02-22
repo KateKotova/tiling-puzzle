@@ -27,12 +27,14 @@ export abstract class OctagonAndSquareTilingBaseModel extends RectangularGridTil
     protected setTilePositionsByEdgeDistanceIndices(): void {
         const octagonRowCount = Math.ceil(this.tileRowCount / 2.0);
         const octagonColumnCount = this.tileColumnCount;
-        const maxOctagonEdgeDistanceIndex = RectangularGridTilingModel.getMaxTilePositionEdgeDistanceIndex(
+        const maxOctagonEdgeDistanceIndex = RectangularGridTilingModel
+            .getMaxTilePositionEdgeDistanceIndex(
             octagonRowCount, octagonColumnCount);
 
         const squareRowCount = octagonRowCount - 1;
         const squareColumnCount = octagonColumnCount - 1;
-        const maxSquareEdgeDistanceIndex = RectangularGridTilingModel.getMaxTilePositionEdgeDistanceIndex(
+        const maxSquareEdgeDistanceIndex = RectangularGridTilingModel
+            .getMaxTilePositionEdgeDistanceIndex(
             squareRowCount, squareColumnCount);
 
         const maxEdgeDistanceIndex = maxOctagonEdgeDistanceIndex + maxSquareEdgeDistanceIndex + 1;

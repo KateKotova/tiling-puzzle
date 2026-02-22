@@ -1,6 +1,5 @@
 import { Point, Renderer } from "pixi.js";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
-import { ModelSettings } from "../../ModelSettings.ts";
 import { HexagonWithSingleLockGeometry }
     from "../../tile-geometries/polygons-with-single-locks/HexagonWithSingleLockGeometry.ts";
 import { TileLockType } from "../../tile-locks/TileLockType.ts";
@@ -10,6 +9,7 @@ import { TilingType } from "../TilingType.ts";
 import { TileModel } from "../../tiles/TileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
 import { HexagonBaseGeometry } from "../../tile-geometries/polygon-bases/HexagonBaseGeometry.ts";
+import { TileParameters } from "../../tiles/TileParameters.ts";
 
 /**
  * Класс модели замощения, представляющего собой прямоугольную сетку,
@@ -55,7 +55,7 @@ export class HexagonWithSingleLockTilingModel extends RectangularGridTilingModel
 
     /**
      * Создание замощения правильными шестиугольниками с одинарными замками
-     * @param modelSettings Модель настроек
+     * @param tileParameters Параметры элемента замощения
      * @param textureModel Модель текстуры
      * @param textureMinSideTilePairCount Количество пар элементов замощения,
      * укладывающихся в минимальную сторону текстуры, в ширину или в высоту,
@@ -64,14 +64,14 @@ export class HexagonWithSingleLockTilingModel extends RectangularGridTilingModel
      * @param renderer Объект, ответственный за отображение
      */
     constructor(
-        modelSettings: ModelSettings,
+        tileParameters: TileParameters,
         textureModel: TilingTextureModel,
         textureMinSideTilePairCount: number,
         imageContainerModel: ImageContainerModel,
         renderer: Renderer
     ) {
 
-        super(modelSettings, textureModel, imageContainerModel, renderer);
+        super(tileParameters, textureModel, imageContainerModel, renderer);
         this.textureMinSideTilePairCount
             = textureMinSideTilePairCount
                 < HexagonWithSingleLockTilingModel.textureMinSideMinTilePairCount
@@ -110,6 +110,7 @@ export class HexagonWithSingleLockTilingModel extends RectangularGridTilingModel
     protected initializeImageTileInfo(): void {
         const tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
         this.tileGeometry = new HexagonWithSingleLockGeometry(tileSide);
+        this.maxTileBoundingSize = this.tileGeometry.maxBoundingSize;
     }
 
     protected getProtectedTileModel(targetTilePosition: RectangularGridTilePosition): TileModel {
@@ -117,7 +118,7 @@ export class HexagonWithSingleLockTilingModel extends RectangularGridTilingModel
             throw new Error('tileGeometry is not defined');
         }
 
-        const result = new TileModel(this.modelSettings, this.tileGeometry);
+        const result = new TileModel(this.tileParameters, this.tileGeometry);
         result.targetTilePosition = targetTilePosition.clone();
         result.targetRotationAngle = 0;
         const inscribedCircleRadius = this.tileGeometry.inscribedCircleRadius;

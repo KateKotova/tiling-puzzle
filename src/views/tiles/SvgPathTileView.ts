@@ -7,21 +7,25 @@ import {
     Sprite,
     Texture
 } from "pixi.js";
-import { TileViewBase } from "./TileViewBase.ts";
-import { TileViewParameters } from "./TileViewParameters.ts";
+import { TileBaseView } from "./TileBaseView.ts";
+import { TileViewCreationParameters } from "./TileViewCreationParameters.ts";
 import { Size } from "../../math/Size.ts";
+import { TileParameters } from "./TileParameters.ts";
 
 /**
  * Представление элемента замощения, который представляет собой svg-путь
  */
-export class SvgPathTileView extends TileViewBase {
+export class SvgPathTileView extends TileBaseView {
     private spriteBoundingSize: Size = new Size();
 
-    constructor (parameters: TileViewParameters) {
-        if (!parameters.model.geometry.svgPath) {
+    constructor (
+        parameters: TileParameters,
+        creationParameters: TileViewCreationParameters
+    ) {
+        if (!creationParameters.model.geometry.svgPath) {
             throw new Error("The tile has no svg path");
         }
-        super(parameters);
+        super(parameters, creationParameters);
     }
 
     public createContent(shouldAddBevelFilter: boolean): Container {
@@ -44,7 +48,7 @@ export class SvgPathTileView extends TileViewBase {
             graphicsTexture, sprite.width, sprite.height);
         result.addChild(blurredSpriteWithMask);
         
-        result.cacheAsTexture({ resolution: this.viewSettings.cacheTileAsTextureResolution });
+        result.cacheAsTexture({ resolution: this.parameters.cacheTileAsTextureResolution });
 
         result.hitArea = this.model.geometry.hitArea.clone();
 
@@ -78,7 +82,7 @@ export class SvgPathTileView extends TileViewBase {
 
         const maskTexture = renderer.generateTexture({
             target: maskGraphics,
-            resolution: this.viewSettings.generateTileTextureResolution,
+            resolution: this.parameters.generateTileTextureResolution,
             width: spriteWidth,
             height: spriteHeight,
             textureSourceOptions: {
@@ -138,7 +142,7 @@ export class SvgPathTileView extends TileViewBase {
 
         const result =  this.renderer.generateTexture({
             target: graphics,
-            resolution: this.viewSettings.generateTileTextureResolution,
+            resolution: this.parameters.generateTileTextureResolution,
             width: textureWidth,
             height: textureHeight,
             textureSourceOptions: {

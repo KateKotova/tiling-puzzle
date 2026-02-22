@@ -1,6 +1,5 @@
 import { Point, Renderer } from "pixi.js";
 import { ImageContainerModel } from "../../ImageContainerModel.ts";
-import { ModelSettings } from "../../ModelSettings.ts";
 import { OctagonWithSingleLockGeometry }
     from "../../tile-geometries/polygons-with-single-locks/OctagonWithSingleLockGeometry.ts";
 import { SquareWithSingleLockGeometry }
@@ -13,6 +12,7 @@ import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosi
 import { TileGeometry } from "../../tile-geometries/TileGeometry.ts";
 import { OctagonBaseGeometry } from "../../tile-geometries/polygon-bases/OctagonBaseGeometry.ts";
 import { OctagonAndSquareTilingBaseModel } from "../OctagonAndSquareTilingBaseModel.ts";
+import { TileParameters } from "../../tiles/TileParameters.ts";
 
 /**
  * Класс модели замощения, представляющего собой прямоугольную сетку,
@@ -77,7 +77,7 @@ export class OctagonAndSquareWithSpiralLockTilingModel
 
     /**
      * Создание замощения правильными восьмиугольниками и квадратами с одинарными замками
-     * @param modelSettings Модель настроек
+     * @param tileParameters Параметры элементов замощения
      * @param textureModel Модель текстуры
      * @param textureMinSideOctagonTileCount Количество восьмиугольников,
      * укладывающихся в минимальную сторону текстуры,
@@ -88,14 +88,14 @@ export class OctagonAndSquareWithSpiralLockTilingModel
      * @param renderer Объект, ответственный за отображение
      */
     constructor(
-        modelSettings: ModelSettings,
+        tileParameters: TileParameters,
         textureModel: TilingTextureModel,
         textureMinSideOctagonTileCount: number,
         imageContainerModel: ImageContainerModel,
         renderer: Renderer
     ) {
 
-        super(modelSettings, textureModel, imageContainerModel, renderer);
+        super(tileParameters, textureModel, imageContainerModel, renderer);
         this.textureMinSideOctagonTileCount
             = textureMinSideOctagonTileCount
                 < OctagonAndSquareWithSpiralLockTilingModel.textureMinSideMinOctagonTileCount
@@ -138,6 +138,10 @@ export class OctagonAndSquareWithSpiralLockTilingModel
         const tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
         this.octagonTileGeometry = new OctagonWithSingleLockGeometry(tileSide);
         this.squareTileGeometry = new SquareWithSingleLockGeometry(tileSide);
+        this.maxTileBoundingSize = Math.max(
+            this.octagonTileGeometry.maxBoundingSize,
+            this.squareTileGeometry.maxBoundingSize
+        );
     }
 
     protected getProtectedTileModel(targetTilePosition: RectangularGridTilePosition): TileModel {
@@ -149,7 +153,7 @@ export class OctagonAndSquareWithSpiralLockTilingModel
         const tileGeometry: TileGeometry = tileIsOctagon
             ? this.octagonTileGeometry
             : this.squareTileGeometry;
-        const result = new TileModel(this.modelSettings, tileGeometry);
+        const result = new TileModel(this.tileParameters, tileGeometry);
         result.targetTilePosition = targetTilePosition.clone();
 
         const lockHeight = this.octagonTileGeometry.lockHeight;

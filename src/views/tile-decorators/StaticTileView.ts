@@ -1,16 +1,16 @@
 import { Texture, Container, Filter, FederatedPointerEvent } from "pixi.js";
 import { TileModel } from "../../models/tiles/TileModel.ts";
-import { ViewSettings } from "../ViewSettings.ts";
 import { TileView } from "../tiles/TileView.ts";
 import { GlowFilter } from "pixi-filters";
 import { DraggingTileData } from "./DraggingTileData.ts";
+import { StaticTileParameters } from "./StaticTileParameters.ts";
 
 /**
  * Класс декоратора представления неподвижного элемента замощения,
  * который обозначает место, куда должен быть размещён пользователем подвижный элемент замощения
  */
 export class StaticTileView implements TileView {
-    private readonly viewSettings: ViewSettings;
+    private readonly parameters: StaticTileParameters;
     /**
      * Композиция: элемент замощения, который декорируется
      */
@@ -29,17 +29,17 @@ export class StaticTileView implements TileView {
     /**
      * Создание неподвижного элемента замощения,
      * служащего ячейкой для перетаскивания подвижного элемента замощения
-     * @param viewSettings Настройки представления
+     * @param parameters Параметры неподвижного элемента замощения
      * @param view Элемент замощения, который декорируется
      * @param draggingTileData Информация о фигуре, которая перетаскивается в данный момент.
      * Этот объект один на всех.
      */
     constructor (
-        viewSettings: ViewSettings,
+        parameters: StaticTileParameters,
         view: TileView,
         draggingTileData: DraggingTileData
     ) {
-        this.viewSettings = viewSettings;
+        this.parameters = parameters;
         this.view = view;
         this.draggingTileData = draggingTileData;
 
@@ -103,7 +103,7 @@ export class StaticTileView implements TileView {
         
         this.isDragTarget = true;
         
-        const filter = new GlowFilter(this.viewSettings.targetStaticTileGlowFilterOptions);      
+        const filter = new GlowFilter(this.parameters.targetGlowFilterOptions);      
         this.view.setFilter(filter);
 
         this.draggingTileData.view?.rotateToDragTarget(this.view.model);     

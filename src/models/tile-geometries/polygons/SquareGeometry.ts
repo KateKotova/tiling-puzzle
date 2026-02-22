@@ -31,5 +31,6 @@ export class SquareGeometry extends SquareBaseGeometry {
             new Point(this.side, this.side),
             new Point(0, this.side)
         ]);
+        this.maxBoundingSize = this.circumscribedCircleRadius * 2;
     }
 }

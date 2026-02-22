@@ -55,5 +55,9 @@ export class HexagonWithSingleLockGeometry extends HexagonBaseGeometry {
             6,
             this.regularPolygonInitialRotationAngle
         );
+        this.maxBoundingSize = Math.max(
+            2 * this.circumscribedCircleRadius,
+            2 * this.inscribedCircleRadius + this.lockHeight
+        );
     }
 }
