@@ -31,7 +31,7 @@ export class TileLineContainer extends Container {
     /**
      * Масштаб элемента мозаики, чтобы он списывался в ленту
      */
-    private readonly tileScale: number;
+    public readonly tileScale: number;
     /**
      * Максимальный предельный размер масштабированного элемента мозаики.
      */
@@ -125,6 +125,7 @@ export class TileLineContainer extends Container {
             const currentRotationAngle = Math.random() * 2 * Math.PI;
             tileModel.currentRotationAngle = currentRotationAngle;
             tileModel.currentTargetRotationAngle = currentRotationAngle;
+            tileModel.targetTilePosition.shuffledIndex = tilePositionIndex;
 
             const longitudinalCoordinate = longitudinalCoordinateOffset
                 + tilePosition.shuffledIndex * longitudinalCoordinateMultiplier;
@@ -145,13 +146,15 @@ export class TileLineContainer extends Container {
 
             this.addChild(tileView.tile);
 
-            const decoratedTileView = new DraggableTileView(
+            new DraggableTileView(
                 this.parameters.draggableTileParameters,
                 tileView,
+                this,
+                this.tilingView.draggableTilesContainer,
                 this.selectedTileContainer,
                 ticker,
-                this.draggingTileData);
-            decoratedTileView.setInitialDragSource(staticTileView);
+                this.draggingTileData
+            );
         }
     }
 
