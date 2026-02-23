@@ -16,6 +16,7 @@ import { TileView } from "../tiles/TileView.ts";
 import { GlowFilter } from "pixi-filters";
 import { AdditionalMath } from "../../math/AdditionalMath.ts";
 import { DraggableTileParameters } from "./DraggableTileParameters.ts";
+import { TileLineContainer } from "../components/TileLineContainer.ts";
 
 /**
  * Класс декоратора представления подвижного элемента замощения
@@ -34,9 +35,9 @@ export class DraggableTileView implements TileView {
      */
     private hitArea?: IHitArea;
     /**
-     * Контейнер, в котором фигура находится по умолчанию
+     * Контейнер, в котором фигура должна находиться, чтобы картинка была собрана
      */
-    private parentContainer: Container | null = null;
+    private targetTilesContainer: Container;
     /**
      * Контейнер, в который фигура переносится на время вращения и/или перетаскивания
      */
@@ -65,12 +66,15 @@ export class DraggableTileView implements TileView {
      * потому что под перетаскиваемой фигурой зона не видна.
      */
     private dragSourceTileWorldHitArea?: Polygon;
-    private initialDragSource?: StaticTileView;
-    private initialDragSourceTileWorldHitArea?: Polygon;
     /**
      * Статическая фигура-ячейка, на которую происходит перетаскивание
      */
     public dragTarget?: StaticTileView;
+
+    /**
+     * Контейнер линии, в котором фигура находится изначально
+     */
+    private initialTileContainer: TileLineContainer;
 
     /**
      * Сохранённая глобальная позиция
@@ -95,8 +99,10 @@ export class DraggableTileView implements TileView {
     /**
      * Создание подвижного элемента замощения
      * @param parameters Параметры подвижного элемента замощения
-     * @param tapParameters Параметры тапа
      * @param view Элемент замощения, который декорируется
+     * @param initialTileContainer Контейнер линии, в котором фигура находится изначально
+     * @param targetTilesContainer Контейнер, в котором фигура должна находиться,
+     * чтобы мозаика была собрана
      * @param selectedTileContainer Контейнер, в который фигура переносится
      * на время вращения и/или перетаскивания
      * @param ticker Инструмент PixiJS, отвечающий за время
@@ -106,13 +112,16 @@ export class DraggableTileView implements TileView {
     constructor (
         parameters: DraggableTileParameters,
         view: TileView,
+        initialTileContainer: TileLineContainer,
+        targetTilesContainer: Container,
         selectedTileContainer: Container,
         ticker: Ticker,
         draggingTileData: DraggingTileData
     ) {            
         this.parameters = parameters;
         this.view = view;
-        this.parentContainer = this.view.tile.parent;
+        this.initialTileContainer = initialTileContainer;
+        this.targetTilesContainer = targetTilesContainer;
         this.selectedTileContainer = selectedTileContainer;
         this.ticker = ticker;
         this.draggingTileData = draggingTileData;
@@ -196,30 +205,38 @@ export class DraggableTileView implements TileView {
         }        
     }
 
-    public rotateToDragTarget(dragTargetModel: TileModel): void {
+    public rotateToDragTarget(dragTargetModel?: TileModel): void {
         this.stopRotation();
+        const rotationAngle = dragTargetModel
+            ? dragTargetModel.targetRotationAngle
+            : Math.random() * 2 * Math.PI;
         const rotationAngleDifference = this.view.model.getNewPositionMinAngleDifference(
-            dragTargetModel.targetRotationAngle);
+            rotationAngle);
         this.startRotation(rotationAngleDifference);
     }
 
-    public moveToStaticTile(staticTileModel: TileModel): void {
+    public moveToDragTarget(targetStaticTileModel?: TileModel): void {
         this.stopMove();
         
-        const targetInParent = staticTileModel.targetPositionPoint;
+        const targetInTarget = targetStaticTileModel
+            ? targetStaticTileModel.targetPositionPoint
+            : this.initialTileContainer.getTilePositionPoint(this.view.model.targetTilePosition);
         
         let moveDifference: Point;
-        if (this.view.tile.parent === this.selectedTileContainer && this.parentContainer) {
-            const globalTarget = this.parentContainer.toGlobal(targetInParent);
-            const targetInSelected = this.selectedTileContainer.toLocal(globalTarget);            
+        if (this.view.tile.parent === this.selectedTileContainer) {
+            const target = targetStaticTileModel
+                ? this.targetTilesContainer
+                : this.initialTileContainer;
+            const targetInGlobal = target.toGlobal(targetInTarget);
+            const targetInSelected = this.selectedTileContainer.toLocal(targetInGlobal);            
             moveDifference = new Point(
                 targetInSelected.x - this.view.model.currentPositionPoint.x,
                 targetInSelected.y - this.view.model.currentPositionPoint.y
             );
         } else {
             moveDifference = new Point(
-                targetInParent.x - this.view.model.currentPositionPoint.x,
-                targetInParent.y - this.view.model.currentPositionPoint.y
+                targetInTarget.x - this.view.model.currentPositionPoint.x,
+                targetInTarget.y - this.view.model.currentPositionPoint.y
             );
         }
 
@@ -283,6 +300,12 @@ export class DraggableTileView implements TileView {
     private executeMove(deltaTime: number): void {
         this.view.model.executeMove(deltaTime);
         this.view.tile.position.copyFrom(this.view.model.currentPositionPoint);
+
+        const globalPosition = this.view.tile.parent
+            ? this.view.tile.parent.toGlobal(this.view.model.currentPositionPoint)
+            : this.view.model.currentPositionPoint;
+        this.initialTileContainer.setScaleRelativeToScaleChangeGlobalRectangle(
+            globalPosition, this);
     }
 
     private completeRotation(): void {
@@ -294,18 +317,8 @@ export class DraggableTileView implements TileView {
         
         this.view.tile.rotation = this.view.model.currentRotationAngle;
         
-        if (
-            !this.isDragging
-            && this.parentContainer
-            && this.view.tile.parent !== this.parentContainer
-        ) {
-            this.saveGlobalPosition();
-            this.parentContainer.addChild(this.view.tile);
-            this.restoreParentScale();
-            
-            const newPosition = this.parentContainer.toLocal(this.savedGlobalPosition);
-            this.view.tile.position.copyFrom(newPosition);
-            this.view.model.currentPositionPoint.copyFrom(this.view.tile.position);
+        if (!this.isDragging && this.view.tile.parent !== this.targetTilesContainer) {
+            this.addTileToTargetContainer();
         }
 
         if (this.view.model.getIsLocatedCorrectly()) {
@@ -324,14 +337,8 @@ export class DraggableTileView implements TileView {
         this.view.model.completeMove();
         this.view.tile.position.copyFrom(this.view.model.currentPositionPoint);
         
-        if (this.parentContainer && this.view.tile.parent !== this.parentContainer) {
-            this.saveGlobalPosition();
-            this.parentContainer.addChild(this.view.tile);
-            this.restoreParentScale();
-            
-            const newPosition = this.parentContainer.toLocal(this.savedGlobalPosition);
-            this.view.tile.position.copyFrom(newPosition);            
-            this.view.model.currentPositionPoint.copyFrom(this.view.tile.position);
+        if (this.view.tile.parent !== this.targetTilesContainer) {
+            this.addTileToTargetContainer();
         }
 
         if (this.view.model.getIsLocatedCorrectly()) {
@@ -342,6 +349,19 @@ export class DraggableTileView implements TileView {
         window.removeEventListener('wheel', this.boundPreventScrollOnWheel);
 
         this.isMovingAfterDrag = false;
+    }
+
+    private addTileToTargetContainer(): void {
+        const targetContainer = this.getTargetContainer();
+
+        this.saveGlobalPosition();
+        targetContainer.addChild(this.view.tile);
+        this.restoreTargetScale();
+        this.restoreGlobalPosition();
+        
+        const newPosition = targetContainer.toLocal(this.savedGlobalPosition);
+        this.view.tile.position.copyFrom(newPosition);
+        this.view.model.currentPositionPoint.copyFrom(this.view.tile.position);
     }
 
     private onPointerDown(event: FederatedPointerEvent): void {
@@ -373,12 +393,14 @@ export class DraggableTileView implements TileView {
         this.dragStartTime = event.timeStamp;
         
         const globalPosition = new Point(event.global.x, event.global.y);
-        const parentPosition = this.getParentContainerPosition(globalPosition);
-        const viewportScale = this.draggingTileData.viewport.scale;
+        const targetPosition = this.getTargetContainerPosition(globalPosition);
+        const targetScale = this.dragSource
+            ? this.draggingTileData.viewport.scale.x
+            : 1;
         
         this.dragOffset.set(
-            (parentPosition.x - this.view.model.currentPositionPoint.x) * viewportScale.x,
-            (parentPosition.y - this.view.model.currentPositionPoint.y) * viewportScale.y
+            (targetPosition.x - this.view.model.currentPositionPoint.x) * targetScale,
+            (targetPosition.y - this.view.model.currentPositionPoint.y) * targetScale
         );
         
         this.addTileToSelectedContainer();
@@ -420,22 +442,17 @@ export class DraggableTileView implements TileView {
         );
         this.view.tile.position.copyFrom(this.view.model.currentPositionPoint);
 
-        const parentContainerPosition = this.getParentContainerPosition(globalPosition);
+        const globalCurrentPosition = this.selectedTileContainer.toGlobal(this.view.tile.position);
+        this.initialTileContainer.setScaleRelativeToScaleChangeGlobalRectangle(
+            globalCurrentPosition, this);
 
-        let wasEnteredToInitialDragSource = false;
-        if (this.initialDragSource && this.initialDragSourceTileWorldHitArea) {
-            wasEnteredToInitialDragSource = this.tryToEnterToDragSource(
-                this.initialDragSource,
-                this.initialDragSourceTileWorldHitArea,
-                parentContainerPosition
-            );
-        }
-        
-        if (!wasEnteredToInitialDragSource && this.dragSource && this.dragSourceTileWorldHitArea) {
+        const targetPosition = this.getTargetContainerPosition(globalPosition);
+
+        if (this.dragSource && this.dragSourceTileWorldHitArea) {
             this.tryToEnterToDragSource(
                 this.dragSource,
                 this.dragSourceTileWorldHitArea,
-                parentContainerPosition
+                targetPosition
             );
         }
     }
@@ -457,6 +474,7 @@ export class DraggableTileView implements TileView {
 
         const finalTarget = this.dragTarget;
         const finalSource = this.dragSource;
+        const finalTargetContainer = this.getTargetContainer();
         
         if (finalTarget) {
             finalTarget.stopBeingDragTarget();
@@ -468,39 +486,28 @@ export class DraggableTileView implements TileView {
         this.view.tile.hitArea = this.hitArea;
         this.view.content.hitArea = this.hitArea;
 
-        let parentPosition: Point;
-        if (this.parentContainer && this.view.tile.parent !== this.parentContainer) {
+        let targetPosition: Point;
+        if (this.view.tile.parent !== finalTargetContainer) {
             const globalPosition = this.view.tile.parent!.toGlobal(this.view.tile.position);
-            parentPosition = this.parentContainer.toLocal(globalPosition);
+            targetPosition = finalTargetContainer.toLocal(globalPosition);
         } else {
-            parentPosition = this.view.tile.position.clone();
+            targetPosition = this.view.tile.position.clone();
         }
 
         const tapParameters = this.parameters.tapParameters;
         const tapWasExecuted
             = (event.timeStamp - this.dragStartTime <= tapParameters.maxDuration)
-            && Math.abs(parentPosition.x - this.dragStartPosition.x)
+            && Math.abs(targetPosition.x - this.dragStartPosition.x)
                 <= tapParameters.maxDistance
-            && Math.abs(parentPosition.y - this.dragStartPosition.y)
+            && Math.abs(targetPosition.y - this.dragStartPosition.y)
                 <= tapParameters.maxDistance;
 
-        const moveTargetModel = finalTarget?.model ?? finalSource?.model;
-        
-        if (moveTargetModel) {
-            this.moveToStaticTile(moveTargetModel);
-            if (tapWasExecuted) {
-                this.onPointerTap(event);
-            } else {
-                this.rotateToDragTarget(moveTargetModel);
-            }
-        } else if (tapWasExecuted) {
+        const moveTargetModel = finalTarget?.model ?? finalSource?.model;        
+        this.moveToDragTarget(moveTargetModel);
+        if (tapWasExecuted) {
             this.onPointerTap(event);
         } else {
-            this.setOnPointerDownActivity(true);
-            this.addTileToParentContainer();
-            this.view.removeFilters();
-            this.draggingTileData.animatingViews.delete(this);
-            window.removeEventListener('wheel', this.boundPreventScrollOnWheel);
+            this.rotateToDragTarget(moveTargetModel);
         }
 
         if (finalTarget) {
@@ -563,26 +570,28 @@ export class DraggableTileView implements TileView {
     private addTileToSelectedContainer(): void {
         this.saveGlobalPosition();
         this.selectedTileContainer.addChild(this.view.tile);
-        const viewportScale = this.draggingTileData.viewport.scale;
-        this.view.tile.scale.copyFrom(viewportScale);
+        if (this.dragSource) {
+            this.view.tile.scale = this.draggingTileData.viewport.scale.x;
+        } else {
+            this.initialTileContainer.setScaleRelativeToScaleChangeGlobalRectangle(
+                this.savedGlobalPosition, this);
+        }
         this.restoreGlobalPosition();
     }
 
-    private restoreParentScale(): void {
-        this.view.tile.scale.set(1, 1);
+    private restoreTargetScale(): void {
+        this.view.tile.scale = this.dragSource
+            ? 1
+            : this.initialTileContainer.initialTileScale;
     }
 
-    private addTileToParentContainer(): void {
-        if (this.parentContainer) {
-            if (this.parentContainer != this.view.tile.parent) {
-                this.saveGlobalPosition();
-                this.parentContainer.addChild(this.view.tile);
-                this.restoreParentScale();
-                this.restoreGlobalPosition();
-                this.view.model.currentPositionPoint.copyFrom(this.view.tile.position);
-            }
-        } else if (this.selectedTileContainer == this.view.tile.parent) {
-            this.selectedTileContainer.removeChild(this.view.tile);
+    private addTileToTargetContainerOnFixAsLocatedCorrectly(): void {
+        if (this.targetTilesContainer != this.view.tile.parent) {
+            this.saveGlobalPosition();
+            this.targetTilesContainer.addChild(this.view.tile);
+            this.restoreTargetScale();
+            this.restoreGlobalPosition();
+            this.view.model.currentPositionPoint.copyFrom(this.view.tile.position);
         }
     }
 
@@ -591,7 +600,7 @@ export class DraggableTileView implements TileView {
             return;
         }
         const globalTilePosition = this.view.tile.parent.toGlobal(this.view.tile.position);
-        this.savedGlobalPosition.copyFrom(globalTilePosition);    
+        this.savedGlobalPosition.copyFrom(globalTilePosition);
     }
 
     private restoreGlobalPosition(): void {
@@ -600,12 +609,6 @@ export class DraggableTileView implements TileView {
         }
         const newLocalPosition = this.view.tile.parent.toLocal(this.savedGlobalPosition);
         this.view.tile.position.copyFrom(newLocalPosition);
-    }
-
-    public setInitialDragSource(initialDragSource?: StaticTileView) {
-        this.setDragSource(initialDragSource);
-        this.initialDragSource = this.dragSource;
-        this.initialDragSourceTileWorldHitArea = this.dragSourceTileWorldHitArea?.clone();
     }
 
     public setDragSource(dragSource?: StaticTileView): void {
@@ -637,10 +640,14 @@ export class DraggableTileView implements TileView {
      * @param globalPoint Глобальные координаты
      * @returns Координаты, в которых живёт модель элемента замощения
      */
-    private getParentContainerPosition(globalPoint: Point): Point {
-        return this.parentContainer
-            ? this.parentContainer.toLocal(globalPoint)
-            : globalPoint;
+    private getTargetContainerPosition(globalPoint: Point): Point {
+        return this.getTargetContainer().toLocal(globalPoint);
+    }
+
+    private getTargetContainer(): Container {
+        return !this.dragSource
+            ? this.initialTileContainer
+            : this.targetTilesContainer;
     }
 
     private removeEventListeners(): void {
@@ -673,7 +680,7 @@ export class DraggableTileView implements TileView {
 
         setTimeout(() => {
             this.removeFilters();
-            this.addTileToParentContainer();
+            this.addTileToTargetContainerOnFixAsLocatedCorrectly();
             const contentWithoutBevelFilter = this.view.createContent(false);
             this.view.replaceContent(contentWithoutBevelFilter);
         },  this.parameters.correctLocatedFilterShowTime);

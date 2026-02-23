@@ -27,7 +27,7 @@ async function main(): Promise<void> {
     const containerHeight = 400;
 
     const textureMinSideTileCount = 4;
-    const tilingType = TilingType.HexagonWithSingleLock;
+    const tilingType = TilingType.OctagonAndSquareWithSingleLock;
 
     //#endregion test data end
 
@@ -165,6 +165,7 @@ async function main(): Promise<void> {
     
     const carouselContainer = new CarouselContainer(carouselContainerOptions);
     carouselContainer.addChild(tileLineContainer);
+    tileLineContainer.onAddedToParent();
     carouselContainer.setContentSize(tileLineContainerSize.width, tileLineContainerSize.height);
     app.stage.addChild(carouselContainer);
     carouselContainer.onAddedToParent();

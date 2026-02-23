@@ -7,6 +7,7 @@ import { TileParameters } from "./tiles/TileParameters.ts";
 import { TileLineDirectionType } from "./components/TileLineDirectionType.ts";
 import { TileLineParameters } from "./components/TileLineParameters.ts";
 import { TilingParameters } from "./tilings/TilingParameters.ts";
+import { TileLineLayoutType } from "./components/TileLineLayoutType.ts";
 
 /**
  * Класс настроек представления.
@@ -33,7 +34,7 @@ export class ViewSettings {
 
     public readonly zoomAndPanParameters: ZoomAndPanParameters = {
         minScale: 1,
-        maxScale: 10,
+        maxScale: 2,
         mouseWheelScaleSensitivity: 0.001,
         touchPanSensitivity: 0.5,
         touchScaleSensitivity: 0.3
@@ -78,6 +79,7 @@ export class ViewSettings {
 
     public readonly tileLineParameters: TileLineParameters = {
         directionType: TileLineDirectionType.FromLeftToRight,
+        layoutType: TileLineLayoutType.Bottom,
         longitudinalContentOffset: 12,
         transverseContentOffset: 12,
         betweenTilesOffset: 12,

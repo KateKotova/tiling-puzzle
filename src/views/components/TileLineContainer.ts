@@ -1,4 +1,4 @@
-import { Color, Container, ContainerChild, ContainerOptions, DestroyOptions, Graphics, Point, Renderer, Ticker } from "pixi.js";
+import { Color, Container, ContainerChild, ContainerOptions, DestroyOptions, Graphics, Point, Rectangle, Renderer, Ticker } from "pixi.js";
 import { TileLineParameters } from "./TileLineParameters.ts";
 import { TilingView } from "../tilings/TilingView.ts";
 import { TileLineDirectionType } from "./TileLineDirectionType.ts";
@@ -8,6 +8,8 @@ import { TileViewFactory } from "../tiles/TileViewFactory.ts";
 import { DraggableTileView } from "../tile-decorators/DraggableTileView.ts";
 import { DraggingTileData } from "../tile-decorators/DraggingTileData.ts";
 import { Size } from "../../math/Size.ts";
+import { TileLineLayoutType } from "./TileLineLayoutType.ts";
+import { AdditionalMath } from "../../math/AdditionalMath.ts";
 
 /**
  * Класс контейнера линии, в которой содержатся элементы мозаики для сборки.
@@ -29,9 +31,18 @@ export class TileLineContainer extends Container {
      */
     private readonly transverseSize: number;
     /**
-     * Масштаб элемента мозаики, чтобы он списывался в ленту
+     * Изначальный масштаб элемента мозаики, когда он лежит на ленте,
+     * чтобы фигура полностью вписывалась в ленту
      */
-    private readonly tileScale: number;
+    public readonly initialTileScale: number;
+    /**
+     * Прямоугольная зона изменения масштаба элемента мозаики.
+     * Когда пользователь захватывает фигуру и начинает двигать,
+     * то в этой зоне масштаб фигуры постепенно меняется с изначального масштаба на ленте
+     * на масштаб viewport-а замощения.
+     * Эта зона определяется на основе типа выравнивания ленты.
+     */
+    private tileScaleChangeGlobalRectangle?: Rectangle;
     /**
      * Максимальный предельный размер масштабированного элемента мозаики.
      */
@@ -70,19 +81,63 @@ export class TileLineContainer extends Container {
             + tileCount * this.maxScaledTileBoundingSize
             + (tileCount - 1) * this.parameters.betweenTilesOffset;
 
-        const lineIsHorizontal = this.parameters.directionType
-            == TileLineDirectionType.FromLeftToRight;            
-        if (lineIsHorizontal) {
-            this.width = this.longitudinalSize; 
-        } else {
-            this.height = this.longitudinalSize;
-        }
+        const size = this.getSizeByDirection();
+        this.width = size.width;
+        this.height = size.height;
         
-        this.tileScale = this.maxScaledTileBoundingSize
+        this.initialTileScale = this.maxScaledTileBoundingSize
             / this.tilingView.model.maxTileBoundingSize;
+
+        this.tileScaleChangeGlobalRectangle = this.getTileScaleChangeGlobalRectangle();
 
         this.backgroundContainer = this.createBackground();
         this.addChild(this.backgroundContainer);
+    }
+
+    /**
+     * Метод, который нужно вызывать после добавления данного контейнера к родителю.
+     * Устанавливает зону изменения масштабирования
+     */
+    public onAddedToParent(): void {
+        this.tileScaleChangeGlobalRectangle = this.getTileScaleChangeGlobalRectangle();
+    }
+
+    private getTileScaleChangeGlobalRectangle(): Rectangle {
+        const globalLeftTop = this.toGlobal(new Point(0, 0));
+        const widthHalf = this.width / 2.0;
+        const heightHalf = this.height / 2.0;
+        switch (this.parameters.layoutType) {
+            case TileLineLayoutType.Top:
+                return new Rectangle(
+                    globalLeftTop.x,
+                    globalLeftTop.y + heightHalf,
+                    this.width,
+                    heightHalf
+                );
+            case TileLineLayoutType.Left:
+                return new Rectangle(
+                    globalLeftTop.x + widthHalf,
+                    globalLeftTop.y,
+                    widthHalf,
+                    this.height
+                );
+            case TileLineLayoutType.Bottom:
+                return new Rectangle(
+                    globalLeftTop.x,
+                    globalLeftTop.y,
+                    this.width,
+                    heightHalf
+                );
+            case TileLineLayoutType.Right:
+                return new Rectangle(
+                    globalLeftTop.x,
+                    globalLeftTop.y,
+                    widthHalf,
+                    this.height
+                );
+            default:
+                return new Rectangle(0, 0, 0, 0);
+        }
     }
 
     private createBackground(): Container {
@@ -125,6 +180,7 @@ export class TileLineContainer extends Container {
             const currentRotationAngle = Math.random() * 2 * Math.PI;
             tileModel.currentRotationAngle = currentRotationAngle;
             tileModel.currentTargetRotationAngle = currentRotationAngle;
+            tileModel.targetTilePosition.shuffledIndex = tilePositionIndex;
 
             const longitudinalCoordinate = longitudinalCoordinateOffset
                 + tilePosition.shuffledIndex * longitudinalCoordinateMultiplier;
@@ -141,18 +197,71 @@ export class TileLineContainer extends Container {
                 this.parameters.tileParameters,
                 tileViewCreationParameters
             );
-            tileView.tile.scale = this.tileScale;
+            tileView.tile.scale = this.initialTileScale;
 
             this.addChild(tileView.tile);
 
-            const decoratedTileView = new DraggableTileView(
+            new DraggableTileView(
                 this.parameters.draggableTileParameters,
                 tileView,
+                this,
+                this.tilingView.draggableTilesContainer,
                 this.selectedTileContainer,
                 ticker,
-                this.draggingTileData);
-            decoratedTileView.setInitialDragSource(staticTileView);
+                this.draggingTileData
+            );
         }
+    }
+
+    public setScaleRelativeToScaleChangeGlobalRectangle(
+        globalPoint: Point,
+        tileView: DraggableTileView
+    ): void {
+        if (!this.tileScaleChangeGlobalRectangle) {
+            throw new Error('tileScaleChangeGlobalRectangle was not created');
+        }
+
+        const shouldChangeScale = AdditionalMath.getPointIsInsideRectangle(
+            globalPoint,
+            this.tileScaleChangeGlobalRectangle
+        );
+        if (!shouldChangeScale) {
+            return;
+        }
+        
+        const tilingViewportScale = this.draggingTileData.viewport.scale.x;
+        const scaleDifference = tilingViewportScale - this.initialTileScale;
+        const coordinateDifference = this.parameters.layoutType == TileLineLayoutType.Top
+            || this.parameters.layoutType == TileLineLayoutType.Bottom
+            ? this.tileScaleChangeGlobalRectangle.height
+            : this.tileScaleChangeGlobalRectangle.width;
+        const scaleToCoordinateRatio = scaleDifference / coordinateDifference;
+
+        let coordinateDistance: number;
+        switch (this.parameters.layoutType) {
+            case TileLineLayoutType.Top:
+                coordinateDistance = globalPoint.y - this.tileScaleChangeGlobalRectangle.y;
+                break;
+            case TileLineLayoutType.Bottom:
+                coordinateDistance = this.tileScaleChangeGlobalRectangle.y
+                    + this.tileScaleChangeGlobalRectangle.height
+                    - globalPoint.y;
+                break;
+            case TileLineLayoutType.Left:
+                coordinateDistance = globalPoint.x - this.tileScaleChangeGlobalRectangle.x;
+                break;            
+            case TileLineLayoutType.Right:
+                coordinateDistance = this.tileScaleChangeGlobalRectangle.x
+                    + this.tileScaleChangeGlobalRectangle.width
+                    - globalPoint.x;
+                break;
+            default:
+                coordinateDistance = 0;
+                break;
+        }
+        
+        tileView.view.tile.scale = this.initialTileScale
+            + scaleToCoordinateRatio * coordinateDistance;
     }
 
     public getTilePositionPoint(tilePosition: TilePosition): Point {
