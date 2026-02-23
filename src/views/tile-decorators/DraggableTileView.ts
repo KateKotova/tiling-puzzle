@@ -209,13 +209,13 @@ export class DraggableTileView implements TileView {
         this.stopRotation();
         const rotationAngle = dragTargetModel
             ? dragTargetModel.targetRotationAngle
-            : this.view.model.currentRotationAngle;
+            : Math.random() * 2 * Math.PI;
         const rotationAngleDifference = this.view.model.getNewPositionMinAngleDifference(
             rotationAngle);
         this.startRotation(rotationAngleDifference);
     }
 
-    public moveToCurrentTargetPosition(targetStaticTileModel?: TileModel): void {
+    public moveToDragTarget(targetStaticTileModel?: TileModel): void {
         this.stopMove();
         
         const targetInTarget = targetStaticTileModel
@@ -300,6 +300,12 @@ export class DraggableTileView implements TileView {
     private executeMove(deltaTime: number): void {
         this.view.model.executeMove(deltaTime);
         this.view.tile.position.copyFrom(this.view.model.currentPositionPoint);
+
+        const globalPosition = this.view.tile.parent
+            ? this.view.tile.parent.toGlobal(this.view.model.currentPositionPoint)
+            : this.view.model.currentPositionPoint;
+        this.initialTileContainer.setScaleRelativeToScaleChangeGlobalRectangle(
+            globalPosition, this);
     }
 
     private completeRotation(): void {
@@ -436,6 +442,10 @@ export class DraggableTileView implements TileView {
         );
         this.view.tile.position.copyFrom(this.view.model.currentPositionPoint);
 
+        const globalCurrentPosition = this.selectedTileContainer.toGlobal(this.view.tile.position);
+        this.initialTileContainer.setScaleRelativeToScaleChangeGlobalRectangle(
+            globalCurrentPosition, this);
+
         const targetPosition = this.getTargetContainerPosition(globalPosition);
 
         if (this.dragSource && this.dragSourceTileWorldHitArea) {
@@ -492,11 +502,9 @@ export class DraggableTileView implements TileView {
             && Math.abs(targetPosition.y - this.dragStartPosition.y)
                 <= tapParameters.maxDistance;
 
-        const moveTargetModel = finalTarget?.model ?? finalSource?.model;
-        
-        this.moveToCurrentTargetPosition(moveTargetModel);
+        const moveTargetModel = finalTarget?.model ?? finalSource?.model;        
+        this.moveToDragTarget(moveTargetModel);
         if (tapWasExecuted) {
-            console.log("tap")
             this.onPointerTap(event);
         } else {
             this.rotateToDragTarget(moveTargetModel);
@@ -562,16 +570,19 @@ export class DraggableTileView implements TileView {
     private addTileToSelectedContainer(): void {
         this.saveGlobalPosition();
         this.selectedTileContainer.addChild(this.view.tile);
-        this.view.tile.scale = this.dragSource
-            ? this.draggingTileData.viewport.scale.x
-            : this.initialTileContainer.tileScale;
+        if (this.dragSource) {
+            this.view.tile.scale = this.draggingTileData.viewport.scale.x;
+        } else {
+            this.initialTileContainer.setScaleRelativeToScaleChangeGlobalRectangle(
+                this.savedGlobalPosition, this);
+        }
         this.restoreGlobalPosition();
     }
 
     private restoreTargetScale(): void {
         this.view.tile.scale = this.dragSource
             ? 1
-            : this.initialTileContainer.tileScale;
+            : this.initialTileContainer.initialTileScale;
     }
 
     private addTileToTargetContainerOnFixAsLocatedCorrectly(): void {
@@ -589,7 +600,7 @@ export class DraggableTileView implements TileView {
             return;
         }
         const globalTilePosition = this.view.tile.parent.toGlobal(this.view.tile.position);
-        this.savedGlobalPosition.copyFrom(globalTilePosition);    
+        this.savedGlobalPosition.copyFrom(globalTilePosition);
     }
 
     private restoreGlobalPosition(): void {
