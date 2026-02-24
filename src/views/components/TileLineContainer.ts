@@ -10,6 +10,8 @@ import { DraggingTileData } from "../tile-decorators/DraggingTileData.ts";
 import { Size } from "../../math/Size.ts";
 import { TileLineLayoutType } from "./TileLineLayoutType.ts";
 import { Algorithm } from "../../math/Algorithm.ts";
+import { TileView } from "../tiles/TileView.ts";
+import { ViewportContainer } from "./ViewportContainer.ts";
 
 /**
  * Класс контейнера линии, в которой содержатся элементы мозаики для сборки.
@@ -48,6 +50,7 @@ export class TileLineContainer extends Container {
      */
     private readonly maxScaledTileBoundingSize: number;
 
+    private viewportContainer?: ViewportContainer;
     private selectedTileContainer: Container;
     /**
      * Информация о фигуре, которая перетаскивается в данный момент.
@@ -57,6 +60,8 @@ export class TileLineContainer extends Container {
 
     private backgroundContainer: Container;
     public backgroundFillColor: Color = new Color(0x00AA00);
+
+    private tileViews: DraggableTileView[] = [];
 
     constructor(
         parameters: TileLineParameters,
@@ -98,8 +103,9 @@ export class TileLineContainer extends Container {
      * Метод, который нужно вызывать после добавления данного контейнера к родителю.
      * Устанавливает зону изменения масштабирования
      */
-    public onAddedToParent(): void {
+    public onAddedToParent(viewportContainer: ViewportContainer): void {
         this.tileScaleChangeGlobalRectangle = this.getTileScaleChangeGlobalRectangle();
+        this.viewportContainer = viewportContainer;
     }
 
     private getTileScaleChangeGlobalRectangle(): Rectangle {
@@ -201,7 +207,7 @@ export class TileLineContainer extends Container {
 
             this.addChild(tileView.tile);
 
-            new DraggableTileView(
+            this.tileViews.push(new DraggableTileView(
                 this.parameters.draggableTileParameters,
                 tileView,
                 this,
@@ -209,7 +215,7 @@ export class TileLineContainer extends Container {
                 this.selectedTileContainer,
                 ticker,
                 this.draggingTileData
-            );
+            ));
         }
     }
 
@@ -264,7 +270,75 @@ export class TileLineContainer extends Container {
             + scaleToCoordinateRatio * coordinateDistance;
     }
 
-    public getTilePositionPoint(tilePosition: TilePosition): Point {
+    // TODO: двигаться будут тайлы слева от удаляемого, те, что уже видны, + 1,
+    // у остальных просто поменяется координата.
+
+    private getTileIsVisibleInViewportContainer(tileView: TileView): boolean {
+        if (!this.viewportContainer) {
+            throw new Error('viewportContainer is not defined');
+        }
+
+        const tileSizeHalf = tileView.model.geometry.maxBoundingSize * this.initialTileScale / 2.0;
+        const tileGlobalPosition = tileView.tile.parent
+            ? tileView.tile.parent.toGlobal(tileView.tile.position)
+            : tileView.tile.position;
+        const viewportContainerPosition = new Point(this.viewportContainer.x,
+            this.viewportContainer.y);
+        const viewportContainerGlobalPosition = this.viewportContainer.parent
+            ? this.viewportContainer.parent.toGlobal(viewportContainerPosition)
+            : viewportContainerPosition;
+        
+        let tileLongitudinalCoordinate: number;
+        let viewportLongitudinalCoordinate: number;
+        let viewportLongitudinalSize: number;
+
+        if (this.parameters.directionType == TileLineDirectionType.FromLeftToRight) {
+            tileLongitudinalCoordinate = tileGlobalPosition.x;
+            viewportLongitudinalCoordinate = viewportContainerGlobalPosition.x;
+            viewportLongitudinalSize = this.viewportContainer.viewportRectangle.width;
+        } else {
+            tileLongitudinalCoordinate = tileGlobalPosition.y;
+            viewportLongitudinalCoordinate = viewportContainerGlobalPosition.y;
+            viewportLongitudinalSize = this.viewportContainer.viewportRectangle.height;
+        }
+
+        return tileLongitudinalCoordinate + tileSizeHalf > viewportLongitudinalCoordinate
+            && tileLongitudinalCoordinate - tileSizeHalf
+            < viewportLongitudinalCoordinate + viewportLongitudinalSize;
+    }
+
+    private getNextTilePositionPoint(tilePositionPoint: Point): Point {
+        return this.getNeighborTilePositionPoint(tilePositionPoint, 1);
+    }
+
+    private getPreviousTilePositionPoint(tilePositionPoint: Point): Point {
+        return this.getNeighborTilePositionPoint(tilePositionPoint, -1);
+    }
+
+    /**
+     * Получение координат соседнего элемента замощения
+     * @param currentPositionPoint Координаты текущей фигуры
+     * @param relativeNeighborIndex Относительный индекс соседней фигуры:
+     * 0 - та же самая фигура, 1 - соседняя фигура слева, -1 - соседняя фигура справа,
+     * -2 - фигура справа через одну и тому подобное.
+     * @returns Координаты соседнего элемента замощения
+     */
+    private getNeighborTilePositionPoint(
+        currentPositionPoint: Point,
+        relativeNeighborIndex: number
+    ): Point {
+        const result = currentPositionPoint.clone();
+        const offset = this.getTileLongitudinalCoordinateMultiplier()
+            * relativeNeighborIndex;
+        if (this.parameters.directionType == TileLineDirectionType.FromLeftToRight) {
+            result.x += offset;
+        } else {
+            result.y += offset;
+        }
+        return result;
+    }
+
+    private getTilePositionPoint(tilePosition: TilePosition): Point {
         const transverseCoordinate = this.getTileTransverseCoordinate();
         const longitudinalCoordinate = this.getTileLongitudinalCoordinateOffset()
             + tilePosition.shuffledIndex * this.getTileLongitudinalCoordinateMultiplier();

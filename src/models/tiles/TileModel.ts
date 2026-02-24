@@ -146,7 +146,8 @@ export class TileModel {
 
         let result = 2 * Math.PI;
         for (
-            let freedomDegreeIndex = 1, potentialRotationAngle = normalizedTargetRotationAngle;
+            let freedomDegreeIndex = 1,
+            potentialRotationAngle = normalizedTargetRotationAngle;
             freedomDegreeIndex <= this.geometry.freedomDegree;
             freedomDegreeIndex++,
             potentialRotationAngle += this.geometry.freedomDegreeRotationAngle

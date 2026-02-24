@@ -163,7 +163,7 @@ async function main(): Promise<void> {
     
     const carouselContainer = new CarouselContainer(carouselContainerOptions);
     carouselContainer.addChild(tileLineContainer);
-    tileLineContainer.onAddedToParent();
+    tileLineContainer.onAddedToParent(carouselContainer);
     carouselContainer.setContentSize(tileLineContainerSize.width, tileLineContainerSize.height);
     app.stage.addChild(carouselContainer);
     carouselContainer.onAddedToParent();

@@ -90,7 +90,8 @@ export class DraggableTileView implements TileView {
     private isLocatedCorrectly: boolean = false;
 
     private boundOnRotationTicker: (ticker: Ticker) => void = this.onRotationTicker.bind(this);
-    private boundOnMoveTicker: (ticker: Ticker) => void = this.onMoveTicker.bind(this);
+    private boundOnMoveAfterDragTicker: (ticker: Ticker) => void
+        = this.onMoveAfterDragTicker.bind(this);
     private boundGlobalPointerUp: (event: PointerEvent) => void
         = this.onGlobalPointerUp.bind(this);
     private boundPreventScrollOnWheel: (event: WheelEvent) => void
@@ -196,11 +197,11 @@ export class DraggableTileView implements TileView {
         }        
     }
 
-    private onMoveTicker(ticker: Ticker): void {
-        this.executeMove(ticker.deltaMS);
+    private onMoveAfterDragTicker(ticker: Ticker): void {
+        this.executeMoveAfterDrag(ticker.deltaMS);
         if (this.view.model.getMoveIsCompleted()) {
-            this.completeMove();
-            this.ticker.remove(this.boundOnMoveTicker);
+            this.completeMoveAfterDrag();
+            this.ticker.remove(this.boundOnMoveAfterDragTicker);
             this.setOnPointerDownActivity(true);
         }        
     }
@@ -216,7 +217,7 @@ export class DraggableTileView implements TileView {
     }
 
     public moveToDragTarget(targetStaticTileModel?: TileModel): void {
-        this.stopMove();
+        this.stopMoveAfterDrag();
         
         const targetInTarget = targetStaticTileModel
             ? targetStaticTileModel.targetPositionPoint
@@ -240,7 +241,7 @@ export class DraggableTileView implements TileView {
             );
         }
 
-        this.startMove(moveDifference);
+        this.startMoveAfterDrag(moveDifference);
     }
     
     private stopRotation(): void {
@@ -249,9 +250,9 @@ export class DraggableTileView implements TileView {
         }
     }
 
-    private stopMove(): void {
+    private stopMoveAfterDrag(): void {
         if (!this.view.model.getMoveIsCompleted()) {
-            this.ticker.remove(this.boundOnMoveTicker);
+            this.ticker.remove(this.boundOnMoveAfterDragTicker);
             this.isMovingAfterDrag = false;
         }
     }
@@ -262,11 +263,11 @@ export class DraggableTileView implements TileView {
         this.ticker.add(this.boundOnRotationTicker);
     }
 
-    private startMove(moveDifference: Point): void {
+    private startMoveAfterDrag(moveDifference: Point): void {
         this.isMovingAfterDrag = true;
         this.setOnPointerDownActivity(false);
-        this.prepareToMove(moveDifference);        
-        this.ticker.add(this.boundOnMoveTicker);
+        this.prepareToMoveAfterDrag(moveDifference);        
+        this.ticker.add(this.boundOnMoveAfterDragTicker);
     }
 
     private prepareToRotation(rotationAngleDifference: number): void {
@@ -280,7 +281,7 @@ export class DraggableTileView implements TileView {
         }
     }
 
-    private prepareToMove(moveDifference: Point): void {
+    private prepareToMoveAfterDrag(moveDifference: Point): void {
         this.draggingTileData.animatingViews.add(this);
         this.view.model.prepareToMove(moveDifference);
 
@@ -297,7 +298,7 @@ export class DraggableTileView implements TileView {
         this.view.tile.rotation = this.view.model.currentRotationAngle;
     }
 
-    private executeMove(deltaTime: number): void {
+    private executeMoveAfterDrag(deltaTime: number): void {
         this.view.model.executeMove(deltaTime);
         this.view.tile.position.copyFrom(this.view.model.currentPositionPoint);
 
@@ -331,7 +332,7 @@ export class DraggableTileView implements TileView {
         }
     }
 
-    private completeMove(): void {
+    private completeMoveAfterDrag(): void {
         this.view.removeFilters();
         
         this.view.model.completeMove();
@@ -652,7 +653,7 @@ export class DraggableTileView implements TileView {
 
     private removeEventListeners(): void {
         this.ticker.remove(this.boundOnRotationTicker);
-        this.ticker.remove(this.boundOnMoveTicker);
+        this.ticker.remove(this.boundOnMoveAfterDragTicker);
         this.view.tile.off('pointerdown', this.onPointerDown, this);
         this.view.tile.off('globalpointermove', this.onPointerMove, this);
         window.removeEventListener('pointerup', this.boundGlobalPointerUp);
