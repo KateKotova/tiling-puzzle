@@ -4,7 +4,7 @@ import {
     DestroyOptions,
     Point
 } from 'pixi.js';
-import { AdditionalMath } from '../../math/AdditionalMath.ts';
+import { Algorithm } from '../../math/Algorithm.ts';
 import { ViewportContainer } from './ViewportContainer.ts';
 import { ZoomAndPanParameters } from './ZoomAndPanParameters.ts';
 
@@ -228,7 +228,7 @@ export class ZoomAndPanContainer extends ViewportContainer {
         
         this.lastTouch1.set(touch1.clientX, touch1.clientY);
         this.lastTouch2.set(touch2.clientX, touch2.clientY);            
-        this.pinchDistance = AdditionalMath.getPointDistance(this.lastTouch1, this.lastTouch2);
+        this.pinchDistance = Algorithm.getPointDistance(this.lastTouch1, this.lastTouch2);
         
         this.isPinching = true;
         this.isDragging = false;
@@ -251,7 +251,7 @@ export class ZoomAndPanContainer extends ViewportContainer {
         const currentTouch1 = new Point(touch1.clientX, touch1.clientY);
         const currentTouch2 = new Point(touch2.clientX, touch2.clientY);
         
-        const currentDistance = AdditionalMath.getPointDistance(currentTouch1, currentTouch2);
+        const currentDistance = Algorithm.getPointDistance(currentTouch1, currentTouch2);
         
         const centerX = (currentTouch1.x + currentTouch2.x) / 2.0;
         const centerY = (currentTouch1.y + currentTouch2.y) / 2.0; 
@@ -273,7 +273,7 @@ export class ZoomAndPanContainer extends ViewportContainer {
             currentTouch2.y - this.lastTouch2.y
         );
         
-        const angle = AdditionalMath.getAngleBetweenVectors(moveVector1, moveVector2);
+        const angle = Algorithm.getAngleBetweenVectors(moveVector1, moveVector2);
         
         const oldX = this.x;
         const oldY = this.y;

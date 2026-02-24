@@ -1,7 +1,7 @@
 import { Point } from "pixi.js";
 import { TileGeometryType } from "../TileGeometryType.ts";
 import { Size } from "../../../math/Size.ts";
-import { AdditionalMath } from "../../../math/AdditionalMath.ts";
+import { Algorithm } from "../../../math/Algorithm.ts";
 import { HexagonBaseGeometry } from "../polygon-bases/HexagonBaseGeometry.ts";
 
 /**
@@ -27,7 +27,7 @@ export class HexagonGeometry extends HexagonBaseGeometry {
             this.side * 2,
             this.inscribedCircleRadius * 2
         );        
-        this.hitArea = AdditionalMath.getRegularPolygon(
+        this.hitArea = Algorithm.getRegularPolygon(
             this.pivotPoint,
             this.circumscribedCircleRadius,
             6,

@@ -5,7 +5,7 @@ import { OverTimePointChangeController }
     from "../../math/over-time-value-changes/OverTimePointChangeController";
 import { OverTimeNumberChangeController }
     from "../../math/over-time-value-changes/OverTimeNumberChangeController";
-import { AdditionalMath } from "../../math/AdditionalMath";
+import { Algorithm } from "../../math/Algorithm";
 import { TileParameters } from "./TileParameters";
 
 /**
@@ -118,16 +118,16 @@ export class TileModel {
      * в радианах
      */
     public getSamePositionNextAngleMinAngleDifference(): number {
-        const normalizedCurrentRotationAngle = AdditionalMath.getNormalizedAngle(
+        const normalizedCurrentRotationAngle = Algorithm.getNormalizedAngle(
             this.currentRotationAngle);
         // currentTargetRotationAngle вместо currentRotationAngle,
         // потому что предыдущее вращение может быть не закончено,
         // и уже начинается новое, поэтому freedomDegreeRotationAngle
         // нужно откладывать от целевого значения, а не от текущего,
         // иначе пазл может перекоситься.
-        const normalizedNextRotationAngle = AdditionalMath.getNormalizedAngle(
+        const normalizedNextRotationAngle = Algorithm.getNormalizedAngle(
             this.currentTargetRotationAngle + this.geometry.freedomDegreeRotationAngle);
-        return AdditionalMath.getMinAngleDifference(normalizedCurrentRotationAngle,
+        return Algorithm.getMinAngleDifference(normalizedCurrentRotationAngle,
             normalizedNextRotationAngle);
     }
 
@@ -140,7 +140,7 @@ export class TileModel {
      */
     public getNewPositionMinAngleDifference(normalizedTargetRotationAngle: number): number {
         if (this.geometry.freedomDegree == 1) {
-            return AdditionalMath.getMinAngleDifference(this.currentRotationAngle,
+            return Algorithm.getMinAngleDifference(this.currentRotationAngle,
                 normalizedTargetRotationAngle);
         }
 
@@ -151,9 +151,9 @@ export class TileModel {
             freedomDegreeIndex++,
             potentialRotationAngle += this.geometry.freedomDegreeRotationAngle
         ) {
-            const normalizedPotentialRotationAngle = AdditionalMath
+            const normalizedPotentialRotationAngle = Algorithm
                 .getNormalizedAngle(potentialRotationAngle);
-            const potentialResult = AdditionalMath.getMinAngleDifference(
+            const potentialResult = Algorithm.getMinAngleDifference(
                 this.currentRotationAngle, normalizedPotentialRotationAngle);
             if (Math.abs(result) - Math.abs(potentialResult) > TileModel.rotationAngleEpsilon) {
                 result = potentialResult;
@@ -232,7 +232,7 @@ export class TileModel {
      * Операции по завершению вращения
      */
     public completeRotation(): void {
-        this.currentRotationAngle = AdditionalMath.getNormalizedAngle(
+        this.currentRotationAngle = Algorithm.getNormalizedAngle(
             this.currentTargetRotationAngle);
         this.currentTargetRotationAngle = this.currentRotationAngle;
     }

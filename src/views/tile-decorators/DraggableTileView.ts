@@ -14,7 +14,7 @@ import { StaticTileView } from "./StaticTileView.ts";
 import { DraggingTileData } from "./DraggingTileData.ts";
 import { TileView } from "../tiles/TileView.ts";
 import { GlowFilter } from "pixi-filters";
-import { AdditionalMath } from "../../math/AdditionalMath.ts";
+import { Algorithm } from "../../math/Algorithm.ts";
 import { DraggableTileParameters } from "./DraggableTileParameters.ts";
 import { TileLineContainer } from "../components/TileLineContainer.ts";
 
@@ -550,7 +550,7 @@ export class DraggableTileView implements TileView {
         dragSourceTileWorldHitArea: Polygon,
         tileWorldPosition: Point
     ): boolean {
-        const pointerIsInHitArea = AdditionalMath.getPointIsInsidePolygon(
+        const pointerIsInHitArea = Algorithm.getPointIsInsidePolygon(
             tileWorldPosition,
             dragSourceTileWorldHitArea
         );
@@ -626,7 +626,7 @@ export class DraggableTileView implements TileView {
             .rotate(dragSource.view.model.currentRotationAngle)
             .translate(currentPositionPoint.x, currentPositionPoint.y);
         
-        const tileWorldHitArea = AdditionalMath.getTransformedPolygon(
+        const tileWorldHitArea = Algorithm.getTransformedPolygon(
             dragSource.view.model.geometry.hitArea,
             tileMatrix
         );

@@ -1,5 +1,5 @@
 import { Point } from "pixi.js";
-import { AdditionalMath } from "../../../math/AdditionalMath.ts";
+import { Algorithm } from "../../../math/Algorithm.ts";
 import { Size } from "../../../math/Size.ts";
 import { TileLockType } from "../../tile-locks/TileLockType.ts";
 import { HexagonBaseGeometry } from "../polygon-bases/HexagonBaseGeometry.ts";
@@ -49,7 +49,7 @@ export class HexagonWithSingleLockGeometry extends HexagonBaseGeometry {
             this.side * 2,
             this.inscribedCircleRadius * 2 + this.lockHeight
         );
-        this.hitArea = AdditionalMath.getRegularPolygon(
+        this.hitArea = Algorithm.getRegularPolygon(
             this.pivotPoint,
             this.circumscribedCircleRadius,
             6,

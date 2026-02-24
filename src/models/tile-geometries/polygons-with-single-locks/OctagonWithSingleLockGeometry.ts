@@ -1,5 +1,5 @@
 import { Point } from "pixi.js";
-import { AdditionalMath } from "../../../math/AdditionalMath.ts";
+import { Algorithm } from "../../../math/Algorithm.ts";
 import { Size } from "../../../math/Size.ts";
 import { TileLockType } from "../../tile-locks/TileLockType.ts";
 import { OctagonBaseGeometry } from "../polygon-bases/OctagonBaseGeometry.ts";
@@ -58,7 +58,7 @@ export class OctagonWithSingleLockGeometry extends OctagonBaseGeometry {
             defaultBoundingRectangleSide,
             defaultBoundingRectangleSide
         );
-        this.hitArea = AdditionalMath.getRegularPolygon(
+        this.hitArea = Algorithm.getRegularPolygon(
             this.pivotPoint,
             this.circumscribedCircleRadius,
             8,

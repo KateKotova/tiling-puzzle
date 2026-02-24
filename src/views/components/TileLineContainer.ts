@@ -9,7 +9,7 @@ import { DraggableTileView } from "../tile-decorators/DraggableTileView.ts";
 import { DraggingTileData } from "../tile-decorators/DraggingTileData.ts";
 import { Size } from "../../math/Size.ts";
 import { TileLineLayoutType } from "./TileLineLayoutType.ts";
-import { AdditionalMath } from "../../math/AdditionalMath.ts";
+import { Algorithm } from "../../math/Algorithm.ts";
 
 /**
  * Класс контейнера линии, в которой содержатся элементы мозаики для сборки.
@@ -221,7 +221,7 @@ export class TileLineContainer extends Container {
             throw new Error('tileScaleChangeGlobalRectangle was not created');
         }
 
-        const shouldChangeScale = AdditionalMath.getPointIsInsideRectangle(
+        const shouldChangeScale = Algorithm.getPointIsInsideRectangle(
             globalPoint,
             this.tileScaleChangeGlobalRectangle
         );
@@ -259,7 +259,7 @@ export class TileLineContainer extends Container {
                 coordinateDistance = 0;
                 break;
         }
-        
+
         tileView.view.tile.scale = this.initialTileScale
             + scaleToCoordinateRatio * coordinateDistance;
     }
