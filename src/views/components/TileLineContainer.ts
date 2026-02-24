@@ -44,19 +44,19 @@ export class TileLineContainer extends Container {
      * на масштаб viewport-а замощения.
      * Эта зона определяется на основе типа выравнивания ленты.
      */
-    private tileScaleChangeGlobalRectangle?: Rectangle;
+    private scaleChangeGlobalRectangle?: Rectangle;
     /**
      * Максимальный предельный размер масштабированного элемента мозаики.
      */
-    private readonly maxScaledTileBoundingSize: number;
+    private readonly maxScaledBoundingSize: number;
 
     private viewportContainer?: ViewportContainer;
-    private selectedTileContainer: Container;
+    private selectedContainer: Container;
     /**
      * Информация о фигуре, которая перетаскивается в данный момент.
      * Этот объект один на всех.
      */
-    private draggingTileData: DraggingTileData;
+    private draggingData: DraggingTileData;
 
     private backgroundContainer: Container;
     public backgroundFillColor: Color = new Color(0x00AA00);
@@ -67,33 +67,33 @@ export class TileLineContainer extends Container {
         parameters: TileLineParameters,
         transverseSize: number,
         tilingView: TilingView,
-        selectedTileContainer: Container,
-        draggingTileData: DraggingTileData,
+        selectedContainer: Container,
+        draggingData: DraggingTileData,
         options?: ContainerOptions<ContainerChild>        
     ) {
         super(options);
         this.parameters = parameters;
         this.transverseSize = transverseSize;
         this.tilingView = tilingView;
-        this.selectedTileContainer = selectedTileContainer;
-        this.draggingTileData = draggingTileData;        
+        this.selectedContainer = selectedContainer;
+        this.draggingData = draggingData;        
 
-        this.maxScaledTileBoundingSize = this.transverseSize
+        this.maxScaledBoundingSize = this.transverseSize
             - 2 * this.parameters.transverseContentOffset;
 
         const tileCount = this.tilingView.model.shuffledTilePositions.length;
         this.longitudinalSize = 2 * this.parameters.longitudinalContentOffset
-            + tileCount * this.maxScaledTileBoundingSize
+            + tileCount * this.maxScaledBoundingSize
             + (tileCount - 1) * this.parameters.betweenTilesOffset;
 
         const size = this.getSizeByDirection();
         this.width = size.width;
         this.height = size.height;
         
-        this.initialTileScale = this.maxScaledTileBoundingSize
+        this.initialTileScale = this.maxScaledBoundingSize
             / this.tilingView.model.maxTileBoundingSize;
 
-        this.tileScaleChangeGlobalRectangle = this.getTileScaleChangeGlobalRectangle();
+        this.scaleChangeGlobalRectangle = this.getTileScaleChangeGlobalRectangle();
 
         this.backgroundContainer = this.createBackground();
         this.addChild(this.backgroundContainer);
@@ -104,7 +104,7 @@ export class TileLineContainer extends Container {
      * Устанавливает зону изменения масштабирования
      */
     public onAddedToParent(viewportContainer: ViewportContainer): void {
-        this.tileScaleChangeGlobalRectangle = this.getTileScaleChangeGlobalRectangle();
+        this.scaleChangeGlobalRectangle = this.getTileScaleChangeGlobalRectangle();
         this.viewportContainer = viewportContainer;
     }
 
@@ -156,65 +156,65 @@ export class TileLineContainer extends Container {
     }
 
     public createDraggableTileViews(renderer: Renderer, ticker: Ticker): void {
-        const staticTileViewsWereCreated = !!this.tilingView.staticTileViewsByTilePositionStrings
+        const staticViewsWereCreated = !!this.tilingView.staticTileViewsByTilePositionStrings
             .size;
-        if (!staticTileViewsWereCreated) {
+        if (!staticViewsWereCreated) {
             throw new Error('static tiles were not created');
         }
         if (!this.tilingView.model.shuffledTilePositions) {
             throw new Error('shuffledTilePositions were not filled');
         }
 
-        const tileViewFactory = new TileViewFactory();
+        const viewFactory = new TileViewFactory();
         const transverseCoordinate = this.getTileTransverseCoordinate();
         const longitudinalCoordinateOffset = this.getTileLongitudinalCoordinateOffset();
         const longitudinalCoordinateMultiplier = this.getTileLongitudinalCoordinateMultiplier();
         
         for (
-            let tilePositionIndex = 0;
-            tilePositionIndex < this.tilingView.model.shuffledTilePositions.length;
-            tilePositionIndex++
+            let positionIndex = 0;
+            positionIndex < this.tilingView.model.shuffledTilePositions.length;
+            positionIndex++
         ) {
-            const tilePosition = this.tilingView.model.shuffledTilePositions[tilePositionIndex];
-            const staticTileView = this.tilingView.staticTileViewsByTilePositionStrings.get(
-                tilePosition.toString());
-            if (!staticTileView) {
+            const position = this.tilingView.model.shuffledTilePositions[positionIndex];
+            const staticView = this.tilingView.staticTileViewsByTilePositionStrings.get(
+                position.toString());
+            if (!staticView) {
                 continue;
             }
 
-            const tileModel = staticTileView.model.clone();
-            const currentRotationAngle = Math.random() * 2 * Math.PI;
-            tileModel.currentRotationAngle = currentRotationAngle;
-            tileModel.currentTargetRotationAngle = currentRotationAngle;
-            tileModel.targetTilePosition.shuffledIndex = tilePositionIndex;
+            const model = staticView.model.clone();
+            const rotationAngle = Math.random() * 2 * Math.PI;
+            model.currentRotationAngle = rotationAngle;
+            model.currentTargetRotationAngle = rotationAngle;
+            model.targetTilePosition.shuffledIndex = positionIndex;
 
             const longitudinalCoordinate = longitudinalCoordinateOffset
-                + tilePosition.shuffledIndex * longitudinalCoordinateMultiplier;
-            tileModel.currentPositionPoint = this.getPoint(longitudinalCoordinate,
+                + position.shuffledIndex * longitudinalCoordinateMultiplier;
+            model.currentPositionPoint = this.getPoint(longitudinalCoordinate,
                 transverseCoordinate);
 
-            const tileViewCreationParameters: TileViewCreationParameters = {
-                model: tileModel,
-                texture: this.tilingView.model.getTileTexture(tileModel),
+            const viewCreationParameters: TileViewCreationParameters = {
+                model: model,
+                texture: this.tilingView.model.getTileTexture(model),
                 renderer,
                 replacingTextureFillColor: this.tilingView.staticTileFillColor
             };
-            const tileView = tileViewFactory.getView(
+            const view = viewFactory.getView(
                 this.parameters.tileParameters,
-                tileViewCreationParameters
+                viewCreationParameters
             );
-            tileView.tile.scale = this.initialTileScale;
+            view.tile.scale = this.initialTileScale;
 
-            this.addChild(tileView.tile);
+            this.addChild(view.tile);
 
             this.tileViews.push(new DraggableTileView(
                 this.parameters.draggableTileParameters,
-                tileView,
+                view,
                 this,
                 this.tilingView.draggableTilesContainer,
-                this.selectedTileContainer,
+                this.selectedContainer,
                 ticker,
-                this.draggingTileData
+                this.draggingData
             ));
         }
     }
@@ -223,42 +223,42 @@ export class TileLineContainer extends Container {
         globalPoint: Point,
         tileView: DraggableTileView
     ): void {
-        if (!this.tileScaleChangeGlobalRectangle) {
+        if (!this.scaleChangeGlobalRectangle) {
             throw new Error('tileScaleChangeGlobalRectangle was not created');
         }
 
         const shouldChangeScale = Algorithm.getPointIsInsideRectangle(
             globalPoint,
-            this.tileScaleChangeGlobalRectangle
+            this.scaleChangeGlobalRectangle
         );
         if (!shouldChangeScale) {
             return;
         }
         
-        const tilingViewportScale = this.draggingTileData.viewport.scale.x;
+        const tilingViewportScale = this.draggingData.viewport.scale.x;
         const scaleDifference = tilingViewportScale - this.initialTileScale;
         const coordinateDifference = this.parameters.layoutType == TileLineLayoutType.Top
             || this.parameters.layoutType == TileLineLayoutType.Bottom
-            ? this.tileScaleChangeGlobalRectangle.height
-            : this.tileScaleChangeGlobalRectangle.width;
+            ? this.scaleChangeGlobalRectangle.height
+            : this.scaleChangeGlobalRectangle.width;
         const scaleToCoordinateRatio = scaleDifference / coordinateDifference;
 
         let coordinateDistance: number;
         switch (this.parameters.layoutType) {
             case TileLineLayoutType.Top:
-                coordinateDistance = globalPoint.y - this.tileScaleChangeGlobalRectangle.y;
+                coordinateDistance = globalPoint.y - this.scaleChangeGlobalRectangle.y;
                 break;
             case TileLineLayoutType.Bottom:
-                coordinateDistance = this.tileScaleChangeGlobalRectangle.y
-                    + this.tileScaleChangeGlobalRectangle.height
+                coordinateDistance = this.scaleChangeGlobalRectangle.y
+                    + this.scaleChangeGlobalRectangle.height
                     - globalPoint.y;
                 break;
             case TileLineLayoutType.Left:
-                coordinateDistance = globalPoint.x - this.tileScaleChangeGlobalRectangle.x;
+                coordinateDistance = globalPoint.x - this.scaleChangeGlobalRectangle.x;
                 break;            
             case TileLineLayoutType.Right:
-                coordinateDistance = this.tileScaleChangeGlobalRectangle.x
-                    + this.tileScaleChangeGlobalRectangle.width
+                coordinateDistance = this.scaleChangeGlobalRectangle.x
+                    + this.scaleChangeGlobalRectangle.width
                     - globalPoint.x;
                 break;
             default:
@@ -270,8 +270,76 @@ export class TileLineContainer extends Container {
             + scaleToCoordinateRatio * coordinateDistance;
     }
 
-    // TODO: двигаться будут тайлы слева от удаляемого, те, что уже видны, + 1,
-    // у остальных просто поменяется координата.
+    /**
+     * Удаление фигуры с ленты.
+     * Фигура удаляется из массива, а также фигуры справа от неё подвигаются,
+     * чтобы не было пробела.
+     * @param tileView Удаляемая перетаскиваемая фигура
+     */
+    public removeTileView(tileView: DraggableTileView): void {
+        const removingTileIndex = tileView.model.targetTilePosition.shuffledIndex;
+        const visibleMovingTiles: DraggableTileView[] = [];
+        const targetPositions: Point[] = [];
+        let lastMovingTileIndex = -1;
+
+        // Эти фигуры видны, поэтому у них будет анимация движения
+        for (
+            let tileIndex = removingTileIndex + 1;
+            tileIndex < this.tileViews.length;
+            tileIndex++
+        ) {
+            const tile = this.tileViews[tileIndex];
+            if (this.getTileIsVisibleInViewportContainer(tile)) {
+                visibleMovingTiles.push(tile);
+                const previousTile = this.tileViews[tileIndex - 1];
+                targetPositions.push(previousTile.model.currentPositionPoint.clone());
+            } else {
+                lastMovingTileIndex = tileIndex;
+                break;
+            }
+        }
+
+        // Фигуры движутся влево, поэтому ещё одну невидимую фигуру захватим,
+        // потому что она подвинется и станет видимой
+        if (
+            lastMovingTileIndex > 0
+            && lastMovingTileIndex < this.tileViews.length
+        ) {
+            visibleMovingTiles.push(this.tileViews[lastMovingTileIndex]);
+            const previousTile = this.tileViews[lastMovingTileIndex - 1];
+            targetPositions.push(previousTile.model.currentPositionPoint.clone());
+        }
+
+        // Корректирую первую позицию,
+        // потому что удаляемая фигурка уже улетела в другой контейнер.
+        if (targetPositions.length && removingTileIndex + 1 < this.tileViews.length) {
+            const afterRemovingFirstPosition
+                = this.tileViews[removingTileIndex + 1].model.currentPositionPoint;
+            targetPositions[0] = this.getPreviousTilePositionPoint(afterRemovingFirstPosition);
+        }        
+
+        for (let tileIndex = 0; tileIndex < visibleMovingTiles.length; tileIndex++) {
+            visibleMovingTiles[tileIndex].moveInInitialContainer(targetPositions[tileIndex]);
+            visibleMovingTiles[tileIndex].model.targetTilePosition.shuffledIndex--;
+        }
+
+        // Остальные фигуры справа просто поменяют координаты, потому что их не видно
+        if (lastMovingTileIndex > 0) {
+            for (
+                let tileIndex = this.tileViews.length - 1;
+                tileIndex >= lastMovingTileIndex + 1;
+                tileIndex--
+            ) {
+                const previousTilePosition = this.tileViews[tileIndex - 1].model.currentPositionPoint;
+                const tile = this.tileViews[tileIndex];
+                tile.model.currentPositionPoint.copyFrom(previousTilePosition);
+                tile.tile.position.copyFrom(previousTilePosition);
+                tile.model.targetTilePosition.shuffledIndex--;
+            }
+        }
+
+        this.tileViews.splice(removingTileIndex, 1);
+    }
 
     private getTileIsVisibleInViewportContainer(tileView: TileView): boolean {
         if (!this.viewportContainer) {
@@ -307,11 +375,7 @@ export class TileLineContainer extends Container {
             < viewportLongitudinalCoordinate + viewportLongitudinalSize;
     }
 
-    private getNextTilePositionPoint(tilePositionPoint: Point): Point {
-        return this.getNeighborTilePositionPoint(tilePositionPoint, 1);
-    }
-
-    private getPreviousTilePositionPoint(tilePositionPoint: Point): Point {
+    public getPreviousTilePositionPoint(tilePositionPoint: Point): Point {
         return this.getNeighborTilePositionPoint(tilePositionPoint, -1);
     }
 
@@ -338,7 +402,7 @@ export class TileLineContainer extends Container {
         return result;
     }
 
-    private getTilePositionPoint(tilePosition: TilePosition): Point {
+    public getTilePositionPoint(tilePosition: TilePosition): Point {
         const transverseCoordinate = this.getTileTransverseCoordinate();
         const longitudinalCoordinate = this.getTileLongitudinalCoordinateOffset()
             + tilePosition.shuffledIndex * this.getTileLongitudinalCoordinateMultiplier();
@@ -347,16 +411,16 @@ export class TileLineContainer extends Container {
 
     private getTileTransverseCoordinate(): number {
         return this.parameters.transverseContentOffset
-           + this.maxScaledTileBoundingSize / 2.0;
+           + this.maxScaledBoundingSize / 2.0;
     }
 
     private getTileLongitudinalCoordinateOffset(): number {
         return this.parameters.longitudinalContentOffset
-            + this.maxScaledTileBoundingSize / 2.0;
+            + this.maxScaledBoundingSize / 2.0;
     }
 
     private getTileLongitudinalCoordinateMultiplier(): number {
-        return this.maxScaledTileBoundingSize + this.parameters.betweenTilesOffset;
+        return this.maxScaledBoundingSize + this.parameters.betweenTilesOffset;
     }
 
     private getPoint(longitudinalCoordinate: number, transverseCoordinate: number): Point {

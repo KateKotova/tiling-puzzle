@@ -18,7 +18,7 @@ export class ViewportContainer extends Container {
      * Позиция и размеры viewport-а, то есть окошка просмотра содержимого.
      * Здесь позиция - координаты левого верхнего угла относительно родительского контейнера.
      */
-    protected viewportRectangle: Rectangle;
+    public viewportRectangle: Rectangle;
     /**
      * Оригинальные размеры контента без масштабирования
      */

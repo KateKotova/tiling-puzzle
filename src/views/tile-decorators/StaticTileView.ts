@@ -24,24 +24,24 @@ export class StaticTileView implements TileView {
      * Информация о фигуре, которая перетаскивается в данный момент.
      * Этот объект один на всех.
      */
-    private draggingTileData: DraggingTileData;
+    private draggingData: DraggingTileData;
 
     /**
      * Создание неподвижного элемента замощения,
      * служащего ячейкой для перетаскивания подвижного элемента замощения
      * @param parameters Параметры неподвижного элемента замощения
      * @param view Элемент замощения, который декорируется
-     * @param draggingTileData Информация о фигуре, которая перетаскивается в данный момент.
+     * @param draggingData Информация о фигуре, которая перетаскивается в данный момент.
      * Этот объект один на всех.
      */
     constructor (
         parameters: StaticTileParameters,
         view: TileView,
-        draggingTileData: DraggingTileData
+        draggingData: DraggingTileData
     ) {
         this.parameters = parameters;
         this.view = view;
-        this.draggingTileData = draggingTileData;
+        this.draggingData = draggingData;
 
         this.view.tile.eventMode = "static";
         this.view.tile.on('pointerenter', this.onPointerEnter, this);
@@ -82,7 +82,7 @@ export class StaticTileView implements TileView {
     }
 
     private getDraggingTileHasTheSameType(): boolean {
-        const draggingGeometryType = this.draggingTileData.view?.model.geometry.geometryType;
+        const draggingGeometryType = this.draggingData.view?.model.geometry.geometryType;
         const currentGeometryType = this.view.model.geometry.geometryType;
         return draggingGeometryType === currentGeometryType;
     }
@@ -92,13 +92,13 @@ export class StaticTileView implements TileView {
             return;
         }
 
-        if (this.draggingTileData.view) {
-            if (this.draggingTileData.view.dragTarget) {
-                this.draggingTileData.view.dragTarget.view.removeFilters();
-                this.draggingTileData.view.dragTarget.isDragTarget = false;
+        if (this.draggingData.view) {
+            if (this.draggingData.view.dragTarget) {
+                this.draggingData.view.dragTarget.view.removeFilters();
+                this.draggingData.view.dragTarget.isDragTarget = false;
             }
             
-            this.draggingTileData.view.dragTarget = this;
+            this.draggingData.view.dragTarget = this;
         }
         
         this.isDragTarget = true;
@@ -106,18 +106,18 @@ export class StaticTileView implements TileView {
         const filter = new GlowFilter(this.parameters.targetGlowFilterOptions);      
         this.view.setFilter(filter);
 
-        this.draggingTileData.view?.rotateToDragTarget(this.view.model);     
+        this.draggingData.view?.rotateToDragTarget(this.view.model);     
     }
 
     public onPointerLeave(): void {
-        if (!this.isDragTarget || this.draggingTileData.view?.dragTarget !== this) {
+        if (!this.isDragTarget || this.draggingData.view?.dragTarget !== this) {
             return;
         }
 
         this.isDragTarget = false;
         this.view.removeFilters();
-        if (this.draggingTileData.view) {
-            this.draggingTileData.view.dragTarget = undefined;
+        if (this.draggingData.view) {
+            this.draggingData.view.dragTarget = undefined;
         }
     }
 
@@ -128,9 +128,9 @@ export class StaticTileView implements TileView {
             return;
         }
 
-        if (this.draggingTileData.view) {
+        if (this.draggingData.view) {
             this.stopBeingDragTarget();            
-            this.draggingTileData.view.onGlobalPointerUp(event);
+            this.draggingData.view.onGlobalPointerUp(event);
         }
     }
 
