@@ -1,7 +1,6 @@
 import { Application, Assets, Container, ContainerChild, ContainerOptions, Graphics } from "pixi.js";
 import { TilingType } from "./models/tilings/TilingType.ts";
-import { ModelSettings } from "./models/ModelSettings.ts";
-import { ViewSettings } from "./views/ViewSettings.ts";
+import { Settings } from "./Settings.ts";
 import { TilingTextureModel } from "./models/TilingTextureModel.ts";
 import { ImageContainerModel } from "./models/ImageContainerModel.ts";
 import { RectangularGridTilingModelFactory }
@@ -47,8 +46,7 @@ async function main(): Promise<void> {
       src: exampleImageSrc,
     });
 
-    const modelSettings = new ModelSettings();
-    const viewSettings = new ViewSettings();
+    const settings = Settings.getInstance();
   
     const texture = Assets.get("example-image");
     const textureModel = new TilingTextureModel(texture);
@@ -59,7 +57,7 @@ async function main(): Promise<void> {
     const rectangularGridTilingModelFactory = new RectangularGridTilingModelFactory();
     const tilingModel: RectangularGridTilingModel | null
       = rectangularGridTilingModelFactory.getTilingModel(
-        modelSettings.tileParameters,
+        settings.tileModelParameters,
         tilingType,
         textureMinSideTileCount,
         textureModel,
@@ -92,7 +90,7 @@ async function main(): Promise<void> {
     const containerCenterY = containerHeight / 2.0;
 
     const zoomAndPanContainer = new ZoomAndPanContainer(      
-      viewSettings.zoomAndPanParameters,
+      settings.zoomAndPanParameters,
       {
         x: containerCenterX - imageContainerModel.width / 2.0,
         y: containerCenterY - imageContainerModel.height / 2.0,
@@ -127,7 +125,7 @@ async function main(): Promise<void> {
     };
 
     const tilingView = new TilingView(
-      viewSettings.tilingParameters,
+      settings.tilingParameters,
       draggingTileData,
       tilingModel
     );
@@ -139,7 +137,7 @@ async function main(): Promise<void> {
     };
 
     const tileLineContainer = new TileLineContainer(
-      viewSettings.tileLineParameters,
+      settings.tileLineParameters,
       80,
       tilingView,
       selectedTileContainer,
@@ -149,7 +147,7 @@ async function main(): Promise<void> {
     const tileLineContainerSize = tileLineContainer.getSizeByDirection();
 
     const carouselContainerOptions: ContainerOptions<ContainerChild> =
-      viewSettings.tileLineParameters.directionType == TileLineDirectionType.FromLeftToRight
+      settings.tileLineParameters.directionType == TileLineDirectionType.FromLeftToRight
       ? {
         x: 25,
         y: app.screen.height - tileLineContainerSize.height - 25,
