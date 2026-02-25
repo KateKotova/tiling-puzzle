@@ -6,7 +6,7 @@ import { TilePosition } from "../../models/tiles/TilePosition.ts";
 import { TileViewCreationParameters } from "../tiles/TileViewCreationParameters.ts";
 import { TileViewFactory } from "../tiles/TileViewFactory.ts";
 import { DraggableTileView } from "../tile-decorators/DraggableTileView.ts";
-import { DraggingTileData } from "../tile-decorators/DraggingTileData.ts";
+import { draggingTileData } from "../tile-decorators/DraggingTileData.ts";
 import { Size } from "../../math/Size.ts";
 import { TileLineLayoutType } from "./TileLineLayoutType.ts";
 import { Algorithm } from "../../math/Algorithm.ts";
@@ -52,11 +52,6 @@ export class TileLineContainer extends Container {
 
     private viewportContainer?: ViewportContainer;
     private selectedContainer: Container;
-    /**
-     * Информация о фигуре, которая перетаскивается в данный момент.
-     * Этот объект один на всех.
-     */
-    private draggingData: DraggingTileData;
 
     private backgroundContainer: Container;
     public backgroundFillColor: Color = new Color(0x00AA00);
@@ -68,7 +63,6 @@ export class TileLineContainer extends Container {
         transverseSize: number,
         tilingView: TilingView,
         selectedContainer: Container,
-        draggingData: DraggingTileData,
         options?: ContainerOptions<ContainerChild>        
     ) {
         super(options);
@@ -76,7 +70,6 @@ export class TileLineContainer extends Container {
         this.transverseSize = transverseSize;
         this.tilingView = tilingView;
         this.selectedContainer = selectedContainer;
-        this.draggingData = draggingData;        
 
         this.maxScaledBoundingSize = this.transverseSize
             - 2 * this.parameters.transverseContentOffset;
@@ -213,8 +206,7 @@ export class TileLineContainer extends Container {
                 this,
                 this.tilingView.draggableTilesContainer,
                 this.selectedContainer,
-                ticker,
-                this.draggingData
+                ticker
             ));
         }
     }
@@ -235,7 +227,11 @@ export class TileLineContainer extends Container {
             return;
         }
         
-        const tilingViewportScale = this.draggingData.viewport.scale.x;
+        if (!draggingTileData.viewport) {
+            throw new Error('draggingTileData.viewport should be initialized');
+        }
+
+        const tilingViewportScale = draggingTileData.viewport.scale.x;
         const scaleDifference = tilingViewportScale - this.initialTileScale;
         const coordinateDifference = this.parameters.layoutType == TileLineLayoutType.Top
             || this.parameters.layoutType == TileLineLayoutType.Bottom

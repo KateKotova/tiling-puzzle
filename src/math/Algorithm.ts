@@ -14,7 +14,6 @@ export class Algorithm {
     public static getShuffledArray<T>(array: T[]): T[] {
         const result = [...array];        
         for (let i = result.length - 1; i > 0; i--) {
-            // Случайный индекс от 0 до i
             const j = Math.floor(Math.random() * (i + 1));
             [result[i], result[j]] = [result[j], result[i]];
         }        

@@ -1,8 +1,8 @@
+import { GlowFilter } from "pixi-filters";
 import { Texture, Container, Filter, FederatedPointerEvent } from "pixi.js";
 import { TileModel } from "../../models/tiles/TileModel.ts";
 import { TileView } from "../tiles/TileView.ts";
-import { GlowFilter } from "pixi-filters";
-import { DraggingTileData } from "./DraggingTileData.ts";
+import { draggingTileData } from "./DraggingTileData.ts";
 import { StaticTileParameters } from "./StaticTileParameters.ts";
 
 /**
@@ -20,28 +20,16 @@ export class StaticTileView implements TileView {
      * для перетаскивания подвижной фигуры
      */
     private isDragTarget: boolean = false;
-    /**
-     * Информация о фигуре, которая перетаскивается в данный момент.
-     * Этот объект один на всех.
-     */
-    private draggingData: DraggingTileData;
 
     /**
      * Создание неподвижного элемента замощения,
      * служащего ячейкой для перетаскивания подвижного элемента замощения
      * @param parameters Параметры неподвижного элемента замощения
      * @param view Элемент замощения, который декорируется
-     * @param draggingData Информация о фигуре, которая перетаскивается в данный момент.
-     * Этот объект один на всех.
      */
-    constructor (
-        parameters: StaticTileParameters,
-        view: TileView,
-        draggingData: DraggingTileData
-    ) {
+    constructor (parameters: StaticTileParameters, view: TileView) {
         this.parameters = parameters;
         this.view = view;
-        this.draggingData = draggingData;
 
         this.view.tile.eventMode = "static";
         this.view.tile.on('pointerenter', this.onPointerEnter, this);
@@ -82,7 +70,7 @@ export class StaticTileView implements TileView {
     }
 
     private getDraggingTileHasTheSameType(): boolean {
-        const draggingGeometryType = this.draggingData.view?.model.geometry.geometryType;
+        const draggingGeometryType = draggingTileData.view?.model.geometry.geometryType;
         const currentGeometryType = this.view.model.geometry.geometryType;
         return draggingGeometryType === currentGeometryType;
     }
@@ -92,13 +80,13 @@ export class StaticTileView implements TileView {
             return;
         }
 
-        if (this.draggingData.view) {
-            if (this.draggingData.view.dragTarget) {
-                this.draggingData.view.dragTarget.view.removeFilters();
-                this.draggingData.view.dragTarget.isDragTarget = false;
+        if (draggingTileData.view) {
+            if (draggingTileData.view.dragTarget) {
+                draggingTileData.view.dragTarget.view.removeFilters();
+                draggingTileData.view.dragTarget.isDragTarget = false;
             }
             
-            this.draggingData.view.dragTarget = this;
+            draggingTileData.view.dragTarget = this;
         }
         
         this.isDragTarget = true;
@@ -106,18 +94,18 @@ export class StaticTileView implements TileView {
         const filter = new GlowFilter(this.parameters.targetGlowFilterOptions);      
         this.view.setFilter(filter);
 
-        this.draggingData.view?.rotateToDragTarget(this.view.model);     
+        draggingTileData.view?.rotateToDragTarget(this.view.model);     
     }
 
     public onPointerLeave(): void {
-        if (!this.isDragTarget || this.draggingData.view?.dragTarget !== this) {
+        if (!this.isDragTarget || draggingTileData.view?.dragTarget !== this) {
             return;
         }
 
         this.isDragTarget = false;
         this.view.removeFilters();
-        if (this.draggingData.view) {
-            this.draggingData.view.dragTarget = undefined;
+        if (draggingTileData.view) {
+            draggingTileData.view.dragTarget = undefined;
         }
     }
 
@@ -128,9 +116,9 @@ export class StaticTileView implements TileView {
             return;
         }
 
-        if (this.draggingData.view) {
+        if (draggingTileData.view) {
             this.stopBeingDragTarget();            
-            this.draggingData.view.onGlobalPointerUp(event);
+            draggingTileData.view.onGlobalPointerUp(event);
         }
     }
 

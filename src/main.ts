@@ -9,8 +9,7 @@ import { RectangularGridTilingModel } from "./models/tilings/RectangularGridTili
 import { TilingView } from "./views/tilings/TilingView.ts";
 import { ZoomAndPanContainer } from "./views/components/ZoomAndPanContainer.ts";
 import { TilingLayoutStrategyType } from "./models/tilings/TilingLayoutStrategyType.ts";
-import { DraggingTileData } from "./views/tile-decorators/DraggingTileData.ts";
-import { TileView } from "./views/tiles/TileView.ts";
+import { draggingTileData } from "./views/tile-decorators/DraggingTileData.ts";
 import { TileLineContainer } from "./views/components/TileLineContainer.ts";
 import { TileLineDirectionType } from "./views/components/TileLineDirectionType.ts";
 import { CarouselContainer } from "./views/components/CarouselContainer.ts";
@@ -45,6 +44,9 @@ async function main(): Promise<void> {
       alias: "example-image",
       src: exampleImageSrc,
     });
+
+    // TODO: сделать контроллер для этого функционала.
+    // Столько всего не будет просто лежать в main.
 
     const settings = Settings.getInstance();
   
@@ -100,6 +102,7 @@ async function main(): Promise<void> {
     );
     container.addChild(zoomAndPanContainer);
     zoomAndPanContainer.onAddedToParent();
+    draggingTileData.viewport = zoomAndPanContainer;
 
     const imageContainer = new Container({
       x: 0,
@@ -118,30 +121,22 @@ async function main(): Promise<void> {
       });
     imageContainer.addChild(image);
 
-    const draggingTileData: DraggingTileData = {
-        view: undefined,
-        viewport: zoomAndPanContainer,
-        animatingViews: new Set<TileView>()
-    };
-
     const tilingView = new TilingView(
       settings.tilingParameters,
-      draggingTileData,
       tilingModel
     );
     tilingView.createStaticTileViews(app.renderer);
     imageContainer.addChild(tilingView.tilingContainer);
     zoomAndPanContainer.setContentSize(imageContainerModel.width, imageContainerModel.height);
     zoomAndPanContainer.getShouldPreventEvents = (): boolean => {
-      return !!tilingView.draggingTileData?.animatingViews.size;
+      return !!draggingTileData?.animatingViews.size;
     };
 
     const tileLineContainer = new TileLineContainer(
       settings.tileLineParameters,
       80,
       tilingView,
-      selectedTileContainer,
-      draggingTileData
+      selectedTileContainer
     );
     tileLineContainer.createDraggableTileViews(app.renderer, app.ticker);
     const tileLineContainerSize = tileLineContainer.getSizeByDirection();
