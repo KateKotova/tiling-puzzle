@@ -56,7 +56,7 @@ export class TileLineContainer extends Container {
     private selectedContainer: Container;
 
     private backgroundContainer: Container;
-    public backgroundFillColor: Color = new Color(0x00AA00);
+    private backgroundFillColor: Color = new Color(0x00AA00);
 
     private tileViews: DraggableTileView[] = [];
 
@@ -254,10 +254,11 @@ export class TileLineContainer extends Container {
             viewportRectangle.y + viewportRectangle.height
         );
 
+        const offset = this.getTileLongitudinalCoordinateMultiplier();
         const endIsVisible = this.parameters.directionType
             == TileLineDirectionType.FromLeftToRight
-            ? globalRightBottom.x <= viewportRightBottom.x
-            : globalRightBottom.y <= viewportRightBottom.y;
+            ? globalRightBottom.x <= viewportRightBottom.x + offset
+            : globalRightBottom.y <= viewportRightBottom.y + offset;
 
         if (endIsVisible) {
             this.startResize(targetLongitudinalSize - this.longitudinalSize);
@@ -322,6 +323,9 @@ export class TileLineContainer extends Container {
 
     private completeResize(): void {
         this.resizeWithoutAnimation(this.targetLongitudinalSize);
+        if (!this.tileViews.length) {
+            this.backgroundContainer.visible = false;
+        }
         this.isResizing = false;
     }
 
@@ -454,7 +458,10 @@ export class TileLineContainer extends Container {
 
         this.tileViews.splice(removingTileIndex, 1);
 
-        this.resize(this.longitudinalSize - this.getTileLongitudinalCoordinateMultiplier());
+        const newSize = this.tileViews.length
+            ? this.longitudinalSize - this.getTileLongitudinalCoordinateMultiplier()
+            : 0;
+        this.resize(newSize);
     }
 
     private getTileIsVisibleInViewportContainer(tileView: TileView): boolean {

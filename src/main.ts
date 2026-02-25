@@ -24,8 +24,8 @@ async function main(): Promise<void> {
     const containerWidth = 500;
     const containerHeight = 400;
 
-    const textureMinSideTileCount = 3;
-    const tilingType = TilingType.Square;
+    const textureMinSideTileCount = 4;
+    const tilingType = TilingType.SquareWithSingleLock;
 
     //#endregion test data end
 
@@ -159,11 +159,12 @@ async function main(): Promise<void> {
       };
     
     const carouselContainer = new CarouselContainer(carouselContainerOptions);
+    carouselContainer.beforeAddingToParent(app.stage);
+    app.stage.addChild(carouselContainer);
+    carouselContainer.onAddedToParent();
     carouselContainer.addChild(tileLineContainer);
     tileLineContainer.onAddedToParent(carouselContainer);
     carouselContainer.setContentSize(tileLineContainerSize.width, tileLineContainerSize.height);
-    app.stage.addChild(carouselContainer);
-    carouselContainer.onAddedToParent();
 
     app.stage.addChild(selectedTileContainer);
   } catch (error) {
