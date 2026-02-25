@@ -84,6 +84,7 @@ export class ViewportContainer extends Container {
     public setContentSize(contentWidth: number, contentHeight: number): void {
         this.contentOriginalSize.width = contentWidth;
         this.contentOriginalSize.height = contentHeight;
+        this.clampPosition(this.position.x, this.position.y);
     }
     
     /**

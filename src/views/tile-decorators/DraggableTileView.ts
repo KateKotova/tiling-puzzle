@@ -569,7 +569,7 @@ export class DraggableTileView implements TileView {
         this.view.tile.off('globalpointermove', this.onPointerMove, this);
         window.removeEventListener('pointerup', this.boundGlobalPointerUp);
 
-        if (finalTarget) {
+        if (!finalSource && finalTarget) {
             this.initialContainer.removeTileView(this);
         }
     }

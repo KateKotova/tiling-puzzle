@@ -24,8 +24,8 @@ async function main(): Promise<void> {
     const containerWidth = 500;
     const containerHeight = 400;
 
-    const textureMinSideTileCount = 4;
-    const tilingType = TilingType.OctagonAndSquareWithSingleLock;
+    const textureMinSideTileCount = 3;
+    const tilingType = TilingType.Square;
 
     //#endregion test data end
 
@@ -47,6 +47,7 @@ async function main(): Promise<void> {
 
     // TODO: сделать контроллер для этого функционала.
     // Столько всего не будет просто лежать в main.
+    // я это сделаю в другой задаче.
 
     const settings = Settings.getInstance();
   
@@ -136,7 +137,8 @@ async function main(): Promise<void> {
       settings.tileLineParameters,
       80,
       tilingView,
-      selectedTileContainer
+      selectedTileContainer,
+      app.ticker
     );
     tileLineContainer.createDraggableTileViews(app.renderer, app.ticker);
     const tileLineContainerSize = tileLineContainer.getSizeByDirection();

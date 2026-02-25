@@ -174,8 +174,8 @@ export class TileModel {
             this.rotationController = new OverTimeNumberChangeController(
                 this.currentRotationAngle,
                 this.currentTargetRotationAngle,
-                this.parameters.animationTime,
-                this.parameters.accelerationTimeToAnimationTimeRatio
+                this.parameters.animationParameters.animationTime,
+                this.parameters.animationParameters.accelerationTimeToAnimationTimeRatio
             );
         } else {
             this.rotationController.reset(this.currentRotationAngle,
@@ -197,8 +197,8 @@ export class TileModel {
             this.positionPointController = new OverTimePointChangeController(
                 this.currentPositionPoint,
                 this.currentTargetPositionPoint,
-                this.parameters.animationTime,
-                this.parameters.accelerationTimeToAnimationTimeRatio
+                this.parameters.animationParameters.animationTime,
+                this.parameters.animationParameters.accelerationTimeToAnimationTimeRatio
             );
         } else {
             this.positionPointController.reset(this.currentPositionPoint,

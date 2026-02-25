@@ -12,6 +12,8 @@ import { TileLineLayoutType } from "./TileLineLayoutType.ts";
 import { Algorithm } from "../../math/Algorithm.ts";
 import { TileView } from "../tiles/TileView.ts";
 import { ViewportContainer } from "./ViewportContainer.ts";
+import { OverTimeNumberChangeController }
+    from "../../math/over-time-value-changes/OverTimeNumberChangeController.ts";
 
 /**
  * Класс контейнера линии, в которой содержатся элементы мозаики для сборки.
@@ -25,7 +27,7 @@ export class TileLineContainer extends Container {
      * Для направления слева направо это ширина.
      * Для направления сверху вниз это высота.
      */
-    private readonly longitudinalSize: number;
+    private longitudinalSize: number;
     /**
      * Поперечный размер.
      * Для направления слева направо это высота.
@@ -58,11 +60,24 @@ export class TileLineContainer extends Container {
 
     private tileViews: DraggableTileView[] = [];
 
+    /**
+     * Контроллер изменения размера ленты
+     */
+    private sizeController?: OverTimeNumberChangeController;
+    // @ts-expect-error TODO: необходимо для остановки прокрутки, которой пока нет
+    private isResizing: boolean = false;
+    private targetLongitudinalSize: number = 0;
+
+    private ticker: Ticker;
+
+    private boundOnResizeTicker: (ticker: Ticker) => void = this.onResizeTicker.bind(this);
+
     constructor(
         parameters: TileLineParameters,
         transverseSize: number,
         tilingView: TilingView,
         selectedContainer: Container,
+        ticker: Ticker,
         options?: ContainerOptions<ContainerChild>        
     ) {
         super(options);
@@ -70,6 +85,7 @@ export class TileLineContainer extends Container {
         this.transverseSize = transverseSize;
         this.tilingView = tilingView;
         this.selectedContainer = selectedContainer;
+        this.ticker = ticker;
 
         this.maxScaledBoundingSize = this.transverseSize
             - 2 * this.parameters.transverseContentOffset;
@@ -86,8 +102,6 @@ export class TileLineContainer extends Container {
         this.initialTileScale = this.maxScaledBoundingSize
             / this.tilingView.model.maxTileBoundingSize;
 
-        this.scaleChangeGlobalRectangle = this.getTileScaleChangeGlobalRectangle();
-
         this.backgroundContainer = this.createBackground();
         this.addChild(this.backgroundContainer);
     }
@@ -97,11 +111,15 @@ export class TileLineContainer extends Container {
      * Устанавливает зону изменения масштабирования
      */
     public onAddedToParent(viewportContainer: ViewportContainer): void {
-        this.scaleChangeGlobalRectangle = this.getTileScaleChangeGlobalRectangle();
         this.viewportContainer = viewportContainer;
+        this.scaleChangeGlobalRectangle = this.getTileScaleChangeGlobalRectangle();
     }
 
     private getTileScaleChangeGlobalRectangle(): Rectangle {
+        if (!this.viewportContainer) {
+            throw new Error('viewportContainer is not defined');
+        }
+
         const globalLeftTop = this.toGlobal(new Point(0, 0));
         const widthHalf = this.width / 2.0;
         const heightHalf = this.height / 2.0;
@@ -110,7 +128,7 @@ export class TileLineContainer extends Container {
                 return new Rectangle(
                     globalLeftTop.x,
                     globalLeftTop.y + heightHalf,
-                    this.width,
+                    this.viewportContainer.viewportRectangle.width,
                     heightHalf
                 );
             case TileLineLayoutType.Left:
@@ -118,13 +136,13 @@ export class TileLineContainer extends Container {
                     globalLeftTop.x + widthHalf,
                     globalLeftTop.y,
                     widthHalf,
-                    this.height
+                    this.viewportContainer.viewportRectangle.height
                 );
             case TileLineLayoutType.Bottom:
                 return new Rectangle(
                     globalLeftTop.x,
                     globalLeftTop.y,
-                    this.width,
+                    this.viewportContainer.viewportRectangle.width,
                     heightHalf
                 );
             case TileLineLayoutType.Right:
@@ -132,7 +150,7 @@ export class TileLineContainer extends Container {
                     globalLeftTop.x,
                     globalLeftTop.y,
                     widthHalf,
-                    this.height
+                    this.viewportContainer.viewportRectangle.height
                 );
             default:
                 return new Rectangle(0, 0, 0, 0);
@@ -211,6 +229,102 @@ export class TileLineContainer extends Container {
         }
     }
 
+    private onResizeTicker(ticker: Ticker): void {
+        this.executeResize(ticker.deltaMS);
+        if (this.sizeController?.getIsCompleted()) {
+            this.completeResize();
+            this.ticker.remove(this.boundOnResizeTicker);
+            // TODO: это будет, когда линия будет перетаскиваться
+            //this.setOnPointerDownActivity(true);
+        }        
+    }
+
+    public resize(targetLongitudinalSize: number): void {
+        this.stopResize();
+
+        if (!this.viewportContainer) {
+            throw new Error('viewportContainer is not defined');
+        }
+        
+        const bounds = this.backgroundContainer.getBounds();
+        const globalRightBottom = new Point(bounds.right, bounds.bottom);
+        const viewportRectangle = this.viewportContainer.viewportRectangle;
+        const viewportRightBottom = new Point(
+            viewportRectangle.x + viewportRectangle.width,
+            viewportRectangle.y + viewportRectangle.height
+        );
+
+        const endIsVisible = this.parameters.directionType
+            == TileLineDirectionType.FromLeftToRight
+            ? globalRightBottom.x <= viewportRightBottom.x
+            : globalRightBottom.y <= viewportRightBottom.y;
+
+        if (endIsVisible) {
+            this.startResize(targetLongitudinalSize - this.longitudinalSize);
+        } else {
+            this.resizeWithoutAnimation(targetLongitudinalSize);
+        }
+    }
+
+    private resizeWithoutAnimation(targetLongitudinalSize: number): void {
+        if (this.parameters.directionType == TileLineDirectionType.FromLeftToRight) {
+            this.backgroundContainer.width = targetLongitudinalSize;            
+        } else {
+            this.backgroundContainer.height = targetLongitudinalSize;
+        }
+
+        this.backgroundContainer.updateCacheTexture();
+
+        this.longitudinalSize = targetLongitudinalSize;
+
+        this.viewportContainer!.setContentSize(
+            this.backgroundContainer.width,
+            this.backgroundContainer.height
+        );
+    }
+
+    private stopResize(): void {
+        if (!this.sizeController?.getIsCompleted()) {
+            this.ticker.remove(this.boundOnResizeTicker);
+            this.isResizing = false;
+        }
+    }
+
+    private startResize(longitudinalSizeDifference: number): void {
+        this.isResizing = true;
+        // TODO: это будет, когда линия будет перетаскиваться
+        //this.setOnPointerDownActivity(false);
+        this.prepareToResize(longitudinalSizeDifference);        
+        this.ticker.add(this.boundOnResizeTicker);
+    }
+
+    private prepareToResize(longitudinalSizeDifference: number): void {
+        this.targetLongitudinalSize = this.longitudinalSize + longitudinalSizeDifference;
+
+        if (!this.sizeController) {            
+            this.sizeController = new OverTimeNumberChangeController(
+                this.longitudinalSize,
+                this.targetLongitudinalSize,
+                this.parameters.animationParameters.animationTime,
+                this.parameters.animationParameters.accelerationTimeToAnimationTimeRatio
+            );
+        } else {
+            this.sizeController.reset(this.longitudinalSize, this.targetLongitudinalSize);
+        }
+    }
+
+    private executeResize(deltaTime: number): void {
+        const sizeIncrement = this.sizeController?.getIsCompleted()
+            ? 0
+            : (this.sizeController?.getIncrement(deltaTime) ?? 0);
+        this.resizeWithoutAnimation(this.longitudinalSize + sizeIncrement);
+    }
+
+    private completeResize(): void {
+        this.resizeWithoutAnimation(this.targetLongitudinalSize);
+        this.isResizing = false;
+    }
+
     public setScaleRelativeToScaleChangeGlobalRectangle(
         globalPoint: Point,
         tileView: DraggableTileView
@@ -274,6 +388,10 @@ export class TileLineContainer extends Container {
      */
     public removeTileView(tileView: DraggableTileView): void {
         const removingTileIndex = tileView.model.targetTilePosition.shuffledIndex;
+        if (this.tileViews[removingTileIndex] !== tileView) {
+            return;
+        }
+
         const visibleMovingTiles: DraggableTileView[] = [];
         const targetPositions: Point[] = [];
         let lastMovingTileIndex = -1;
@@ -335,6 +453,8 @@ export class TileLineContainer extends Container {
         }
 
         this.tileViews.splice(removingTileIndex, 1);
+
+        this.resize(this.longitudinalSize - this.getTileLongitudinalCoordinateMultiplier());
     }
 
     private getTileIsVisibleInViewportContainer(tileView: TileView): boolean {

@@ -1,3 +1,4 @@
+import { AnimationParameters } from "../../AnimationParameters.ts";
 import { DraggableTileParameters } from "../tile-decorators/DraggableTileParameters.ts";
 import { TileParameters } from "../tiles/TileParameters.ts";
 import { TileLineDirectionType } from "./TileLineDirectionType.ts";
@@ -27,4 +28,5 @@ export interface TileLineParameters {
     betweenTilesOffset: number;
     tileParameters: TileParameters;
     draggableTileParameters: DraggableTileParameters;
+    animationParameters: AnimationParameters;
 }

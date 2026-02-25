@@ -9,6 +9,7 @@ import { TileLineDirectionType } from "./views/components/TileLineDirectionType.
 import { TileLineParameters } from "./views/components/TileLineParameters.ts";
 import { TilingParameters } from "./views/tilings/TilingParameters.ts";
 import { TileLineLayoutType } from "./views/components/TileLineLayoutType.ts";
+import { AnimationParameters } from "./AnimationParameters.ts";
 
 /**
  * Singleton-класс настроек представления.
@@ -27,9 +28,13 @@ export class Settings {
         return Settings.instance;
     }
 
-    public readonly tileModelParameters: TileModelParameters = {
+    public readonly animationParameters: AnimationParameters = {
         animationTime: 300,
         accelerationTimeToAnimationTimeRatio: 0.3
+    };
+
+    public readonly tileModelParameters: TileModelParameters = {
+        animationParameters: this.animationParameters
     };
 
     public readonly tileViewParameters: TileViewParameters = {
@@ -102,6 +107,7 @@ export class Settings {
         transverseContentOffset: 12,
         betweenTilesOffset: 12,
         tileParameters: this.tileViewParameters,
-        draggableTileParameters: this.draggableTileParameters
+        draggableTileParameters: this.draggableTileParameters,
+        animationParameters: this.animationParameters
     }
 }
