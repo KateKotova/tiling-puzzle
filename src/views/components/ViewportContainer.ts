@@ -114,7 +114,7 @@ export class ViewportContainer extends Container {
      */
     public setViewportPosition(x: number, y: number): void {
         this.viewportRectangle.x = x;
-        this.viewportRectangle.x = y;
+        this.viewportRectangle.y = y;
         this.clampPosition(this.x, this.y);
     }
 

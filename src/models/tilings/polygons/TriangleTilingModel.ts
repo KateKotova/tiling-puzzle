@@ -109,7 +109,7 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
         result.targetTilePosition = targetTilePosition.clone();
 
         const tileIsRotated = (targetTilePosition.rowIndex + targetTilePosition.columnIndex)
-            % 2 == 1;
+            % 2 === 1;
         result.targetRotationAngle = tileIsRotated ? Math.PI : 0;
 
         const sideHalf = this.tileGeometry.side / 2.0;

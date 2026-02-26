@@ -139,7 +139,7 @@ export class TileModel {
      * в радианах
      */
     public getNewPositionMinAngleDifference(normalizedTargetRotationAngle: number): number {
-        if (this.geometry.freedomDegree == 1) {
+        if (this.geometry.freedomDegree === 1) {
             return Algorithm.getMinAngleDifference(this.currentRotationAngle,
                 normalizedTargetRotationAngle);
         }

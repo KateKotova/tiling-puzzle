@@ -73,7 +73,7 @@ export class Algorithm {
     /**
      * Алгоритм вычисления кратчайшей разницы углов.
      * Получение расстояния между двумя нормализованными углами.
-     * Это расстояние может быть как положительнымЮ так и отрицательным.
+     * Это расстояние может быть как положительным, так и отрицательным.
      * Главное, по модулю оно является минимальным.
      * @param sourceNormalizedAngle Исходный угол в радианах
      * @param targetNormalizedAngle Целевой угол в радианах
@@ -154,8 +154,8 @@ export class Algorithm {
             const x = points[i];
             const y = points[i + 1];
             
-            const transformed = matrix.apply(new Point(x, y));
-            transformedPoints.push(transformed.x, transformed.y);
+            const transformedPoint = matrix.apply(new Point(x, y));
+            transformedPoints.push(transformedPoint.x, transformedPoint.y);
         }
         
         return new Polygon(transformedPoints);
@@ -186,20 +186,56 @@ export class Algorithm {
         if (points.length < 3) {
             return false;
         }
+
+        // Пускаем луч из точки и считаем, сколько раз он пересекает границы многоугольника.
+        // Если число пересечений нечётное, то точка внутри, если чётное, то снаружи.
         
         const x = point.x;
         const y = point.y;
         let result = false;
-        
-        for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
-            const xi = points[i * 2];
-            const yi = points[i * 2 + 1];
-            const xj = points[j * 2];
-            const yj = points[j * 2 + 1];
+
+        // Вершины многоугольника пронумерованы по кругу,
+        // где индекс первой вершины - 0, второй - 1 и так далее.
+        // Последняя вершина имеет индекс points.length - 1.
+        // Вершине с индексом 1 предшествует вершина с индексом 0.
+        // Вершине с индексом 0 предшествует вершина с индексом points.length - 1,
+        // потому что вершины идут по кругу.
+        for (
+            let currentVertexIndex = 0,
+            previousVertexIndex = points.length - 1;
+            currentVertexIndex < points.length;
+            previousVertexIndex = currentVertexIndex++
+        ) {
+            const currentVertexX = points[currentVertexIndex * 2];
+            const currentVertexY = points[currentVertexIndex * 2 + 1];
+            const previousVertexX = points[previousVertexIndex * 2];
+            const previousVertexY = points[previousVertexIndex * 2 + 1];
             
-            const intersects = ((yi > y) !== (yj > y))
-                && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-            
+            // Операция XOR.
+            // Признак того, что ордината точки находится между вершинами ребра.
+            // Одна вершина должна быть выше точки, другая - ниже или наоборот.
+            // Если обе точки выше или обе ниже, то луч не пересекает ребро.
+            const yIsBetweenVertices = (currentVertexY > y) !== (previousVertexY > y);
+
+            const xEdgeProjection = previousVertexX - currentVertexX;
+            const yEdgeProjection = previousVertexY - currentVertexY;
+            const pointToCurrentVertexYDistance = y - currentVertexY;
+
+            const intersectionX = currentVertexX + xEdgeProjection
+                * pointToCurrentVertexYDistance / yEdgeProjection;
+            // Признак того, что точка находится слева от ребра.
+            // Здесь луч идёт вправо.
+            const xIsAtTheLeftFromEdge = x < intersectionX;
+
+            const intersects = yIsBetweenVertices && xIsAtTheLeftFromEdge;
+            // Каждое пересечение меняет четность.
+            // Мы идём по лучу из бесконечности к точке.
+            // Стартуем снаружи (чётное число пересечений - 0),
+            // встречаем границу, пересекаем, теперь мы внутри (нечётное число пересечений - 1),
+            // встречаем еще границу, пересекаем, теперь мы снаружи (нечётное число пересечений - 2)
+            // и так далее.
+            // Когда достигнута проверяемая точка, то граница пересечена оказывается
+            // нечётное количество раз, то есть точка внутри.
             if (intersects) {
                 result = !result;
             }

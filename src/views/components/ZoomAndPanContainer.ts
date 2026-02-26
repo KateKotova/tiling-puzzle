@@ -33,6 +33,7 @@ export class ZoomAndPanContainer extends ViewportContainer {
      * Функция, которая показывает, что следует предотвращать события
      */
     public getShouldPreventEvents: () => boolean = () => false;
+    public onDestroy?: () => void;
     
     private boundOnMouseDown: (e: MouseEvent) => void = this.onMouseDown.bind(this);
     private boundOnMouseMove: (e: MouseEvent) => void = this.onMouseMove.bind(this);
@@ -340,6 +341,7 @@ export class ZoomAndPanContainer extends ViewportContainer {
     
     public destroy(options?: DestroyOptions): void {
         this.removeEventListeners();
+        this.onDestroy?.();
         super.destroy(options);
     }
 }

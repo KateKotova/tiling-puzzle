@@ -613,7 +613,7 @@ export class DraggableTileView implements TileView {
             return true;
         }
         
-        if (this.dragTarget == dragSource && !pointerIsInHitArea) {
+        if (this.dragTarget === dragSource && !pointerIsInHitArea) {
             dragSource.onPointerLeave();
         }
 
@@ -642,7 +642,7 @@ export class DraggableTileView implements TileView {
     }
 
     private addTileToTargetContainerOnFixAsLocatedCorrectly(): void {
-        if (this.targetContainer != this.view.tile.parent) {
+        if (this.targetContainer !== this.view.tile.parent) {
             this.saveGlobalPosition();
             this.targetContainer.addChild(this.view.tile);
             this.restoreTargetScale();

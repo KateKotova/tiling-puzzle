@@ -16,7 +16,7 @@ export class TileViewFactory {
         tileViewCreationParameters: TileViewCreationParameters
     ): TileView {
         return tileViewCreationParameters.model.geometry instanceof RegularPolygonTileGeometry
-            && tileViewCreationParameters.model.geometry.lockType == TileLockType.None
+            && tileViewCreationParameters.model.geometry.lockType === TileLockType.None
             ? new RegularPolygonTileView(tileParameters, tileViewCreationParameters)
             : new SvgPathTileView(tileParameters, tileViewCreationParameters);
     }

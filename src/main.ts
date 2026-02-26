@@ -104,6 +104,9 @@ async function main(): Promise<void> {
     container.addChild(zoomAndPanContainer);
     zoomAndPanContainer.onAddedToParent();
     draggingTileData.viewport = zoomAndPanContainer;
+    zoomAndPanContainer.onDestroy = (): void => {
+      draggingTileData.viewport = undefined;
+    };
 
     const imageContainer = new Container({
       x: 0,
@@ -144,7 +147,7 @@ async function main(): Promise<void> {
     const tileLineContainerSize = tileLineContainer.getSizeByDirection();
 
     const carouselContainerOptions: ContainerOptions<ContainerChild> =
-      settings.tileLineParameters.directionType == TileLineDirectionType.FromLeftToRight
+      settings.tileLineParameters.directionType === TileLineDirectionType.FromLeftToRight
       ? {
         x: 25,
         y: app.screen.height - tileLineContainerSize.height - 25,

@@ -49,7 +49,7 @@ export abstract class OctagonAndSquareTilingBaseModel extends RectangularGridTil
             let rightColumnIndex: number;
 
             const tilePositions: TilePosition[] = [];
-            const isOctagonEdgeDistanceIndex = edgeDistanceIndex % 2 == 0;
+            const isOctagonEdgeDistanceIndex = edgeDistanceIndex % 2 === 0;
             if (isOctagonEdgeDistanceIndex) {
                 const octagonEdgeDistanceIndex = edgeDistanceIndex / 2;
                 topRowIndex = 2 * octagonEdgeDistanceIndex;
@@ -71,7 +71,7 @@ export abstract class OctagonAndSquareTilingBaseModel extends RectangularGridTil
                     edgeDistanceIndex,
                     tilePositions
                 );
-                if (topRowIndex != bottomRowIndex) {
+                if (topRowIndex !== bottomRowIndex) {
                     this.addTilePositionByIndices(
                         bottomRowIndex,
                         columnIndex,
@@ -90,7 +90,7 @@ export abstract class OctagonAndSquareTilingBaseModel extends RectangularGridTil
                     edgeDistanceIndex,
                     tilePositions
                 );
-                if (leftColumnIndex != rightColumnIndex) {
+                if (leftColumnIndex !== rightColumnIndex) {
                     this.addTilePositionByIndices(
                         rowIndex,
                         rightColumnIndex,

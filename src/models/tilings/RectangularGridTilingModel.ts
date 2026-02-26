@@ -92,7 +92,7 @@ export abstract class RectangularGridTilingModel extends TilingModel {
                     edgeDistanceIndex,
                     tilePositions
                 );
-                if (topRowIndex != bottomRowIndex) {
+                if (topRowIndex !== bottomRowIndex) {
                     this.addTilePositionByIndices(
                         bottomRowIndex,
                         columnIndex,
@@ -113,7 +113,7 @@ export abstract class RectangularGridTilingModel extends TilingModel {
                     edgeDistanceIndex,
                     tilePositions
                 );
-                if (leftColumnIndex != rightColumnIndex) {
+                if (leftColumnIndex !== rightColumnIndex) {
                     this.addTilePositionByIndices(
                         rowIndex,
                         rightColumnIndex,

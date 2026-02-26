@@ -106,6 +106,13 @@ export class TileLineContainer extends Container {
         this.addChild(this.backgroundContainer);
     }
 
+    private getViewportContainerOrThrow(): ViewportContainer {
+        if (!this.viewportContainer) {
+            throw new Error('viewportContainer is not defined');
+        }
+        return this.viewportContainer;
+    }
+
     /**
      * Метод, который нужно вызывать после добавления данного контейнера к родителю.
      * Устанавливает зону изменения масштабирования
@@ -116,10 +123,7 @@ export class TileLineContainer extends Container {
     }
 
     private getTileScaleChangeGlobalRectangle(): Rectangle {
-        if (!this.viewportContainer) {
-            throw new Error('viewportContainer is not defined');
-        }
-
+        const viewportRectangle = this.getViewportContainerOrThrow().viewportRectangle;
         const globalLeftTop = this.toGlobal(new Point(0, 0));
         const widthHalf = this.width / 2.0;
         const heightHalf = this.height / 2.0;
@@ -128,7 +132,7 @@ export class TileLineContainer extends Container {
                 return new Rectangle(
                     globalLeftTop.x,
                     globalLeftTop.y + heightHalf,
-                    this.viewportContainer.viewportRectangle.width,
+                    viewportRectangle.width,
                     heightHalf
                 );
             case TileLineLayoutType.Left:
@@ -136,13 +140,13 @@ export class TileLineContainer extends Container {
                     globalLeftTop.x + widthHalf,
                     globalLeftTop.y,
                     widthHalf,
-                    this.viewportContainer.viewportRectangle.height
+                    viewportRectangle.height
                 );
             case TileLineLayoutType.Bottom:
                 return new Rectangle(
                     globalLeftTop.x,
                     globalLeftTop.y,
-                    this.viewportContainer.viewportRectangle.width,
+                    viewportRectangle.width,
                     heightHalf
                 );
             case TileLineLayoutType.Right:
@@ -150,7 +154,7 @@ export class TileLineContainer extends Container {
                     globalLeftTop.x,
                     globalLeftTop.y,
                     widthHalf,
-                    this.viewportContainer.viewportRectangle.height
+                    viewportRectangle.height
                 );
             default:
                 return new Rectangle(0, 0, 0, 0);
@@ -242,13 +246,9 @@ export class TileLineContainer extends Container {
     public resize(targetLongitudinalSize: number): void {
         this.stopResize();
 
-        if (!this.viewportContainer) {
-            throw new Error('viewportContainer is not defined');
-        }
-        
         const bounds = this.backgroundContainer.getBounds();
         const globalRightBottom = new Point(bounds.right, bounds.bottom);
-        const viewportRectangle = this.viewportContainer.viewportRectangle;
+        const viewportRectangle = this.getViewportContainerOrThrow().viewportRectangle;
         const viewportRightBottom = new Point(
             viewportRectangle.x + viewportRectangle.width,
             viewportRectangle.y + viewportRectangle.height
@@ -256,7 +256,7 @@ export class TileLineContainer extends Container {
 
         const offset = this.getTileLongitudinalCoordinateMultiplier();
         const endIsVisible = this.parameters.directionType
-            == TileLineDirectionType.FromLeftToRight
+            === TileLineDirectionType.FromLeftToRight
             ? globalRightBottom.x <= viewportRightBottom.x + offset
             : globalRightBottom.y <= viewportRightBottom.y + offset;
 
@@ -268,7 +268,7 @@ export class TileLineContainer extends Container {
     }
 
     private resizeWithoutAnimation(targetLongitudinalSize: number): void {
-        if (this.parameters.directionType == TileLineDirectionType.FromLeftToRight) {
+        if (this.parameters.directionType === TileLineDirectionType.FromLeftToRight) {
             this.backgroundContainer.width = targetLongitudinalSize;            
         } else {
             this.backgroundContainer.height = targetLongitudinalSize;
@@ -278,7 +278,7 @@ export class TileLineContainer extends Container {
 
         this.longitudinalSize = targetLongitudinalSize;
 
-        this.viewportContainer!.setContentSize(
+        this.getViewportContainerOrThrow().setContentSize(
             this.backgroundContainer.width,
             this.backgroundContainer.height
         );
@@ -351,8 +351,8 @@ export class TileLineContainer extends Container {
 
         const tilingViewportScale = draggingTileData.viewport.scale.x;
         const scaleDifference = tilingViewportScale - this.initialTileScale;
-        const coordinateDifference = this.parameters.layoutType == TileLineLayoutType.Top
-            || this.parameters.layoutType == TileLineLayoutType.Bottom
+        const coordinateDifference = this.parameters.layoutType === TileLineLayoutType.Top
+            || this.parameters.layoutType === TileLineLayoutType.Bottom
             ? this.scaleChangeGlobalRectangle.height
             : this.scaleChangeGlobalRectangle.width;
         const scaleToCoordinateRatio = scaleDifference / coordinateDifference;
@@ -465,32 +465,30 @@ export class TileLineContainer extends Container {
     }
 
     private getTileIsVisibleInViewportContainer(tileView: TileView): boolean {
-        if (!this.viewportContainer) {
-            throw new Error('viewportContainer is not defined');
-        }
+        const viewportContainer = this.getViewportContainerOrThrow();
 
         const tileSizeHalf = tileView.model.geometry.maxBoundingSize * this.initialTileScale / 2.0;
         const tileGlobalPosition = tileView.tile.parent
             ? tileView.tile.parent.toGlobal(tileView.tile.position)
             : tileView.tile.position;
-        const viewportContainerPosition = new Point(this.viewportContainer.x,
-            this.viewportContainer.y);
-        const viewportContainerGlobalPosition = this.viewportContainer.parent
-            ? this.viewportContainer.parent.toGlobal(viewportContainerPosition)
+        const viewportContainerPosition = new Point(viewportContainer.x,
+            viewportContainer.y);
+        const viewportContainerGlobalPosition = viewportContainer.parent
+            ? viewportContainer.parent.toGlobal(viewportContainerPosition)
             : viewportContainerPosition;
         
         let tileLongitudinalCoordinate: number;
         let viewportLongitudinalCoordinate: number;
         let viewportLongitudinalSize: number;
 
-        if (this.parameters.directionType == TileLineDirectionType.FromLeftToRight) {
+        if (this.parameters.directionType === TileLineDirectionType.FromLeftToRight) {
             tileLongitudinalCoordinate = tileGlobalPosition.x;
             viewportLongitudinalCoordinate = viewportContainerGlobalPosition.x;
-            viewportLongitudinalSize = this.viewportContainer.viewportRectangle.width;
+            viewportLongitudinalSize = viewportContainer.viewportRectangle.width;
         } else {
             tileLongitudinalCoordinate = tileGlobalPosition.y;
             viewportLongitudinalCoordinate = viewportContainerGlobalPosition.y;
-            viewportLongitudinalSize = this.viewportContainer.viewportRectangle.height;
+            viewportLongitudinalSize = viewportContainer.viewportRectangle.height;
         }
 
         return tileLongitudinalCoordinate + tileSizeHalf > viewportLongitudinalCoordinate
@@ -517,7 +515,7 @@ export class TileLineContainer extends Container {
         const result = currentPositionPoint.clone();
         const offset = this.getTileLongitudinalCoordinateMultiplier()
             * relativeNeighborIndex;
-        if (this.parameters.directionType == TileLineDirectionType.FromLeftToRight) {
+        if (this.parameters.directionType === TileLineDirectionType.FromLeftToRight) {
             result.x += offset;
         } else {
             result.y += offset;
@@ -547,13 +545,13 @@ export class TileLineContainer extends Container {
     }
 
     private getPoint(longitudinalCoordinate: number, transverseCoordinate: number): Point {
-        return this.parameters.directionType == TileLineDirectionType.FromLeftToRight
+        return this.parameters.directionType === TileLineDirectionType.FromLeftToRight
             ? new Point(longitudinalCoordinate, transverseCoordinate)
             : new Point(transverseCoordinate, longitudinalCoordinate);
     }
 
     public getSizeByDirection(): Size {
-        return this.parameters.directionType == TileLineDirectionType.FromLeftToRight
+        return this.parameters.directionType === TileLineDirectionType.FromLeftToRight
             ? new Size(this.longitudinalSize, this.transverseSize)
             : new Size(this.transverseSize, this.longitudinalSize);
     }
