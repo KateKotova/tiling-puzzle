@@ -113,7 +113,7 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
             targetTilePosition.columnIndex * this.tileGeometry.side / 2.0 * 3
                 + this.tileGeometry.side,
             targetTilePosition.rowIndex * this.tileGeometry.inscribedCircleRadius * 2.0
-                + (targetTilePosition.columnIndex % 2 == 1 ? inscribedCircleRadius : 0)
+                + (targetTilePosition.columnIndex % 2 === 1 ? inscribedCircleRadius : 0)
                 + inscribedCircleRadius
         );     
         return result;

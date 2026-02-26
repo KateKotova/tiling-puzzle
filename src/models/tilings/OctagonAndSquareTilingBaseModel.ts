@@ -49,7 +49,7 @@ export abstract class OctagonAndSquareTilingBaseModel extends RectangularGridTil
             let rightColumnIndex: number;
 
             const tilePositions: TilePosition[] = [];
-            const isOctagonEdgeDistanceIndex = edgeDistanceIndex % 2 == 0;
+            const isOctagonEdgeDistanceIndex = edgeDistanceIndex % 2 === 0;
             if (isOctagonEdgeDistanceIndex) {
                 const octagonEdgeDistanceIndex = edgeDistanceIndex / 2;
                 topRowIndex = 2 * octagonEdgeDistanceIndex;
@@ -71,12 +71,14 @@ export abstract class OctagonAndSquareTilingBaseModel extends RectangularGridTil
                     edgeDistanceIndex,
                     tilePositions
                 );
-                this.addTilePositionByIndices(
-                    bottomRowIndex,
-                    columnIndex,
-                    edgeDistanceIndex,
-                    tilePositions
-                );
+                if (topRowIndex !== bottomRowIndex) {
+                    this.addTilePositionByIndices(
+                        bottomRowIndex,
+                        columnIndex,
+                        edgeDistanceIndex,
+                        tilePositions
+                    );
+                }
             }
 
             const startRowIndex = topRowIndex + 2;
@@ -88,12 +90,14 @@ export abstract class OctagonAndSquareTilingBaseModel extends RectangularGridTil
                     edgeDistanceIndex,
                     tilePositions
                 );
-                this.addTilePositionByIndices(
-                    rowIndex,
-                    rightColumnIndex,
-                    edgeDistanceIndex,
-                    tilePositions
-                );
+                if (leftColumnIndex !== rightColumnIndex) {
+                    this.addTilePositionByIndices(
+                        rowIndex,
+                        rightColumnIndex,
+                        edgeDistanceIndex,
+                        tilePositions
+                    );
+                }
             }
 
             this.tilePositionsByEdgeDistanceIndices.push(tilePositions);

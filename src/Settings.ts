@@ -1,20 +1,43 @@
 import { Color } from "pixi.js";
-import { ZoomAndPanParameters } from "./components/ZoomAndPanParameters.ts";
-import { StaticTileParameters } from "./tile-decorators/StaticTileParameters.ts";
-import { DraggableTileParameters } from "./tile-decorators/DraggableTileParameters.ts";
-import { TapParameters } from "./TapParameters.ts";
-import { TileParameters } from "./tiles/TileParameters.ts";
-import { TileLineDirectionType } from "./components/TileLineDirectionType.ts";
-import { TileLineParameters } from "./components/TileLineParameters.ts";
-import { TilingParameters } from "./tilings/TilingParameters.ts";
-import { TileLineLayoutType } from "./components/TileLineLayoutType.ts";
+import { ZoomAndPanParameters } from "./views/components/ZoomAndPanParameters.ts";
+import { StaticTileParameters } from "./views/tile-decorators/StaticTileParameters.ts";
+import { DraggableTileParameters } from "./views/tile-decorators/DraggableTileParameters.ts";
+import { TapParameters } from "./views/TapParameters.ts";
+import { TileParameters as TileViewParameters} from "./views/tiles/TileParameters.ts";
+import { TileParameters as TileModelParameters} from "./models/tiles/TileParameters.ts";
+import { TileLineDirectionType } from "./views/components/TileLineDirectionType.ts";
+import { TileLineParameters } from "./views/components/TileLineParameters.ts";
+import { TilingParameters } from "./views/tilings/TilingParameters.ts";
+import { TileLineLayoutType } from "./views/components/TileLineLayoutType.ts";
+import { AnimationParameters } from "./AnimationParameters.ts";
 
 /**
- * Класс настроек представления.
+ * Singleton-класс настроек представления.
  * Предполагается, что создаётся единственный экземпляр этого класса и везде передаётся.
  */
-export class ViewSettings {
-    public readonly tileParameters: TileParameters = {
+export class Settings {
+    private static instance: Settings;
+
+    private constructor() {
+    }
+
+    public static getInstance(): Settings {
+        if (!Settings.instance) {
+            Settings.instance = new Settings();
+        }
+        return Settings.instance;
+    }
+
+    public readonly animationParameters: AnimationParameters = {
+        animationTime: 300,
+        accelerationTimeToAnimationTimeRatio: 0.3
+    };
+
+    public readonly tileModelParameters: TileModelParameters = {
+        animationParameters: this.animationParameters
+    };
+
+    public readonly tileViewParameters: TileViewParameters = {
         cacheTileAsTextureResolution: 2,
         generateTileTextureResolution: 1,
         bevelFilterOptions: { 
@@ -73,7 +96,7 @@ export class ViewSettings {
     };
 
     public readonly tilingParameters: TilingParameters = {
-        tileParameters: this.tileParameters,
+        tileParameters: this.tileViewParameters,
         staticTileParameters: this.staticTileParameters
     };
 
@@ -83,7 +106,8 @@ export class ViewSettings {
         longitudinalContentOffset: 12,
         transverseContentOffset: 12,
         betweenTilesOffset: 12,
-        tileParameters: this.tileParameters,
-        draggableTileParameters: this.draggableTileParameters
+        tileParameters: this.tileViewParameters,
+        draggableTileParameters: this.draggableTileParameters,
+        animationParameters: this.animationParameters
     }
 }

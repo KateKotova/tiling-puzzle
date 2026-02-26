@@ -18,7 +18,7 @@ export class ViewportContainer extends Container {
      * Позиция и размеры viewport-а, то есть окошка просмотра содержимого.
      * Здесь позиция - координаты левого верхнего угла относительно родительского контейнера.
      */
-    protected viewportRectangle: Rectangle;
+    public viewportRectangle: Rectangle;
     /**
      * Оригинальные размеры контента без масштабирования
      */
@@ -84,6 +84,7 @@ export class ViewportContainer extends Container {
     public setContentSize(contentWidth: number, contentHeight: number): void {
         this.contentOriginalSize.width = contentWidth;
         this.contentOriginalSize.height = contentHeight;
+        this.clampPosition(this.position.x, this.position.y);
     }
     
     /**
@@ -113,7 +114,7 @@ export class ViewportContainer extends Container {
      */
     public setViewportPosition(x: number, y: number): void {
         this.viewportRectangle.x = x;
-        this.viewportRectangle.x = y;
+        this.viewportRectangle.y = y;
         this.clampPosition(this.x, this.y);
     }
 

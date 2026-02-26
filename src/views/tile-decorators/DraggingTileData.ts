@@ -3,11 +3,19 @@ import { ZoomAndPanContainer } from "../components/ZoomAndPanContainer.ts";
 import { TileView } from "../tiles/TileView.ts";
 
 /**
- * Интерфейс информация о фигуре, которая перетаскивается в данный момент.
- * Такой объект должен быть один на всех.
+ * Интерфейс информации о фигуре, которая перетаскивается в данный момент.
  */
-export interface DraggingTileData {
+interface DraggingTileData {
     view?: DraggableTileView;
-    viewport: ZoomAndPanContainer;
+    viewport?: ZoomAndPanContainer;
     animatingViews: Set<TileView>;
 }
+
+/**
+ * Модульный объект-singleton информации о фигуре, которая перетаскивается в данный момент.
+ */
+export const draggingTileData: DraggingTileData = {
+    view: undefined,
+    viewport: undefined,
+    animatingViews: new Set<TileView>()
+};

@@ -123,7 +123,7 @@ export class OctagonAndSquareTilingModel extends OctagonAndSquareTilingBaseModel
             throw new Error('Tile geometry is not defined');
         }
 
-        const tileIsOctagon = targetTilePosition.rowIndex % 2 == 0;
+        const tileIsOctagon = targetTilePosition.rowIndex % 2 === 0;
         const tileGeometry: TileGeometry = tileIsOctagon
             ? this.octagonTileGeometry
             : this.squareTileGeometry;

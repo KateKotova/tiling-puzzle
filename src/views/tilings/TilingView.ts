@@ -1,6 +1,5 @@
 import { Color, Container, Renderer } from "pixi.js";
 import { TilingModel } from "../../models/tilings/TilingModel.ts";
-import { DraggingTileData } from "../tile-decorators/DraggingTileData.ts";
 import { StaticTileView } from "../tile-decorators/StaticTileView.ts";
 import { TileViewFactory } from "../tiles/TileViewFactory.ts";
 import { TileViewCreationParameters } from "../tiles/TileViewCreationParameters.ts";
@@ -17,7 +16,6 @@ export class TilingView {
     public draggableTilesContainer: Container;
     public staticTileFillColor: Color = new Color(0x00AA00);
     private staticTileAlpha: number = 1;
-    public draggingTileData: DraggingTileData;
     /**
      * Карта, где по строковому представлению позиции
      * можно найти статический элемент замощения, представляющий собой
@@ -28,7 +26,6 @@ export class TilingView {
 
     constructor(
         parameters: TilingParameters,
-        draggingTileData: DraggingTileData,
         model: TilingModel
     ) {
         if (!model.isInitialized) {
@@ -36,7 +33,6 @@ export class TilingView {
         }
 
         this.parameters = parameters;
-        this.draggingTileData = draggingTileData;
         this.model = model;
         this.tilingContainer = this.createTilingContainer();
 
@@ -98,8 +94,7 @@ export class TilingView {
 
                 const decoratedTileView = new StaticTileView(
                     this.parameters.staticTileParameters,
-                    tileView,
-                    this.draggingTileData
+                    tileView
                 );
                 this.staticTileViewsByTilePositionStrings.set(
                     tilePosition.toString(),

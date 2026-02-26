@@ -149,7 +149,7 @@ export class OctagonAndSquareWithSpiralLockTilingModel
             throw new Error('Tile geometry is not defined');
         }
             
-        const tileIsOctagon = targetTilePosition.rowIndex % 2 == 0;
+        const tileIsOctagon = targetTilePosition.rowIndex % 2 === 0;
         const tileGeometry: TileGeometry = tileIsOctagon
             ? this.octagonTileGeometry
             : this.squareTileGeometry;
@@ -162,7 +162,7 @@ export class OctagonAndSquareWithSpiralLockTilingModel
         const octagonTileInscribedCircleDiameter = octagonTileInscribedCircleRadius * 2;
         if (tileIsOctagon) {
             result.targetRotationAngle
-                = (targetTilePosition.rowIndex / 2 + targetTilePosition.columnIndex) % 2 == 0
+                = (targetTilePosition.rowIndex / 2 + targetTilePosition.columnIndex) % 2 === 0
                 ? 0
                 : Math.PI / 4;            
             result.targetPositionPoint = new Point(
@@ -173,7 +173,8 @@ export class OctagonAndSquareWithSpiralLockTilingModel
             );
         } else {
             result.targetRotationAngle
-                = ((targetTilePosition.rowIndex - 1) / 2 + targetTilePosition.columnIndex) % 2 == 0
+                = ((targetTilePosition.rowIndex - 1) / 2 + targetTilePosition.columnIndex) % 2
+                === 0
                 ? 7.0 / 4.0 * Math.PI
                 : Math.PI / 4;
             result.targetPositionPoint = new Point(
