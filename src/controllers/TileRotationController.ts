@@ -4,7 +4,7 @@ import { TileModel } from "../models/tiles/TileModel.ts";
 import { DraggableTileView } from "../views/tile-decorators/DraggableTileView.ts";
 import { draggingTileData } from "../views/tile-decorators/DraggingTileData.ts";
 
-export class DraggableTileViewRotationController {
+export class TileRotationController {
     private readonly tileView: DraggableTileView;
     private readonly ticker: Ticker;
 
