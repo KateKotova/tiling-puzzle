@@ -11,8 +11,7 @@ import { TileLineLayoutType } from "./TileLineLayoutType.ts";
 import { Algorithm } from "../../math/Algorithm.ts";
 import { TileView } from "../tiles/TileView.ts";
 import { ViewportContainer } from "./ViewportContainer.ts";
-import { OverTimeNumberChangeController }
-    from "../../math/over-time-value-change-controllers/OverTimeNumberChangeController.ts";
+import { TileLineResizeController } from "../../controllers/TileLineResizeController.ts";
 
 /**
  * Класс контейнера линии, в которой содержатся элементы мозаики для сборки.
@@ -26,7 +25,7 @@ export class TileLineContainer extends Container {
      * Для направления слева направо это ширина.
      * Для направления сверху вниз это высота.
      */
-    private longitudinalSize: number;
+    public longitudinalSize: number;
     /**
      * Поперечный размер.
      * Для направления слева направо это высота.
@@ -52,24 +51,17 @@ export class TileLineContainer extends Container {
     private readonly maxScaledBoundingSize: number;
 
     private viewportContainer?: ViewportContainer;
-    private selectedContainer: Container;
+    private readonly selectedContainer: Container;
 
-    private backgroundContainer: Container;
+    public readonly backgroundContainer: Container;
     private backgroundFillColor: Color = new Color(0x00AA00);
 
-    private tileViews: DraggableTileView[] = [];
+    public tileViews: DraggableTileView[] = [];
 
-    /**
-     * Контроллер изменения размера ленты
-     */
-    private sizeController?: OverTimeNumberChangeController;
-    // @ts-expect-error TODO: необходимо для остановки прокрутки, которой пока нет
-    private isResizing: boolean = false;
-    private targetLongitudinalSize: number = 0;
+    public isResizing: boolean = false;
+    public targetLongitudinalSize: number = 0;
 
-    private ticker: Ticker;
-
-    private boundOnResizeTicker: (ticker: Ticker) => void = this.onResizeTicker.bind(this);
+    private readonly resizeController: TileLineResizeController;
 
     constructor(
         parameters: TileLineParameters,
@@ -84,7 +76,8 @@ export class TileLineContainer extends Container {
         this.transverseSize = transverseSize;
         this.tilingView = tilingView;
         this.selectedContainer = selectedContainer;
-        this.ticker = ticker;
+
+        this.resizeController = new TileLineResizeController(this, ticker);
 
         this.maxScaledBoundingSize = this.transverseSize
             - 2 * this.parameters.transverseContentOffset;
@@ -241,18 +234,8 @@ export class TileLineContainer extends Container {
         }
     }
 
-    private onResizeTicker(ticker: Ticker): void {
-        this.executeResize(ticker.deltaMS);
-        if (this.sizeController?.getIsCompleted()) {
-            this.completeResize();
-            this.ticker.remove(this.boundOnResizeTicker);
-            // TODO: это будет, когда линия будет перетаскиваться
-            //this.setOnPointerDownActivity(true);
-        }        
-    }
-
     public resize(targetLongitudinalSize: number): void {
-        this.stopResize();
+        this.resizeController.stop();
 
         const bounds = this.backgroundContainer.getBounds();
         const globalRightBottom = new Point(bounds.right, bounds.bottom);
@@ -269,13 +252,13 @@ export class TileLineContainer extends Container {
             : globalRightBottom.y <= viewportRightBottom.y + offset;
 
         if (endIsVisible) {
-            this.startResize(targetLongitudinalSize - this.longitudinalSize);
+            this.resizeController.start(targetLongitudinalSize - this.longitudinalSize);
         } else {
             this.resizeWithoutAnimation(targetLongitudinalSize);
         }
     }
 
-    private resizeWithoutAnimation(targetLongitudinalSize: number): void {
+    public resizeWithoutAnimation(targetLongitudinalSize: number): void {
         if (this.parameters.directionType === TileLineDirectionType.FromLeftToRight) {
             this.backgroundContainer.width = targetLongitudinalSize;            
         } else {
@@ -290,51 +273,6 @@ export class TileLineContainer extends Container {
             this.backgroundContainer.width,
             this.backgroundContainer.height
         );
-    }
-
-    private stopResize(): void {
-        if (!this.sizeController?.getIsCompleted()) {
-            this.ticker.remove(this.boundOnResizeTicker);
-            this.isResizing = false;
-        }
-    }
-
-    private startResize(longitudinalSizeDifference: number): void {
-        this.isResizing = true;
-        // TODO: это будет, когда линия будет перетаскиваться
-        //this.setOnPointerDownActivity(false);
-        this.prepareToResize(longitudinalSizeDifference);        
-        this.ticker.add(this.boundOnResizeTicker);
-    }
-
-    private prepareToResize(longitudinalSizeDifference: number): void {
-        this.targetLongitudinalSize = this.longitudinalSize + longitudinalSizeDifference;
-
-        if (!this.sizeController) {            
-            this.sizeController = new OverTimeNumberChangeController(
-                this.longitudinalSize,
-                this.targetLongitudinalSize,
-                this.parameters.animationParameters.animationTime,
-                this.parameters.animationParameters.accelerationTimeToAnimationTimeRatio
-            );
-        } else {
-            this.sizeController.reset(this.longitudinalSize, this.targetLongitudinalSize);
-        }
-    }
-
-    private executeResize(deltaTime: number): void {
-        const sizeIncrement = this.sizeController?.getIsCompleted()
-            ? 0
-            : (this.sizeController?.getIncrement(deltaTime) ?? 0);
-        this.resizeWithoutAnimation(this.longitudinalSize + sizeIncrement);
-    }
-
-    private completeResize(): void {
-        this.resizeWithoutAnimation(this.targetLongitudinalSize);
-        if (!this.tileViews.length) {
-            this.backgroundContainer.visible = false;
-        }
-        this.isResizing = false;
     }
 
     public setScaleRelativeToScaleChangeGlobalRectangle(
@@ -659,6 +597,7 @@ export class TileLineContainer extends Container {
     }
 
     public destroy(options?: DestroyOptions): void {
+        this.resizeController.removeEventListeners();
         if (this.backgroundContainer) {
             this.backgroundContainer.destroy();
         }

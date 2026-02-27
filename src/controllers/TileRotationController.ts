@@ -5,13 +5,13 @@ import { DraggableTileView } from "../views/tile-decorators/DraggableTileView.ts
 import { draggingTileData } from "../views/tile-decorators/DraggingTileData.ts";
 
 export class TileRotationController {
-    private readonly tileView: DraggableTileView;
+    private readonly target: DraggableTileView;
     private readonly ticker: Ticker;
 
     private readonly boundOnTicker: (ticker: Ticker) => void = this.onTicker.bind(this);
 
-    constructor(tileView: DraggableTileView, ticker: Ticker) {
-        this.tileView = tileView;
+    constructor(target: DraggableTileView, ticker: Ticker) {
+        this.target = target;
         this.ticker = ticker;
     }
 
@@ -20,51 +20,51 @@ export class TileRotationController {
         const rotationAngle = dragTargetModel
             ? dragTargetModel.targetRotationAngle
             : Math.random() * 2 * Math.PI;
-        const rotationAngleDifference = this.tileView.view.model
+        const rotationAngleDifference = this.target.view.model
             .getNewPositionMinAngleDifference(rotationAngle);
         this.start(rotationAngleDifference);
     }
 
     public stop(): void {
-        if (!this.tileView.view.model.getRotationIsCompleted()) {
+        if (!this.target.view.model.getRotationIsCompleted()) {
             this.ticker.remove(this.boundOnTicker);
         }
     }
 
     public start(rotationAngleDifference: number): void {
-        this.tileView.setOnPointerDownActivity(false);
+        this.target.setOnPointerDownActivity(false);
         this.prepareToExecute(rotationAngleDifference);        
         this.ticker.add(this.boundOnTicker);
     }
 
     private onTicker(ticker: Ticker): void {
         this.execute(ticker.deltaMS);
-        if (this.tileView.view.model.getRotationIsCompleted()) {
+        if (this.target.view.model.getRotationIsCompleted()) {
             this.complete();
             this.ticker.remove(this.boundOnTicker);
-            this.tileView.setOnPointerDownActivity(true);
+            this.target.setOnPointerDownActivity(true);
         }        
     }
 
     private prepareToExecute(rotationAngleDifference: number): void {
-        draggingTileData.animatingViews.add(this.tileView);
-        this.tileView.view.model.prepareToRotation(rotationAngleDifference);
-        this.tileView.addTileToSelectedContainer();
+        draggingTileData.animatingViews.add(this.target);
+        this.target.view.model.prepareToRotation(rotationAngleDifference);
+        this.target.addTileToSelectedContainer();
         
-        if (!this.tileView.isDragging) {
-            const filter = new GlowFilter(this.tileView.parameters.selectedGlowFilterOptions);
-            this.tileView.view.setFilter(filter);
+        if (!this.target.isDragging) {
+            const filter = new GlowFilter(this.target.parameters.selectedGlowFilterOptions);
+            this.target.view.setFilter(filter);
         }
     }
 
     private execute(deltaTime: number): void {
-        this.tileView.view.model.executeRotation(deltaTime);
-        this.tileView.view.tile.rotation = this.tileView.view.model.currentRotationAngle;
+        this.target.view.model.executeRotation(deltaTime);
+        this.target.view.tile.rotation = this.target.view.model.currentRotationAngle;
     }
 
     private complete(): void {
-        const view = this.tileView.view;
-        if (!this.tileView.isDragging) {
+        const view = this.target.view;
+        if (!this.target.isDragging) {
             view.removeFilters();
         }
         
@@ -73,19 +73,19 @@ export class TileRotationController {
         view.tile.rotation = view.model.currentRotationAngle;
         
         if (
-            !this.tileView.isDragging
-            && view.tile.parent !== this.tileView.targetContainer
+            !this.target.isDragging
+            && view.tile.parent !== this.target.targetContainer
         ) {
-            this.tileView.addTileToTargetContainer();
+            this.target.addTileToTargetContainer();
         }
 
         if (view.model.getIsLocatedCorrectly()) {
-            this.tileView.fixAsLocatedCorrectly();
+            this.target.fixAsLocatedCorrectly();
         }
 
-        if (!this.tileView.isDragging && !this.tileView.isMoving) {
-            draggingTileData.animatingViews.delete(this.tileView);
-            window.removeEventListener('wheel', this.tileView.boundPreventScrollOnWheel);
+        if (!this.target.isDragging && !this.target.isMoving) {
+            draggingTileData.animatingViews.delete(this.target);
+            window.removeEventListener('wheel', this.target.boundPreventScrollOnWheel);
         }
     }
 

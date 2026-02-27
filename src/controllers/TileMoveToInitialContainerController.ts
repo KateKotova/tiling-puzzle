@@ -4,20 +4,20 @@ import { DraggableTileView } from "../views/tile-decorators/DraggableTileView.ts
 import { draggingTileData } from "../views/tile-decorators/DraggingTileData.ts";
 
 export class TileMoveToInitialContainerController {
-    private readonly tileView: DraggableTileView;
+    private readonly target: DraggableTileView;
     private readonly ticker: Ticker;
 
     private readonly boundOnTicker: (ticker: Ticker) => void = this.onTicker.bind(this);
 
-    constructor(tileView: DraggableTileView, ticker: Ticker) {
-        this.tileView = tileView;
+    constructor(target: DraggableTileView, ticker: Ticker) {
+        this.target = target;
         this.ticker = ticker;
     }
 
     public restart(targetGlobalPosition: Point): void {
         this.stop();
 
-        const globalPosition = this.tileView.getGlobalPosition();
+        const globalPosition = this.target.getGlobalPosition();
         const moveDifference = new Point(
             targetGlobalPosition.x - globalPosition.x,
             targetGlobalPosition.y - globalPosition.y
@@ -27,63 +27,63 @@ export class TileMoveToInitialContainerController {
     }
 
     private stop(): void {
-        if (!this.tileView.view.model.getMoveIsCompleted()) {
+        if (!this.target.view.model.getMoveIsCompleted()) {
             this.ticker.remove(this.boundOnTicker);
-            this.tileView.isMoving = false;
+            this.target.isMoving = false;
         }
     }
 
     private start(moveDifference: Point): void {
-        this.tileView.isMoving = true;
-        this.tileView.setOnPointerDownActivity(false);
+        this.target.isMoving = true;
+        this.target.setOnPointerDownActivity(false);
         this.prepareToExecute(moveDifference);        
         this.ticker.add(this.boundOnTicker);
     }
 
     private onTicker(ticker: Ticker): void {
         this.execute(ticker.deltaMS);
-        if (this.tileView.view.model.getMoveIsCompleted()) {
+        if (this.target.view.model.getMoveIsCompleted()) {
             this.complete();
             this.ticker.remove(this.boundOnTicker);
-            this.tileView.setOnPointerDownActivity(true);
+            this.target.setOnPointerDownActivity(true);
         }        
     }
 
     private prepareToExecute(moveDifference: Point): void {
-        draggingTileData.animatingViews.add(this.tileView);
-        this.tileView.view.model.prepareToMove(moveDifference);
+        draggingTileData.animatingViews.add(this.target);
+        this.target.view.model.prepareToMove(moveDifference);
 
-        if (this.tileView.view.tile.parent !== this.tileView.selectedContainer) {
-            this.tileView.addTileToSelectedContainer();
+        if (this.target.view.tile.parent !== this.target.selectedContainer) {
+            this.target.addTileToSelectedContainer();
         }
 
-        const filter = new GlowFilter(this.tileView.parameters.selectedGlowFilterOptions);
-        this.tileView.view.setFilter(filter);
+        const filter = new GlowFilter(this.target.parameters.selectedGlowFilterOptions);
+        this.target.view.setFilter(filter);
     }
 
     private execute(deltaTime: number): void {
-        this.tileView.view.model.executeMove(deltaTime);
-        this.tileView.view.tile.position.copyFrom(
-            this.tileView.view.model.currentPositionPoint);
-        this.tileView.initialContainer.setScaleRelativeToScaleChangeGlobalRectangle(
-            this.tileView.getGlobalPosition(), this.tileView);
+        this.target.view.model.executeMove(deltaTime);
+        this.target.view.tile.position.copyFrom(
+            this.target.view.model.currentPositionPoint);
+        this.target.initialContainer.setScaleRelativeToScaleChangeGlobalRectangle(
+            this.target.getGlobalPosition(), this.target);
     }
 
     private complete(): void {
-        const view = this.tileView.view;
+        const view = this.target.view;
         view.removeFilters();
         
         view.model.completeMove();
         view.tile.position.copyFrom(view.model.currentPositionPoint);
         
-        if (view.tile.parent !== this.tileView.initialContainer) {
-            this.tileView.addTileToInitialContainer();
+        if (view.tile.parent !== this.target.initialContainer) {
+            this.target.addTileToInitialContainer();
         }
 
-        draggingTileData.animatingViews.delete(this.tileView);
-        window.removeEventListener('wheel', this.tileView.boundPreventScrollOnWheel);
+        draggingTileData.animatingViews.delete(this.target);
+        window.removeEventListener('wheel', this.target.boundPreventScrollOnWheel);
 
-        this.tileView.isMoving = false;
+        this.target.isMoving = false;
     }
 
     public removeEventListeners(): void {
