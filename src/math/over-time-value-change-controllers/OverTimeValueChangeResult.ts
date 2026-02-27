@@ -1,8 +1,8 @@
 /**
  * Класс изменений величины, произошедших с течением времени
  */
-export interface OverTimeValueChangeResult<ValueType> {
-    valueIncrement: ValueType;
+export interface OverTimeValueChangeResult<TValue> {
+    valueIncrement: TValue;
     newCurrentTime: number;
     valueChangeIsCompleted: boolean;
 }

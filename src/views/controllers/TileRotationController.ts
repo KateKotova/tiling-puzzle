@@ -4,12 +4,21 @@ import { TileModel } from "../../models/tiles/TileModel.ts";
 import { DraggableTileView } from "../tile-decorators/DraggableTileView.ts";
 import { draggingTileData } from "../tile-decorators/DraggingTileData.ts";
 import { EntityController } from "./EntityController.ts";
+import { TileRotationController as TileRotationModelController}
+    from "../../models/controllers/TileRotationController.ts";
 
 /**
  * Класс контроллера для перетаскиваемого элемента замощения,
  * угол поворота вокруг опорной точки которого меняется со временем
  */
 export class TileRotationController extends EntityController<DraggableTileView, number> {
+    private readonly controller: TileRotationModelController;
+
+    constructor(target: DraggableTileView, ticker: Ticker) {
+        super(target, ticker);
+        this.controller = this.target.view.model.rotationController;
+    }
+
     public restart(dragTargetModel?: TileModel): void {
         this.stop();
         const rotationAngle = dragTargetModel
@@ -21,7 +30,7 @@ export class TileRotationController extends EntityController<DraggableTileView, 
     }
 
     public stop(): void {
-        if (!this.target.view.model.getRotationIsCompleted()) {
+        if (!this.controller.getIsCompleted()) {
             this.ticker.remove(this.boundOnTicker);
         }
     }
@@ -34,7 +43,7 @@ export class TileRotationController extends EntityController<DraggableTileView, 
 
     protected onTicker(ticker: Ticker): void {
         this.execute(ticker.deltaMS);
-        if (this.target.view.model.getRotationIsCompleted()) {
+        if (this.controller.getIsCompleted()) {
             this.complete();
             this.ticker.remove(this.boundOnTicker);
             this.target.setOnPointerDownActivity(true);
@@ -43,7 +52,7 @@ export class TileRotationController extends EntityController<DraggableTileView, 
 
     protected prepareToExecute(rotationAngleDifference: number): void {
         draggingTileData.animatingViews.add(this.target);
-        this.target.view.model.prepareToRotation(rotationAngleDifference);
+        this.controller.prepareToExecute(rotationAngleDifference);
         this.target.addTileToSelectedContainer();
         
         if (!this.target.isDragging) {
@@ -53,7 +62,7 @@ export class TileRotationController extends EntityController<DraggableTileView, 
     }
 
     protected execute(deltaTime: number): void {
-        this.target.view.model.executeRotation(deltaTime);
+        this.controller.execute(deltaTime);
         this.target.view.tile.rotation = this.target.view.model.currentRotationAngle;
     }
 
@@ -63,7 +72,7 @@ export class TileRotationController extends EntityController<DraggableTileView, 
             view.removeFilters();
         }
         
-        view.model.completeRotation();
+        this.controller.complete();
         
         view.tile.rotation = view.model.currentRotationAngle;
         

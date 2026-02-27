@@ -1,12 +1,10 @@
 import { Point } from "pixi.js";
-import { TileGeometry } from "../tile-geometries/TileGeometry";
-import { TilePosition } from "./TilePosition";
-import { OverTimePointChangeController }
-    from "../../math/over-time-value-change-controllers/OverTimePointChangeController";
-import { OverTimeNumberChangeController }
-    from "../../math/over-time-value-change-controllers/OverTimeNumberChangeController";
-import { Algorithm } from "../../math/Algorithm";
-import { TileParameters } from "./TileParameters";
+import { TileGeometry } from "../tile-geometries/TileGeometry.ts";
+import { TilePosition } from "./TilePosition.ts";
+import { Algorithm } from "../../math/Algorithm.ts";
+import { TileParameters } from "./TileParameters.ts";
+import { TileRotationController } from "../controllers/TileRotationController.ts";
+import { TileMoveController } from "../controllers/TileMoveController.ts";
 
 /**
  * Класс элемента замощения.
@@ -17,7 +15,7 @@ export class TileModel {
     private static rotationAngleEpsilon: number = Math.PI / 180;
     private static positionCoordinateEpsilon: number = 2;
 
-    private readonly parameters: TileParameters;
+    public readonly parameters: TileParameters;
     public geometry: TileGeometry;
     /**
      * Целевая позиция элемента замощения в замощении
@@ -44,7 +42,7 @@ export class TileModel {
     /**
      * Контроллер перемещения текущей позиции-точки фигуры
      */
-    private positionPointController?: OverTimePointChangeController;
+    public moveController: TileMoveController;
 
     /**
      * Целевой угол вращения фигуры в радианах.
@@ -65,7 +63,7 @@ export class TileModel {
     /**
      * Контроллер изменения текущего угла вращения фигуры вокруг точки опоры
      */
-    private rotationController?: OverTimeNumberChangeController;
+    public rotationController: TileRotationController;
 
     constructor(
         parameters: TileParameters,
@@ -73,6 +71,8 @@ export class TileModel {
     ) {
         this.parameters = parameters;
         this.geometry = geometry;
+        this.rotationController = new TileRotationController(this);
+        this.moveController = new TileMoveController(this);
     }
 
     public clone(): TileModel {
@@ -161,95 +161,5 @@ export class TileModel {
             }
         }
         return result;
-    }
-
-    /**
-     * Подготовка к вращению фигуры, установка параметров контроллера вращения
-     * @param rotationAngleDifference Угол-разность, на который будет произведён поворот.
-     * Угол в радианах, может быть как положительным, так и отрицательным.
-     */
-    public prepareToRotation(rotationAngleDifference: number): void {
-        this.currentTargetRotationAngle = this.currentRotationAngle + rotationAngleDifference;
-        if (!this.rotationController) {            
-            this.rotationController = new OverTimeNumberChangeController(
-                this.currentRotationAngle,
-                this.currentTargetRotationAngle,
-                this.parameters.animationParameters.animationTime,
-                this.parameters.animationParameters.accelerationTimeToAnimationTimeRatio
-            );
-        } else {
-            this.rotationController.reset(this.currentRotationAngle,
-                this.currentTargetRotationAngle);
-        }
-    }
-
-    /**
-     * Подготовка к перемещению фигуры, установка параметров контроллера перемещения
-     * @param positionPointDifference Координаты-разность,
-     * на которые будет произведено перемещение
-     */
-    public prepareToMove(positionPointDifference: Point): void {
-        this.currentTargetPositionPoint = new Point(
-            this.currentPositionPoint.x + positionPointDifference.x,
-            this.currentPositionPoint.y + positionPointDifference.y
-        );
-        if (!this.positionPointController) {            
-            this.positionPointController = new OverTimePointChangeController(
-                this.currentPositionPoint,
-                this.currentTargetPositionPoint,
-                this.parameters.animationParameters.animationTime,
-                this.parameters.animationParameters.accelerationTimeToAnimationTimeRatio
-            );
-        } else {
-            this.positionPointController.reset(this.currentPositionPoint,
-                this.currentTargetPositionPoint);
-        }
-    }
-
-    /**
-     * Выполнение поворота
-     * @param deltaTime Интервал времени, прошедший с момента предыдущего поворота
-     */
-    public executeRotation(deltaTime: number): void {
-        const rotationAngleIncrement: number = this.rotationController?.getIsCompleted()
-            ? 0
-            : (this.rotationController?.getIncrement(deltaTime) ?? 0);
-        this.currentRotationAngle += rotationAngleIncrement;
-    }
-
-    /**
-     * Выполнение перемещения
-     * @param deltaTime Интервал времени, прошедший с момента предыдущего перемещения
-     */
-    public executeMove(deltaTime: number): void {
-        const positionPointIncrement: Point = this.positionPointController?.getIsCompleted()
-            ? new Point(0, 0)
-            : (this.positionPointController?.getIncrement(deltaTime) ?? new Point(0, 0));
-        this.currentPositionPoint.x += positionPointIncrement.x;
-        this.currentPositionPoint.y += positionPointIncrement.y;
-    }
-
-    /**
-     * Операции по завершению вращения
-     */
-    public completeRotation(): void {
-        this.currentRotationAngle = Algorithm.getNormalizedAngle(
-            this.currentTargetRotationAngle);
-        this.currentTargetRotationAngle = this.currentRotationAngle;
-    }
-
-    /**
-     * Операции по завершению перемещения
-     */
-    public completeMove(): void {
-        this.currentPositionPoint = this.currentTargetPositionPoint.clone();
-    }
-    
-    public getRotationIsCompleted(): boolean {
-        return this.rotationController?.getIsCompleted() ?? false;
-    }
-
-    public getMoveIsCompleted(): boolean {
-        return this.positionPointController?.getIsCompleted() ?? false;
     }
 }

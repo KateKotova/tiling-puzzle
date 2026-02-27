@@ -3,6 +3,7 @@ import { GlowFilter } from "pixi-filters";
 import { DraggableTileView } from "../tile-decorators/DraggableTileView.ts";
 import { draggingTileData } from "../tile-decorators/DraggingTileData.ts";
 import { EntityController } from "./EntityController.ts";
+import { TileMoveController } from "../../models/controllers/TileMoveController.ts";
 
 /**
  * Класс контроллера для перетаскиваемого элемента замощения,
@@ -11,6 +12,13 @@ import { EntityController } from "./EntityController.ts";
  */
 export class TileMoveToInitialContainerController
     extends EntityController<DraggableTileView, Point> {
+
+    private readonly controller: TileMoveController;
+
+    constructor(target: DraggableTileView, ticker: Ticker) {
+        super(target, ticker);
+        this.controller = this.target.view.model.moveController;
+    }
 
     public restart(targetGlobalPosition: Point): void {
         this.stop();
@@ -25,7 +33,7 @@ export class TileMoveToInitialContainerController
     }
 
     public stop(): void {
-        if (!this.target.view.model.getMoveIsCompleted()) {
+        if (!this.controller.getIsCompleted()) {
             this.ticker.remove(this.boundOnTicker);
             this.target.isMoving = false;
         }
@@ -40,7 +48,7 @@ export class TileMoveToInitialContainerController
 
     protected onTicker(ticker: Ticker): void {
         this.execute(ticker.deltaMS);
-        if (this.target.view.model.getMoveIsCompleted()) {
+        if (this.controller.getIsCompleted()) {
             this.complete();
             this.ticker.remove(this.boundOnTicker);
             this.target.setOnPointerDownActivity(true);
@@ -49,7 +57,7 @@ export class TileMoveToInitialContainerController
 
     protected prepareToExecute(moveDifference: Point): void {
         draggingTileData.animatingViews.add(this.target);
-        this.target.view.model.prepareToMove(moveDifference);
+        this.controller.prepareToExecute(moveDifference);
 
         if (this.target.view.tile.parent !== this.target.selectedContainer) {
             this.target.addTileToSelectedContainer();
@@ -60,7 +68,7 @@ export class TileMoveToInitialContainerController
     }
 
     protected execute(deltaTime: number): void {
-        this.target.view.model.executeMove(deltaTime);
+        this.controller.execute(deltaTime);
         this.target.view.tile.position.copyFrom(
             this.target.view.model.currentPositionPoint);
         this.target.initialContainer.setScaleRelativeToScaleChangeGlobalRectangle(
@@ -71,7 +79,7 @@ export class TileMoveToInitialContainerController
         const view = this.target.view;
         view.removeFilters();
         
-        view.model.completeMove();
+        this.controller.complete();
         view.tile.position.copyFrom(view.model.currentPositionPoint);
         
         if (view.tile.parent !== this.target.initialContainer) {

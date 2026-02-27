@@ -1,44 +1,17 @@
 import { Point } from "pixi.js";
 import { OverTimeValueChangeResult } from "./OverTimeValueChangeResult.ts";
+import { OverTimeValueChangeController } from "./OverTimeValueChangeController.ts";
 
 /**
  * Класс, контролирующий плавное изменение точки с течением времени
  */
-export class OverTimePointChangeController {
-    private startPoint: Point;
-    private targetPoint: Point;
-    private totalTime: number;
-    private accelerationTimeToTotalTimeRatio: number;
-    private currentTime: number = 0;
-    private currentPoint: Point;
-    private isCompleted: boolean = false;
-    
-    /**
-     * Создание контроллера плавного изменение точки с течением времени
-     * @param startPoint Начальные координаты точки
-     * @param targetPoint Конечные координаты точки
-     * @param totalTime Общее время изменения точки
-     * @param accelerationTimeToTotalTimeRatio Доля времени ускорения от общего времени.
-     * Число от 0 до 0.5.
-     */
-    constructor(startPoint: Point,
-        targetPoint: Point,
-        totalTime: number,
-        accelerationTimeToTotalTimeRatio: number = 0.3) {
-
-        this.startPoint = startPoint.clone();
-        this.targetPoint = targetPoint.clone();
-        this.totalTime = totalTime;
-        this.accelerationTimeToTotalTimeRatio = accelerationTimeToTotalTimeRatio;
-        this.currentPoint = startPoint.clone();
-    }
-
-    public reset(newStartPoint: Point, newTargetPoint: Point): void {
+export class OverTimePointChangeController extends OverTimeValueChangeController<Point> {
+    public reset(newStartValue: Point, newTargetValue: Point): void {
         this.currentTime = 0;
-        this.currentPoint = newStartPoint.clone();
+        this.currentValue = newStartValue.clone();
         this.isCompleted = false;
-        this.startPoint = newStartPoint.clone();
-        this.targetPoint = newTargetPoint.clone();
+        this.startValue = newStartValue.clone();
+        this.targetValue = newTargetValue.clone();
     }
     
     public getIncrement(deltaTime: number): Point {
@@ -48,16 +21,16 @@ export class OverTimePointChangeController {
         
         const result = this.getChangeResult(deltaTime);        
         this.currentTime = result.newCurrentTime;
-        this.currentPoint.x += result.valueIncrement.x;
-        this.currentPoint.y += result.valueIncrement.y;
+        this.currentValue.x += result.valueIncrement.x;
+        this.currentValue.y += result.valueIncrement.y;
         this.isCompleted = result.valueChangeIsCompleted;
         
         return result.valueIncrement;
     }
 
-    private getChangeResult(deltaTime: number): OverTimeValueChangeResult<Point> {
-        const totalPointDifference = new Point(this.targetPoint.x - this.startPoint.x,
-            this.targetPoint.y - this.startPoint.y);
+    protected getChangeResult(deltaTime: number): OverTimeValueChangeResult<Point> {
+        const totalPointDifference = new Point(this.targetValue.x - this.startValue.x,
+            this.targetValue.y - this.startValue.y);
         
         const totalDistance = Math.sqrt(totalPointDifference.x * totalPointDifference.x + 
             totalPointDifference.y * totalPointDifference.y);
@@ -114,41 +87,8 @@ export class OverTimePointChangeController {
         };
     }
 
-    private getDistanceAtTime(
-        time: number,
-        accelerationTime: number,
-        acceleration: number,
-        constantTime: number
-    ): number {
-        const clampedTime = Math.max(0, Math.min(time, this.totalTime));
-        
-        if (clampedTime <= accelerationTime) {
-            return 0.5 * acceleration * clampedTime * clampedTime;
-        }
-        
-        const accelerationDistance = 0.5 * acceleration * accelerationTime * accelerationTime;
-        const maxVelocity = acceleration * accelerationTime;
-
-        if (clampedTime <= accelerationTime + constantTime) {
-            const constantVelocityTime = clampedTime - accelerationTime;
-            return accelerationDistance + maxVelocity * constantVelocityTime;
-        }
-        
-        const constantVelocityDistance = maxVelocity * constantTime;
-        const decelerationTime = clampedTime - (accelerationTime + constantTime);
-        
-        const decelerationDistance = maxVelocity * decelerationTime 
-            - 0.5 * acceleration * decelerationTime * decelerationTime;
-        
-        return accelerationDistance + constantVelocityDistance + decelerationDistance;
-    }
-    
-    public getIsCompleted(): boolean {
-        return this.isCompleted;
-    }
-    
     public complete(): void {
-        this.currentPoint = this.targetPoint.clone();
+        this.currentValue = this.targetValue.clone();
         this.isCompleted = true;
         this.currentTime = this.totalTime;
     }

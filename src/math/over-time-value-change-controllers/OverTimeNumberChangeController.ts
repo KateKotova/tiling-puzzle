@@ -1,37 +1,10 @@
+import { OverTimeValueChangeController } from "./OverTimeValueChangeController.ts";
 import { OverTimeValueChangeResult } from "./OverTimeValueChangeResult.ts";
 
 /**
  * Класс, контролирующий плавное изменение числа с течением времени
  */
-export class OverTimeNumberChangeController {
-    private startValue: number;
-    private targetValue: number;
-    private totalTime: number;
-    private accelerationTimeToTotalTimeRatio: number;
-    private currentTime: number = 0;
-    private currentValue: number;
-    private isCompleted: boolean = false;
-    
-    /**
-     * Создание контроллера плавного изменение числа с течением времени
-     * @param startValue Начальное значение числа
-     * @param targetValue Конечное значение числа
-     * @param totalTime Общее время изменения числа
-     * @param accelerationTimeToTotalTimeRatio Доля времени ускорения от общего времени.
-     * Число от 0 до 0.5.
-     */
-    constructor(startValue: number,
-        targetValue: number,
-        totalTime: number,
-        accelerationTimeToTotalTimeRatio: number = 0.3) {
-
-        this.startValue = startValue;
-        this.targetValue = targetValue;
-        this.totalTime = totalTime;
-        this.accelerationTimeToTotalTimeRatio = accelerationTimeToTotalTimeRatio;
-        this.currentValue = startValue;
-    }
-
+export class OverTimeNumberChangeController extends OverTimeValueChangeController<number>{
     public reset(newStartValue: number, newTargetValue: number): void {
         this.currentTime = 0;
         this.currentValue = newStartValue;
@@ -53,7 +26,7 @@ export class OverTimeNumberChangeController {
         return result.valueIncrement;
     }
 
-    private getChangeResult(deltaTime: number): OverTimeValueChangeResult<number> {
+    protected getChangeResult(deltaTime: number): OverTimeValueChangeResult<number> {
         const totalValueDifference = this.targetValue - this.startValue;        
         const direction = totalValueDifference >= 0 ? 1 : -1;
         const totalValueDistance = Math.abs(totalValueDifference);
@@ -96,35 +69,9 @@ export class OverTimeNumberChangeController {
         };
     }
 
-    private getDistanceAtTime(time: number,
-        accelerationTime: number,
-        acceleration: number,
-        constantTime: number): number {
-
-        const clampedTime = Math.max(0, Math.min(time, this.totalTime));
-        
-        if (clampedTime <= accelerationTime) {
-            return 0.5 * acceleration * clampedTime * clampedTime;
-        }
-        
-        const accelerationDistance = 0.5 * acceleration * accelerationTime * accelerationTime;
-        const maxVelocity = acceleration * accelerationTime;
-
-        if (clampedTime <= accelerationTime + constantTime) {
-            const constantVelocityTime = clampedTime - accelerationTime;
-            return accelerationDistance + maxVelocity * constantVelocityTime;
-        }
-        
-        const constantVelocityDistance = maxVelocity * constantTime;
-        
-        const decelerationTime = clampedTime - (accelerationTime + constantTime);
-        const decelerationDistance = maxVelocity * decelerationTime
-            - 0.5 * acceleration * decelerationTime * decelerationTime;
-        
-        return accelerationDistance + constantVelocityDistance + decelerationDistance;
-    }
-    
-    public getIsCompleted(): boolean {
-        return this.isCompleted;
+    public complete(): void {
+        this.currentValue = this.targetValue;
+        this.isCompleted = true;
+        this.currentTime = this.totalTime;
     }
 }

@@ -9,9 +9,6 @@ import { EntityController } from "./EntityController.ts";
  */
 export class TileLineResizeController
     extends EntityController<TileLineContainer, number> {
-    /**
-     * Контроллер изменения размера ленты
-     */
     private controller?: OverTimeNumberChangeController;
 
     public stop(): void {
