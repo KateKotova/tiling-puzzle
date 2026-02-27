@@ -12,7 +12,7 @@ import { Algorithm } from "../../math/Algorithm.ts";
 import { TileView } from "../tiles/TileView.ts";
 import { ViewportContainer } from "./ViewportContainer.ts";
 import { OverTimeNumberChangeController }
-    from "../../math/over-time-value-changes/OverTimeNumberChangeController.ts";
+    from "../../math/over-time-value-change-controllers/OverTimeNumberChangeController.ts";
 
 /**
  * Класс контейнера линии, в которой содержатся элементы мозаики для сборки.

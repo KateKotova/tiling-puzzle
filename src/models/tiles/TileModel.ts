@@ -2,9 +2,9 @@ import { Point } from "pixi.js";
 import { TileGeometry } from "../tile-geometries/TileGeometry";
 import { TilePosition } from "./TilePosition";
 import { OverTimePointChangeController }
-    from "../../math/over-time-value-changes/OverTimePointChangeController";
+    from "../../math/over-time-value-change-controllers/OverTimePointChangeController";
 import { OverTimeNumberChangeController }
-    from "../../math/over-time-value-changes/OverTimeNumberChangeController";
+    from "../../math/over-time-value-change-controllers/OverTimeNumberChangeController";
 import { Algorithm } from "../../math/Algorithm";
 import { TileParameters } from "./TileParameters";
 

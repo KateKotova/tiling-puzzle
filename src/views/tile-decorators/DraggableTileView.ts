@@ -17,16 +17,17 @@ import { TileView } from "../tiles/TileView.ts";
 import { Algorithm } from "../../math/Algorithm.ts";
 import { DraggableTileParameters } from "./DraggableTileParameters.ts";
 import { TileLineContainer } from "../components/TileLineContainer.ts";
+import { DraggableTileViewRotationController } from "../../controllers/DraggableTileViewRotationController.ts";
 
 /**
  * Класс декоратора представления подвижного элемента замощения
  */
 export class DraggableTileView implements TileView {
-    private readonly parameters: DraggableTileParameters;
+    public readonly parameters: DraggableTileParameters;
     /**
      * Композиция: элемент замощения, который декорируется
      */
-    public view: TileView;
+    public readonly view: TileView;
     /**
      * Сохраняемая область попадания.
      * При движении область попадания и события указателя отключаются,
@@ -37,16 +38,16 @@ export class DraggableTileView implements TileView {
     /**
      * Контейнер, в котором фигура должна находиться, чтобы картинка была собрана
      */
-    private targetContainer: Container;
+    public readonly targetContainer: Container;
     /**
      * Контейнер, в который фигура переносится на время вращения и/или перетаскивания
      */
-    private selectedContainer: Container;
-    private ticker: Ticker;
+    private readonly selectedContainer: Container;
+    private readonly ticker: Ticker;
 
-    private isMoving: boolean = false;
+    public isMoving: boolean = false;
 
-    private isDragging: boolean = false;
+    public isDragging: boolean = false;
     private dragOffset: Point = new Point(0, 0);
     private dragStartPosition: Point = new Point(0, 0);
     private dragStartTime: number = 0;
@@ -69,7 +70,7 @@ export class DraggableTileView implements TileView {
     /**
      * Контейнер линии, в котором фигура находится изначально
      */
-    private initialContainer: TileLineContainer;
+    private readonly initialContainer: TileLineContainer;
 
     /**
      * Сохранённая глобальная позиция.
@@ -85,7 +86,8 @@ export class DraggableTileView implements TileView {
      */
     private isLocatedCorrectly: boolean = false;
 
-    private boundOnRotationTicker: (ticker: Ticker) => void = this.onRotationTicker.bind(this);
+    private rotationController: DraggableTileViewRotationController;
+
     private boundOnMoveAfterDragTicker: (ticker: Ticker) => void
         = this.onMoveAfterDragTicker.bind(this);
     private boundOnMoveInsideInitialContainerTicker: (ticker: Ticker) => void
@@ -95,7 +97,7 @@ export class DraggableTileView implements TileView {
 
     private boundGlobalPointerUp: (event: PointerEvent) => void
         = this.onGlobalPointerUp.bind(this);
-    private boundPreventScrollOnWheel: (event: WheelEvent) => void
+    public boundPreventScrollOnWheel: (event: WheelEvent) => void
         = this.preventScrollOnWheel.bind(this);
 
     /**
@@ -123,6 +125,8 @@ export class DraggableTileView implements TileView {
         this.targetContainer = targetContainer;
         this.selectedContainer = selectedContainer;
         this.ticker = ticker;
+
+        this.rotationController = new DraggableTileViewRotationController(this, ticker);
 
         this.view.tile.eventMode = "static";
         this.view.tile.on('pointerdown', this.onPointerDown, this);
@@ -179,19 +183,10 @@ export class DraggableTileView implements TileView {
         if (this.getPointerIsMouseAndButtonIsNotLeft(event)) {
             return;
         }
-        this.stopRotation();
+        this.rotationController.stop();
         const rotationAngleDifference = this.view.model
             .getSamePositionNextAngleMinAngleDifference();
-        this.startRotation(rotationAngleDifference);
-    }
-
-    private onRotationTicker(ticker: Ticker): void {
-        this.executeRotation(ticker.deltaMS);
-        if (this.view.model.getRotationIsCompleted()) {
-            this.completeRotation();
-            this.ticker.remove(this.boundOnRotationTicker);
-            this.setOnPointerDownActivity(true);
-        }        
+        this.rotationController.start(rotationAngleDifference);
     }
 
     private onMoveAfterDragTicker(ticker: Ticker): void {
@@ -222,13 +217,7 @@ export class DraggableTileView implements TileView {
     }
 
     public rotateToDragTarget(dragTargetModel?: TileModel): void {
-        this.stopRotation();
-        const rotationAngle = dragTargetModel
-            ? dragTargetModel.targetRotationAngle
-            : Math.random() * 2 * Math.PI;
-        const rotationAngleDifference = this.view.model.getNewPositionMinAngleDifference(
-            rotationAngle);
-        this.startRotation(rotationAngleDifference);
+        this.rotationController.restart(dragTargetModel);
     }
 
     public moveToDragTarget(dragTargetModel?: TileModel): void {
@@ -283,12 +272,6 @@ export class DraggableTileView implements TileView {
         this.startMoveToInitialContainer(moveDifference);
     }
     
-    private stopRotation(): void {
-        if (!this.view.model.getRotationIsCompleted()) {
-            this.ticker.remove(this.boundOnRotationTicker);
-        }
-    }
-
     private stopMoveAfterDrag(): void {
         if (!this.view.model.getMoveIsCompleted()) {
             this.ticker.remove(this.boundOnMoveAfterDragTicker);
@@ -310,12 +293,6 @@ export class DraggableTileView implements TileView {
         }
     }
 
-    private startRotation(rotationAngleDifference: number): void {
-        this.setOnPointerDownActivity(false);
-        this.prepareToRotation(rotationAngleDifference);        
-        this.ticker.add(this.boundOnRotationTicker);
-    }
-
     private startMoveAfterDrag(moveDifference: Point): void {
         this.isMoving = true;
         this.setOnPointerDownActivity(false);
@@ -335,17 +312,6 @@ export class DraggableTileView implements TileView {
         this.setOnPointerDownActivity(false);
         this.prepareToMoveToInitialContainer(moveDifference);        
         this.ticker.add(this.boundOnMoveToInitialContainerTicker);
-    }
-
-    private prepareToRotation(rotationAngleDifference: number): void {
-        draggingTileData.animatingViews.add(this);
-        this.view.model.prepareToRotation(rotationAngleDifference);
-        this.addTileToSelectedContainer();
-        
-        if (!this.isDragging) {
-            const filter = new GlowFilter(this.parameters.selectedGlowFilterOptions);
-            this.view.setFilter(filter);
-        }
     }
 
     private prepareToMoveAfterDrag(moveDifference: Point): void {
@@ -379,11 +345,6 @@ export class DraggableTileView implements TileView {
         this.view.setFilter(filter);
     }
 
-    private executeRotation(deltaTime: number): void {
-        this.view.model.executeRotation(deltaTime);
-        this.view.tile.rotation = this.view.model.currentRotationAngle;
-    }
-
     private executeMoveAfterDrag(deltaTime: number): void {
         this.view.model.executeMove(deltaTime);
         this.view.tile.position.copyFrom(this.view.model.currentPositionPoint);
@@ -404,29 +365,6 @@ export class DraggableTileView implements TileView {
         this.view.tile.position.copyFrom(this.view.model.currentPositionPoint);
         this.initialContainer.setScaleRelativeToScaleChangeGlobalRectangle(
             this.getGlobalPosition(), this);
-    }
-
-    private completeRotation(): void {
-        if (!this.isDragging) {
-            this.view.removeFilters();
-        }
-        
-        this.view.model.completeRotation();
-        
-        this.view.tile.rotation = this.view.model.currentRotationAngle;
-        
-        if (!this.isDragging && this.view.tile.parent !== this.targetContainer) {
-            this.addTileToTargetContainer();
-        }
-
-        if (this.view.model.getIsLocatedCorrectly()) {
-            this.fixAsLocatedCorrectly();
-        }
-
-        if (!this.isDragging && !this.isMoving) {
-            draggingTileData.animatingViews.delete(this);
-            window.removeEventListener('wheel', this.boundPreventScrollOnWheel);
-        }
     }
 
     private completeMoveAfterDrag(): void {
@@ -471,7 +409,7 @@ export class DraggableTileView implements TileView {
         this.isMoving = false;
     }
 
-    private addTileToTargetContainer(): void {
+    public addTileToTargetContainer(): void {
         const targetContainer = this.getTargetContainer();
 
         this.saveGlobalPosition();
@@ -715,7 +653,7 @@ export class DraggableTileView implements TileView {
         return false;
     }
 
-    private addTileToSelectedContainer(): void {
+    public addTileToSelectedContainer(): void {
         this.saveGlobalPosition();
         this.selectedContainer.addChild(this.view.tile);
         if (this.dragSource) {
@@ -807,7 +745,7 @@ export class DraggableTileView implements TileView {
     }
 
     private removeEventListeners(): void {
-        this.ticker.remove(this.boundOnRotationTicker);
+        this.rotationController.removeEventListeners();
         this.ticker.remove(this.boundOnMoveAfterDragTicker);
         this.view.tile.off('pointerdown', this.onPointerDown, this);
         this.view.tile.off('globalpointermove', this.onPointerMove, this);
@@ -821,7 +759,7 @@ export class DraggableTileView implements TileView {
      * Выдавленная рамка убирается, и фигура становится часть картинки.
      * Реакция на события указателя пропадает.
      */
-    private fixAsLocatedCorrectly(): void {
+    public fixAsLocatedCorrectly(): void {
         if (this.isLocatedCorrectly) {
             return;
         }
