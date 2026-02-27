@@ -2,7 +2,6 @@ import { Color, Container, ContainerChild, ContainerOptions, DestroyOptions, Gra
 import { TileLineParameters } from "./TileLineParameters.ts";
 import { TilingView } from "../tilings/TilingView.ts";
 import { TileLineDirectionType } from "./TileLineDirectionType.ts";
-import { TilePosition } from "../../models/tiles/TilePosition.ts";
 import { TileViewCreationParameters } from "../tiles/TileViewCreationParameters.ts";
 import { TileViewFactory } from "../tiles/TileViewFactory.ts";
 import { DraggableTileView } from "../tile-decorators/DraggableTileView.ts";
@@ -122,11 +121,20 @@ export class TileLineContainer extends Container {
         this.scaleChangeGlobalRectangle = this.getTileScaleChangeGlobalRectangle();
     }
 
+    public getPointIsInsideViewportRectangle(globalPoint: Point): boolean {
+        return Algorithm.getPointIsInsideRectangle(
+            globalPoint,
+            this.getViewportContainerOrThrow().getViewportGlobalRectangle()
+        );
+    }
+
     private getTileScaleChangeGlobalRectangle(): Rectangle {
-        const viewportRectangle = this.getViewportContainerOrThrow().viewportRectangle;
-        const globalLeftTop = this.toGlobal(new Point(0, 0));
+        const viewportContainer = this.getViewportContainerOrThrow();
+        const viewportRectangle = viewportContainer.viewportRectangle;
+        const globalLeftTop = viewportContainer.viewportGlobalPosition;
         const widthHalf = this.width / 2.0;
         const heightHalf = this.height / 2.0;
+
         switch (this.parameters.layoutType) {
             case TileLineLayoutType.Top:
                 return new Rectangle(
@@ -437,7 +445,7 @@ export class TileLineContainer extends Container {
         }        
 
         for (let tileIndex = 0; tileIndex < visibleMovingTiles.length; tileIndex++) {
-            visibleMovingTiles[tileIndex].moveInInitialContainer(targetPositions[tileIndex]);
+            visibleMovingTiles[tileIndex].moveInsideInitialContainer(targetPositions[tileIndex]);
             visibleMovingTiles[tileIndex].model.targetTilePosition.shuffledIndex--;
         }
 
@@ -462,6 +470,100 @@ export class TileLineContainer extends Container {
             ? this.longitudinalSize - this.getTileLongitudinalCoordinateMultiplier()
             : 0;
         this.resize(newSize);
+    }
+
+    /**
+     * Добавление фигуры на ленту.
+     * Фигура добавляется в массив, а также фигуры справа от неё подвигаются.
+     * @param tileView Добавляемая перетаскиваемая фигура
+     */
+    public addTileView(tileView: DraggableTileView): void {
+        const viewportContainer = this.getViewportContainerOrThrow();
+        const viewportGlobalRectangle = viewportContainer.getViewportGlobalRectangle();
+
+        // Добавляем новый единственный элемент мозаики в пустой массив
+        if (!this.tileViews.length) {
+            tileView.model.targetTilePosition.shuffledIndex = 0;
+            
+            const targetGlobalPosition = new Point(
+                viewportGlobalRectangle.x + viewportGlobalRectangle.width / 2.0,
+                viewportGlobalRectangle.y + viewportGlobalRectangle.height / 2.0
+            );
+
+            tileView.moveToInitialContainer(targetGlobalPosition);
+            this.tileViews.push(tileView);
+
+            this.backgroundContainer.visible = true;
+            const newSize = 2 * this.parameters.longitudinalContentOffset
+                + this.maxScaledBoundingSize;
+            this.resize(newSize);
+            return;            
+        }
+
+        const globalPosition = tileView.getGlobalPosition();
+        const localPosition = this.toLocal(globalPosition);
+        const isHorizontal = this.parameters.directionType
+            === TileLineDirectionType.FromLeftToRight;
+
+        const coordinate = isHorizontal ? localPosition.x : localPosition.y;       
+        const coordinates = isHorizontal
+            ? this.tileViews.map(tileView => tileView.tile.position.x)
+            : this.tileViews.map(tileView => tileView.tile.position.y);
+
+        const shuffledIndex = coordinate < coordinates[0]
+            ? 0
+            : coordinate > coordinates[coordinates.length - 1]
+                ? coordinates.length
+                : Algorithm.findSegmentIndex(coordinates, coordinate);
+
+        tileView.model.targetTilePosition.shuffledIndex = shuffledIndex;
+        for (let tileIndex = shuffledIndex; tileIndex < this.tileViews.length; tileIndex++) {
+            const tileViews = this.tileViews[tileIndex];
+            tileViews.model.targetTilePosition.shuffledIndex++;
+            tileViews.moveInsideInitialContainer(this.getTilePositionPoint(tileIndex + 1));
+        }
+
+        const sizeDifference = this.getTileLongitudinalCoordinateMultiplier();
+        const newSize = this.longitudinalSize + sizeDifference;
+
+        const viewportSize = isHorizontal
+            ? viewportGlobalRectangle.width
+            : viewportGlobalRectangle.height;
+
+        const targetLocalPosition = this.getTilePositionPoint(shuffledIndex);
+        const thisGlobalPosition = this.parent?.toGlobal(this.position) ?? this.position;
+
+        let thisNewGlobalPosition: number;
+        if (newSize < viewportSize) {
+            // При малой ширине полоски происходит её центрирование во вьюпорте
+            const viewportSizeDifferenceHalf = (viewportSize - newSize) / 2.0;
+            thisNewGlobalPosition = isHorizontal
+                ? viewportGlobalRectangle.x + viewportSizeDifferenceHalf
+                : viewportGlobalRectangle.y + viewportSizeDifferenceHalf;
+        } else {
+            // Корректировка позиции в границах вьюпорта
+            thisNewGlobalPosition = isHorizontal
+                ? viewportContainer.getClampedX(thisGlobalPosition.x, newSize)
+                : viewportContainer.getClampedY(thisGlobalPosition.y, newSize);
+        }
+
+        const targetGlobalPosition = new Point(
+            isHorizontal
+                ? thisNewGlobalPosition + targetLocalPosition.x
+                : targetLocalPosition.x + viewportGlobalRectangle.x,
+            isHorizontal
+                ? targetLocalPosition.y + viewportGlobalRectangle.y
+                : thisNewGlobalPosition + targetLocalPosition.y
+        );
+
+        tileView.moveToInitialContainer(targetGlobalPosition);
+        if (shuffledIndex >= this.tileViews.length) {
+            this.tileViews.push(tileView);
+        } else {
+            this.tileViews.splice(shuffledIndex, 0, tileView);
+        }
+
+        this.resize(newSize);        
     }
 
     private getTileIsVisibleInViewportContainer(tileView: TileView): boolean {
@@ -523,10 +625,10 @@ export class TileLineContainer extends Container {
         return result;
     }
 
-    public getTilePositionPoint(tilePosition: TilePosition): Point {
+    public getTilePositionPoint(shuffledIndex: number,): Point {
         const transverseCoordinate = this.getTileTransverseCoordinate();
         const longitudinalCoordinate = this.getTileLongitudinalCoordinateOffset()
-            + tilePosition.shuffledIndex * this.getTileLongitudinalCoordinateMultiplier();
+            + shuffledIndex * this.getTileLongitudinalCoordinateMultiplier();
         return this.getPoint(longitudinalCoordinate, transverseCoordinate);
     }
 

@@ -5,6 +5,47 @@ import { Matrix, Point, Polygon, Rectangle } from "pixi.js";
  */
 export class Algorithm {
     /**
+     * Метод половинного деления.
+     * Поиск индекса сегмента в диапазоне нецелочисленных значений,
+     * в который попадает заданное нецелочисленное значение.
+     * @param values Массив нецелочисленных значений, которые отсортированы по возрастанию.
+     * Соседние из них образуют сегменты.
+     * Заданное значение анализируется на предмет попадания в такие сегменты.
+     * @param value Значение, которое рассматривается в пределах диапазона.
+     * @returns Индекс сегмента, в который попадает заданное значение.
+     */
+    public static findSegmentIndex(values: number[], value: number): number {
+        if (!values.length || value <= values[0]) {
+            return 0;
+        }
+
+        if (value >= values[values.length - 1]) {
+            return values.length - 1;
+        }
+        
+        let leftIndex = 0;
+        let rightIndex = values.length - 1;
+
+        // Метод половинного деления.
+        // Берём точку со средним индексом между левой и правой текущими границами поиска.
+        // Если заданная точка меньше или равна полученной,
+        // то правая граница смещается в новую току, иначе - левая граница смещается в новую току.
+        // Так происходит до сих пор, пока индексы границ не сойдутся.
+        // В итоге возвращаем индекс правой точки.
+        while (rightIndex - leftIndex > 1) {
+            const middleIndex = Math.floor((leftIndex + rightIndex) / 2);
+            
+            if (value <= values[middleIndex]) {
+                rightIndex = middleIndex;
+            } else {
+                leftIndex = middleIndex;
+            }
+        }
+
+        return rightIndex;
+    }
+
+    /**
      * Тасовка Фишера-Йетса или перемешивание Кнута.
      * Получение массива, элементы которого перемешаны в произвольном порядке.
      * @param array Исходный массив
