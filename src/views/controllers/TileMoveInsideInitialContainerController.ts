@@ -1,16 +1,14 @@
 import { Point, Ticker } from "pixi.js";
-import { DraggableTileView } from "../views/tile-decorators/DraggableTileView.ts";
+import { DraggableTileView } from "../tile-decorators/DraggableTileView.ts";
+import { EntityController } from "./EntityController.ts";
 
-export class TileMoveInsideInitialContainerController {
-    private readonly target: DraggableTileView;
-    private readonly ticker: Ticker;
-
-    private readonly boundOnTicker: (ticker: Ticker) => void = this.onTicker.bind(this);
-
-    constructor(target: DraggableTileView, ticker: Ticker) {
-        this.target = target;
-        this.ticker = ticker;
-    }
+/**
+ * Класс контроллера для перетаскиваемого элемента замощения,
+ * координаты опорной точки которого меняются со временем
+ * при перемещении внутри исходного контейнера
+ */
+export class TileMoveInsideInitialContainerController
+    extends EntityController<DraggableTileView, Point> {
 
     public restart(targetPoint: Point): void {
         this.stop();
@@ -23,21 +21,21 @@ export class TileMoveInsideInitialContainerController {
         this.start(moveDifference);
     }
 
-    private stop(): void {
+    public stop(): void {
         if (!this.target.view.model.getMoveIsCompleted()) {
             this.ticker.remove(this.boundOnTicker);
             this.target.isMoving = false;
         }
     }
 
-    private start(moveDifference: Point): void {
+    public start(moveDifference: Point): void {
         this.target.isMoving = true;
         this.target.setOnPointerDownActivity(false);
         this.prepareToExecute(moveDifference);        
         this.ticker.add(this.boundOnTicker);
     }
 
-    private onTicker(ticker: Ticker): void {
+    protected onTicker(ticker: Ticker): void {
         this.execute(ticker.deltaMS);
         if (this.target.view.model.getMoveIsCompleted()) {
             this.complete();
@@ -46,28 +44,20 @@ export class TileMoveInsideInitialContainerController {
         }        
     }
 
-    private prepareToExecute(moveDifference: Point): void {
+    protected prepareToExecute(moveDifference: Point): void {
         this.target.view.model.prepareToMove(moveDifference);
     }
 
-    private execute(deltaTime: number): void {
+    protected execute(deltaTime: number): void {
         const view = this.target.view;
         view.model.executeMove(deltaTime);
         view.tile.position.copyFrom(view.model.currentPositionPoint);
     }
 
-    private complete(): void {
+    protected complete(): void {
         this.target.view.model.completeMove();
         this.target.view.tile.position.copyFrom(
             this.target.view.model.currentPositionPoint);
         this.target.isMoving = false;
-    }
-
-    public removeEventListeners(): void {
-        this.ticker.remove(this.boundOnTicker);
-    }
-
-    public destroy(): void {
-        this.removeEventListeners();
     }
 }

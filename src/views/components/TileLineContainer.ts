@@ -1,4 +1,15 @@
-import { Color, Container, ContainerChild, ContainerOptions, DestroyOptions, Graphics, Point, Rectangle, Renderer, Ticker } from "pixi.js";
+import { 
+    Color,
+    Container,
+    ContainerChild,
+    ContainerOptions,
+    DestroyOptions,
+    Graphics,
+    Point,
+    Rectangle,
+    Renderer,
+    Ticker
+} from "pixi.js";
 import { TileLineParameters } from "./TileLineParameters.ts";
 import { TilingView } from "../tilings/TilingView.ts";
 import { TileLineDirectionType } from "./TileLineDirectionType.ts";
@@ -11,7 +22,7 @@ import { TileLineLayoutType } from "./TileLineLayoutType.ts";
 import { Algorithm } from "../../math/Algorithm.ts";
 import { TileView } from "../tiles/TileView.ts";
 import { ViewportContainer } from "./ViewportContainer.ts";
-import { TileLineResizeController } from "../../controllers/TileLineResizeController.ts";
+import { TileLineResizeController } from "../controllers/TileLineResizeController.ts";
 
 /**
  * Класс контейнера линии, в которой содержатся элементы мозаики для сборки.

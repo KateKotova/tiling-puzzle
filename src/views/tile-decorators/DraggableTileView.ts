@@ -17,12 +17,12 @@ import { TileView } from "../tiles/TileView.ts";
 import { Algorithm } from "../../math/Algorithm.ts";
 import { DraggableTileParameters } from "./DraggableTileParameters.ts";
 import { TileLineContainer } from "../components/TileLineContainer.ts";
-import { TileRotationController } from "../../controllers/TileRotationController.ts";
+import { TileRotationController } from "../controllers/TileRotationController.ts";
 import { TileMoveAfterDragController }
-    from "../../controllers/TileMoveAfterDragController.ts";
+    from "../controllers/TileMoveAfterDragController.ts";
 import { TileMoveInsideInitialContainerController }
-    from "../../controllers/TileMoveInsideInitialContainerController.ts";
-import { TileMoveToInitialContainerController } from "../../controllers/TileMoveToInitialContainerController.ts";
+    from "../controllers/TileMoveInsideInitialContainerController.ts";
+import { TileMoveToInitialContainerController } from "../controllers/TileMoveToInitialContainerController.ts";
 
 /**
  * Класс декоратора представления подвижного элемента замощения

@@ -1,22 +1,18 @@
 import { Ticker } from "pixi.js";
-import { TileLineContainer } from "../views/components/TileLineContainer.ts";
+import { TileLineContainer } from "../components/TileLineContainer.ts";
 import { OverTimeNumberChangeController }
-    from "../math/over-time-value-change-controllers/OverTimeNumberChangeController.ts";
+    from "../../math/over-time-value-change-controllers/OverTimeNumberChangeController.ts";
+import { EntityController } from "./EntityController.ts";
 
-export class TileLineResizeController {
-    private readonly target: TileLineContainer;
-    private readonly ticker: Ticker;
+/**
+ * Класс контроллера для линии пазлов, размер которой меняется со временем
+ */
+export class TileLineResizeController
+    extends EntityController<TileLineContainer, number> {
     /**
      * Контроллер изменения размера ленты
      */
     private controller?: OverTimeNumberChangeController;
-
-    private readonly boundOnTicker: (ticker: Ticker) => void = this.onTicker.bind(this);
-
-    constructor(target: TileLineContainer, ticker: Ticker) {
-        this.target = target;
-        this.ticker = ticker;
-    }
 
     public stop(): void {
         if (!this.controller?.getIsCompleted()) {
@@ -33,7 +29,7 @@ export class TileLineResizeController {
         this.ticker.add(this.boundOnTicker);
     }
 
-    private onTicker(ticker: Ticker): void {
+    protected onTicker(ticker: Ticker): void {
         this.execute(ticker.deltaMS);
         if (this.controller?.getIsCompleted()) {
             this.complete();
@@ -43,7 +39,7 @@ export class TileLineResizeController {
         }        
     }
 
-    private prepareToExecute(longitudinalSizeDifference: number): void {
+    protected prepareToExecute(longitudinalSizeDifference: number): void {
         this.target.targetLongitudinalSize = this.target.longitudinalSize
             + longitudinalSizeDifference;
 
@@ -61,26 +57,18 @@ export class TileLineResizeController {
         }
     }
 
-    private execute(deltaTime: number): void {
+    protected execute(deltaTime: number): void {
         const sizeIncrement = this.controller?.getIsCompleted()
             ? 0
             : (this.controller?.getIncrement(deltaTime) ?? 0);
         this.target.resizeWithoutAnimation(this.target.longitudinalSize + sizeIncrement);
     }
 
-    private complete(): void {
+    protected complete(): void {
         this.target.resizeWithoutAnimation(this.target.targetLongitudinalSize);
         if (!this.target.tileViews.length) {
             this.target.backgroundContainer.visible = false;
         }
         this.target.isResizing = false;
-    }
-
-    public removeEventListeners(): void {
-        this.ticker.remove(this.boundOnTicker);
-    }
-
-    public destroy(): void {
-        this.removeEventListeners();
     }
 }

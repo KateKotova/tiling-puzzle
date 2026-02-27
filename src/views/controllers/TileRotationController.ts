@@ -1,20 +1,15 @@
 import { Ticker } from "pixi.js";
 import { GlowFilter } from "pixi-filters";
-import { TileModel } from "../models/tiles/TileModel.ts";
-import { DraggableTileView } from "../views/tile-decorators/DraggableTileView.ts";
-import { draggingTileData } from "../views/tile-decorators/DraggingTileData.ts";
+import { TileModel } from "../../models/tiles/TileModel.ts";
+import { DraggableTileView } from "../tile-decorators/DraggableTileView.ts";
+import { draggingTileData } from "../tile-decorators/DraggingTileData.ts";
+import { EntityController } from "./EntityController.ts";
 
-export class TileRotationController {
-    private readonly target: DraggableTileView;
-    private readonly ticker: Ticker;
-
-    private readonly boundOnTicker: (ticker: Ticker) => void = this.onTicker.bind(this);
-
-    constructor(target: DraggableTileView, ticker: Ticker) {
-        this.target = target;
-        this.ticker = ticker;
-    }
-
+/**
+ * Класс контроллера для перетаскиваемого элемента замощения,
+ * угол поворота вокруг опорной точки которого меняется со временем
+ */
+export class TileRotationController extends EntityController<DraggableTileView, number> {
     public restart(dragTargetModel?: TileModel): void {
         this.stop();
         const rotationAngle = dragTargetModel
@@ -37,7 +32,7 @@ export class TileRotationController {
         this.ticker.add(this.boundOnTicker);
     }
 
-    private onTicker(ticker: Ticker): void {
+    protected onTicker(ticker: Ticker): void {
         this.execute(ticker.deltaMS);
         if (this.target.view.model.getRotationIsCompleted()) {
             this.complete();
@@ -46,7 +41,7 @@ export class TileRotationController {
         }        
     }
 
-    private prepareToExecute(rotationAngleDifference: number): void {
+    protected prepareToExecute(rotationAngleDifference: number): void {
         draggingTileData.animatingViews.add(this.target);
         this.target.view.model.prepareToRotation(rotationAngleDifference);
         this.target.addTileToSelectedContainer();
@@ -57,12 +52,12 @@ export class TileRotationController {
         }
     }
 
-    private execute(deltaTime: number): void {
+    protected execute(deltaTime: number): void {
         this.target.view.model.executeRotation(deltaTime);
         this.target.view.tile.rotation = this.target.view.model.currentRotationAngle;
     }
 
-    private complete(): void {
+    protected complete(): void {
         const view = this.target.view;
         if (!this.target.isDragging) {
             view.removeFilters();
@@ -87,13 +82,5 @@ export class TileRotationController {
             draggingTileData.animatingViews.delete(this.target);
             window.removeEventListener('wheel', this.target.boundPreventScrollOnWheel);
         }
-    }
-
-    public removeEventListeners(): void {
-        this.ticker.remove(this.boundOnTicker);
-    }
-
-    public destroy(): void {
-        this.removeEventListeners();
     }
 }
