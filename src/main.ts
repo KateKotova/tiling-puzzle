@@ -162,7 +162,7 @@ async function main(): Promise<void> {
       };
     
     const carouselContainer = new CarouselContainer(carouselContainerOptions);
-    carouselContainer.beforeAddingToParent(app.stage);
+    carouselContainer.onBeforeAddToParent(app.stage);
     app.stage.addChild(carouselContainer);
     carouselContainer.onAddedToParent();
     carouselContainer.addChild(tileLineContainer);

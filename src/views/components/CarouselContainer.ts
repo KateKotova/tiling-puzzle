@@ -23,7 +23,7 @@ export class CarouselContainer extends ViewportContainer {
         return graphics;
     }
 
-    public beforeAddingToParent(parent: Container): void {
+    public onBeforeAddToParent(parent: Container): void {
         if (
             parent
             && this.backgroundContainer

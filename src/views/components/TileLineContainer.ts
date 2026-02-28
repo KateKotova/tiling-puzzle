@@ -126,10 +126,8 @@ export class TileLineContainer extends Container {
     }
 
     public getPointIsInsideViewportRectangle(globalPoint: Point): boolean {
-        return Algorithm.getPointIsInsideRectangle(
-            globalPoint,
-            this.getViewportContainerOrThrow().getViewportGlobalRectangle()
-        );
+        return this.getViewportContainerOrThrow()
+            .getPointIsInsideViewportRectangle(globalPoint);
     }
 
     private getTileScaleChangeGlobalRectangle(): Rectangle {

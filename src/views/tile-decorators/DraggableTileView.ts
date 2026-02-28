@@ -374,11 +374,13 @@ export class DraggableTileView implements TileView {
             && Math.abs(targetPosition.y - this.dragStartPosition.y)
                 <= tapParameters.maxDistance;
 
-        const shouldAddToInitialContainer =
-            finalSource
-            && !finalTarget
-            && this.initialContainer.getPointIsInsideViewportRectangle(globalPosition);
-
+        let shouldAddToInitialContainer = false;
+        if (finalSource && !finalTarget) {
+            const isInsideViewportRectangle = draggingTileData.viewport
+                ?.getPointIsInsideViewportRectangle(globalPosition) ?? false;
+            shouldAddToInitialContainer = !isInsideViewportRectangle;
+        }
+        
         if (!shouldAddToInitialContainer) {
             const moveTargetModel = finalTarget?.model ?? finalSource?.model;        
             this.moveToDragTarget(moveTargetModel);

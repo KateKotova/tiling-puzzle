@@ -8,6 +8,7 @@ import {
     Rectangle
 } from 'pixi.js';
 import { Size } from '../../math/Size.ts';
+import { Algorithm } from '../../math/Algorithm.ts';
 
 /**
  * Класс контейнера-viewport-а,
@@ -89,6 +90,13 @@ export class ViewportContainer extends Container {
             this.viewportGlobalPosition.y,
             this.viewportRectangle.width,
             this.viewportRectangle.height
+        );
+    }
+
+    public getPointIsInsideViewportRectangle(globalPoint: Point): boolean {
+        return Algorithm.getPointIsInsideRectangle(
+            globalPoint,
+            this.getViewportGlobalRectangle()
         );
     }
 
