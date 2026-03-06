@@ -14,7 +14,9 @@ variables:
 build_job:
   stage: build
   tags:
-    - shell  # или тег, который вы указали при регистрации
+    - docker
+    - local
+    - windows  # или тег, который вы указали при регистрации
   image: node:18
   # Кэшируем папку node_modules для ускорения следующих сборок
   cache:
@@ -36,7 +38,9 @@ build_job:
 deploy_job:
   stage: deploy
   tags:
-    - shell
+    - docker
+    - local
+    - windows
   # Используем официальный AWS CLI образ (совместим с S3)
   image: amazon/aws-cli
   # Зависимость от задачи сборки (получит ее артефакты)
