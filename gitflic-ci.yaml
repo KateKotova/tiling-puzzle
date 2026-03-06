@@ -13,7 +13,9 @@ variables:
 # Задача для этапа сборки
 build_job:
   stage: build
-  image: $BUILD_IMAGE
+  tags:
+    - shell  # или тег, который вы указали при регистрации
+  image: node:18
   # Кэшируем папку node_modules для ускорения следующих сборок
   cache:
     key: node-modules-cache
@@ -33,6 +35,8 @@ build_job:
 # Задача для этапа деплоя в Яндекс.Облако
 deploy_job:
   stage: deploy
+  tags:
+    - shell
   # Используем официальный AWS CLI образ (совместим с S3)
   image: amazon/aws-cli
   # Зависимость от задачи сборки (получит ее артефакты)
