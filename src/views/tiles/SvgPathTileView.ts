@@ -7,6 +7,7 @@ import {
     Sprite,
     Texture
 } from "pixi.js";
+import { BevelFilter } from "pixi-filters";
 import { TileBaseView } from "./TileBaseView.ts";
 import { TileViewCreationParameters } from "./TileViewCreationParameters.ts";
 import { Size } from "../../math/Size.ts";
@@ -131,16 +132,17 @@ export class SvgPathTileView extends TileBaseView {
             });
         }
 
+        let bevelFilter: BevelFilter | undefined;
         if (shouldAddBevelFilter) {
             const graphicsSideToSpriteSideRatio = graphics.width / this.spriteBoundingSize.width;
-            const bevelFilter = this.getBevelFilter(graphicsSideToSpriteSideRatio);
+            bevelFilter = this.getBevelFilter(graphicsSideToSpriteSideRatio);
             graphics.filters = [bevelFilter];
         }
 
         const textureWidth = this.getPowerOfTwoSize(this.spriteBoundingSize.width);
         const textureHeight = this.getPowerOfTwoSize(this.spriteBoundingSize.height);
 
-        const result =  this.renderer.generateTexture({
+        const result = this.renderer.generateTexture({
             target: graphics,
             resolution: this.parameters.generateTileTextureResolution,
             width: textureWidth,
@@ -150,6 +152,9 @@ export class SvgPathTileView extends TileBaseView {
             }
         });
         graphics.destroy();
+        if (bevelFilter) {
+            bevelFilter.destroy();
+        }
 
         return result;
     }

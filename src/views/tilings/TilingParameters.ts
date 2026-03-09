@@ -1,3 +1,5 @@
+import { AnimationParameters } from "../../AnimationParameters";
+import { TapParameters } from "../TapParameters";
 import { StaticTileParameters } from "../tile-decorators/StaticTileParameters";
 import { TileParameters } from "../tiles/TileParameters";
 
@@ -7,4 +9,6 @@ import { TileParameters } from "../tiles/TileParameters";
 export interface TilingParameters {
     tileParameters: TileParameters;
     staticTileParameters: StaticTileParameters;
+    animationParameters: AnimationParameters;
+    tapParameters: TapParameters;
 }

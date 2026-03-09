@@ -5,13 +5,48 @@ import { Matrix, Point, Polygon, Rectangle } from "pixi.js";
  */
 export class Algorithm {
     /**
+     * Метод половинного деления.
+     * Поиск индекса сегмента в диапазоне нецелочисленных значений,
+     * в который попадает заданное нецелочисленное значение.
+     * @param values Массив нецелочисленных значений, которые отсортированы по возрастанию.
+     * Соседние из них образуют сегменты.
+     * Заданное значение анализируется на предмет попадания в такие сегменты.
+     * @param value Значение, которое рассматривается в пределах диапазона.
+     * @returns Индекс сегмента, в который попадает заданное значение.
+     */
+    public static findSegmentIndex(values: number[], value: number): number {
+        if (!values.length || value <= values[0]) {
+            return 0;
+        }
+
+        if (value >= values[values.length - 1]) {
+            return values.length - 1;
+        }
+        
+        let leftIndex = 0;
+        let rightIndex = values.length - 1;
+
+        while (rightIndex - leftIndex > 1) {
+            const middleIndex = Math.floor((leftIndex + rightIndex) / 2);
+            
+            if (value <= values[middleIndex]) {
+                rightIndex = middleIndex;
+            } else {
+                leftIndex = middleIndex;
+            }
+        }
+
+        return rightIndex;
+    }
+
+    /**
      * Тасовка Фишера-Йетса или перемешивание Кнута.
      * Получение массива, элементы которого перемешаны в произвольном порядке.
      * @param array Исходный массив
      * @returns Новый массив из элементов исходного массива,
      * чьи элементы перемешаны в произвольном порядке
      */
-    public static getShuffledArray<T>(array: T[]): T[] {
+    public static getShuffledArray<ValueType>(array: ValueType[]): ValueType[] {
         const result = [...array];        
         for (let i = result.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
