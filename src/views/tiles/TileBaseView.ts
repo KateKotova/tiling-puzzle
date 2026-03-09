@@ -18,7 +18,7 @@ export abstract class TileBaseView implements TileView {
     /**
      * Цвет заливки, применяемый в отсутствии текстуры
      */
-    protected replacingTextureFillColor: Color;
+    public replacingTextureFillColor: Color;
 
     constructor (
         parameters: TileParameters,
@@ -36,10 +36,18 @@ export abstract class TileBaseView implements TileView {
     public abstract createContent(shouldAddBevelFilter: boolean): Container;
 
     public replaceContent(newContent: Container): void {
-        this.tile.removeChild(this.content);
-        this.content.destroy();
+        const oldContent = this.content;
+        oldContent.cacheAsTexture(false);
+        
         this.content = newContent;
-        this.tile.addChild(this.content); 
+        this.tile.addChild(this.content);        
+        
+        if (oldContent) {
+            this.tile.removeChild(oldContent);                       
+            requestAnimationFrame(() => oldContent.destroy({ children: true }));
+        }
+
+        this.tile.updateCacheTexture();
     }
     
     protected createTile(): Container {

@@ -1,18 +1,18 @@
 import { TileModel } from "../tiles/TileModel.ts";
-import { OverTimeValueChangeController } from "../../math/over-time-value-change-controllers/OverTimeValueChangeController.ts";
+import { SmoothStepController } from "../../math/controllers/SmoothStepController.ts";
 
 /**
  * Класс контроллера фигуры
  */
-export abstract class TileController<TValue> {
+export abstract class TileController<ValueType> {
     protected target: TileModel;
-    protected controller?: OverTimeValueChangeController<TValue>;
+    protected controller?: SmoothStepController<ValueType>;
 
     constructor(target: TileModel) {
         this.target = target;
     }
 
-    public abstract prepareToExecute(valueDifference: TValue): void;
+    public abstract prepareToExecute(valueDifference: ValueType): void;
 
     public abstract execute(deltaTime: number): void;
 

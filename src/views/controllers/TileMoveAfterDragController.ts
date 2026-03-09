@@ -1,5 +1,4 @@
 import { Point, Ticker } from "pixi.js";
-import { GlowFilter } from "pixi-filters";
 import { DraggableTileView } from "../tile-decorators/DraggableTileView.ts";
 import { TileModel } from "../../models/tiles/TileModel.ts";
 import { draggingTileData } from "../tile-decorators/DraggingTileData.ts";
@@ -15,6 +14,7 @@ export class TileMoveAfterDragController
     extends EntityController<DraggableTileView, Point> {
 
     private readonly controller: TileMoveController;
+    private hasDragTarget: boolean = false;
 
     constructor(target: DraggableTileView, ticker: Ticker) {
         super(target, ticker);
@@ -25,6 +25,7 @@ export class TileMoveAfterDragController
         const view = this.target.view;
         this.stop();
         
+        this.hasDragTarget = !!dragTargetModel;
         const targetInTarget = dragTargetModel
             ? dragTargetModel.targetPositionPoint
             : this.target.initialContainer.getTilePositionPoint(
@@ -82,7 +83,7 @@ export class TileMoveAfterDragController
             this.target.addTileToSelectedContainer();
         }
 
-        const filter = new GlowFilter(this.target.parameters.selectedGlowFilterOptions);
+        const filter = this.target.getSelectedGlowFilter();
         this.target.view.setFilter(filter);
     }
 
@@ -101,8 +102,11 @@ export class TileMoveAfterDragController
         this.controller.complete();
         view.tile.position.copyFrom(view.model.currentPositionPoint);
         
-        if (view.tile.parent !== this.target.targetContainer) {
-            this.target.addTileToTargetContainer();
+        const targetContainer = this.hasDragTarget
+            ? this.target.targetContainer
+            : this.target.initialContainer;
+        if (view.tile.parent !== targetContainer) {
+            this.target.addTileToContainer(targetContainer);
         }
 
         if (view.model.getIsLocatedCorrectly()) {

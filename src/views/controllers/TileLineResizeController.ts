@@ -1,7 +1,7 @@
 import { Ticker } from "pixi.js";
 import { TileLineContainer } from "../components/TileLineContainer.ts";
-import { OverTimeNumberChangeController }
-    from "../../math/over-time-value-change-controllers/OverTimeNumberChangeController.ts";
+import { SmoothNumberStepController }
+    from "../../math/controllers/SmoothNumberStepController.ts";
 import { EntityController } from "./EntityController.ts";
 
 /**
@@ -9,7 +9,7 @@ import { EntityController } from "./EntityController.ts";
  */
 export class TileLineResizeController
     extends EntityController<TileLineContainer, number> {
-    private controller?: OverTimeNumberChangeController;
+    private controller?: SmoothNumberStepController;
 
     public stop(): void {
         if (!this.controller?.getIsCompleted()) {
@@ -20,8 +20,7 @@ export class TileLineResizeController
 
     public start(longitudinalSizeDifference: number): void {
         this.target.isResizing = true;
-        // TODO: это будет, когда линия будет перетаскиваться
-        //this.target.setOnPointerDownActivity(false);
+        this.target.dispatchStartResizeEvent();
         this.prepareToExecute(longitudinalSizeDifference);        
         this.ticker.add(this.boundOnTicker);
     }
@@ -31,8 +30,7 @@ export class TileLineResizeController
         if (this.controller?.getIsCompleted()) {
             this.complete();
             this.ticker.remove(this.boundOnTicker);
-            // TODO: это будет, когда линия будет перетаскиваться
-            //this.target.setOnPointerDownActivity(true);
+            this.target.dispatchStopResizeEvent();
         }        
     }
 
@@ -41,7 +39,7 @@ export class TileLineResizeController
             + longitudinalSizeDifference;
 
         if (!this.controller) {            
-            this.controller = new OverTimeNumberChangeController(
+            this.controller = new SmoothNumberStepController(
                 this.target.longitudinalSize,
                 this.target.targetLongitudinalSize,
                 this.target.parameters.animationParameters.animationTime,
