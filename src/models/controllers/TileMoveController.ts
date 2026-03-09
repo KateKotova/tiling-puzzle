@@ -1,6 +1,6 @@
 import { Point } from "pixi.js";
-import { OverTimePointChangeController }
-    from "../../math/over-time-value-change-controllers/OverTimePointChangeController.ts";
+import { SmoothPointStepController }
+    from "../../math/controllers/SmoothPointStepController.ts";
 import { TileController } from "./TileController.ts";
 
 /**
@@ -18,7 +18,7 @@ export class TileMoveController extends TileController<Point> {
             this.target.currentPositionPoint.y + positionPointDifference.y
         );
         if (!this.controller) {            
-            this.controller = new OverTimePointChangeController(
+            this.controller = new SmoothPointStepController(
                 this.target.currentPositionPoint,
                 this.target.currentTargetPositionPoint,
                 this.target.parameters.animationParameters.animationTime,

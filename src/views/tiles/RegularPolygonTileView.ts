@@ -1,4 +1,5 @@
 import { Container, Graphics, Sprite } from "pixi.js";
+import { BevelFilter } from "pixi-filters";
 import { TileBaseView } from "./TileBaseView.ts";
 import { RegularPolygonTileGeometry } from "../../models/tile-geometries/RegularPolygonTileGeometry.ts";
 import { TileLockType } from "../../models/tile-locks/TileLockType.ts";
@@ -46,10 +47,11 @@ export class RegularPolygonTileView extends TileBaseView {
             });
         }
 
+        let bevelFilter: BevelFilter | undefined;
         if (shouldAddBevelFilter) {
             const graphicsSideToSpriteSideRatio = graphics.width
                 / geometry.defaultBoundingRectangleSize.width;
-            const bevelFilter = this.getBevelFilter(graphicsSideToSpriteSideRatio);
+            bevelFilter = this.getBevelFilter(graphicsSideToSpriteSideRatio);
             graphics.filters = [bevelFilter];
         }
 
@@ -61,6 +63,9 @@ export class RegularPolygonTileView extends TileBaseView {
             }
         });
         graphics.destroy();
+        if (bevelFilter) {
+            bevelFilter.destroy();
+        }
 
         const sprite = new Sprite(graphicsTexture);
         sprite.cacheAsTexture({ resolution: this.parameters.cacheTileAsTextureResolution });

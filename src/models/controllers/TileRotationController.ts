@@ -1,6 +1,6 @@
 import { Algorithm } from "../../math/Algorithm.ts";
-import { OverTimeNumberChangeController }
-    from "../../math/over-time-value-change-controllers/OverTimeNumberChangeController.ts";
+import { SmoothNumberStepController }
+    from "../../math/controllers/SmoothNumberStepController.ts";
 import { TileController } from "./TileController.ts";
 
 /**
@@ -16,7 +16,7 @@ export class TileRotationController extends TileController<number> {
         this.target.currentTargetRotationAngle = this.target.currentRotationAngle
             + rotationAngleDifference;
         if (!this.controller) {            
-            this.controller = new OverTimeNumberChangeController(
+            this.controller = new SmoothNumberStepController(
                 this.target.currentRotationAngle,
                 this.target.currentTargetRotationAngle,
                 this.target.parameters.animationParameters.animationTime,

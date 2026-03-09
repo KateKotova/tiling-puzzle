@@ -29,8 +29,11 @@ import { TileLineResizeController } from "../controllers/TileLineResizeControlle
  * Может быть вертикальной (сверху вниз) или горизонтальной (слева направо).
  */
 export class TileLineContainer extends Container {
+    public static readonly startResizeEventName: string = "startResizeEvent";
+    public static readonly stopResizeEventName: string = "stopResizeEvent";
+
     public readonly parameters: TileLineParameters;
-    private readonly tilingView: TilingView;
+    private readonly tilingView: TilingView;    
     /**
      * Продольный размер.
      * Для направления слева направо это ширина.
@@ -107,6 +110,16 @@ export class TileLineContainer extends Container {
 
         this.backgroundContainer = this.createBackground();
         this.addChild(this.backgroundContainer);
+    }
+
+    public dispatchStartResizeEvent(): void {
+        const event = new CustomEvent(TileLineContainer.startResizeEventName);
+        window.dispatchEvent(event);
+    }
+
+    public dispatchStopResizeEvent(): void {
+        const event = new CustomEvent(TileLineContainer.stopResizeEventName);
+        window.dispatchEvent(event);
     }
 
     private getViewportContainerOrThrow(): ViewportContainer {
@@ -222,7 +235,7 @@ export class TileLineContainer extends Container {
                 model: model,
                 texture: this.tilingView.model.getTileTexture(model),
                 renderer,
-                replacingTextureFillColor: this.tilingView.staticTileFillColor
+                replacingTextureFillColor: this.tilingView.defaultStaticTileFillColor
             };
             const view = viewFactory.getView(
                 this.parameters.tileParameters,
@@ -232,14 +245,21 @@ export class TileLineContainer extends Container {
 
             this.addChild(view.tile);
 
-            this.tileViews.push(new DraggableTileView(
+            const decoratedView = new DraggableTileView(
                 this.parameters.draggableTileParameters,
                 view,
                 this,
                 this.tilingView.draggableTilesContainer,
                 this.selectedContainer,
                 ticker
-            ));
+            );
+
+            this.tileViews.push(decoratedView);
+
+            this.tilingView.draggableTileViewsByTilePositionStrings.set(
+                view.model.targetTilePosition.toString(),
+                decoratedView
+            );
         }
     }
 
@@ -372,7 +392,7 @@ export class TileLineContainer extends Container {
             }
         }
 
-        // Фигуры движутся влево, поэтому ещё одну невидимую фигуру захватим,
+        // Фигуры движутся влево/вверху, поэтому ещё одну невидимую фигуру захватим,
         // потому что она подвинется и станет видимой
         if (
             lastMovingTileIndex > 0
@@ -380,7 +400,7 @@ export class TileLineContainer extends Container {
         ) {
             visibleMovingTiles.push(this.tileViews[lastMovingTileIndex]);
             const previousTile = this.tileViews[lastMovingTileIndex - 1];
-            targetPositions.push(previousTile.model.currentPositionPoint.clone());
+            targetPositions.push(previousTile.model.currentPositionPoint.clone());            
         }
 
         // Корректирую первую позицию,
@@ -396,14 +416,15 @@ export class TileLineContainer extends Container {
             visibleMovingTiles[tileIndex].model.targetTilePosition.shuffledIndex--;
         }
 
-        // Остальные фигуры справа просто поменяют координаты, потому что их не видно
+        // Остальные фигуры справа/снизу просто поменяют координаты, потому что их не видно
         if (lastMovingTileIndex > 0) {
             for (
                 let tileIndex = this.tileViews.length - 1;
                 tileIndex >= lastMovingTileIndex + 1;
                 tileIndex--
             ) {
-                const previousTilePosition = this.tileViews[tileIndex - 1].model.currentPositionPoint;
+                const previousTilePosition = this.tileViews[tileIndex - 1].model
+                    .currentPositionPoint;
                 const tile = this.tileViews[tileIndex];
                 tile.model.currentPositionPoint.copyFrom(previousTilePosition);
                 tile.tile.position.copyFrom(previousTilePosition);
@@ -520,11 +541,6 @@ export class TileLineContainer extends Container {
         const tileGlobalPosition = tileView.tile.parent
             ? tileView.tile.parent.toGlobal(tileView.tile.position)
             : tileView.tile.position;
-        const viewportContainerPosition = new Point(viewportContainer.x,
-            viewportContainer.y);
-        const viewportContainerGlobalPosition = viewportContainer.parent
-            ? viewportContainer.parent.toGlobal(viewportContainerPosition)
-            : viewportContainerPosition;
         
         let tileLongitudinalCoordinate: number;
         let viewportLongitudinalCoordinate: number;
@@ -532,11 +548,11 @@ export class TileLineContainer extends Container {
 
         if (this.parameters.directionType === TileLineDirectionType.FromLeftToRight) {
             tileLongitudinalCoordinate = tileGlobalPosition.x;
-            viewportLongitudinalCoordinate = viewportContainerGlobalPosition.x;
+            viewportLongitudinalCoordinate = viewportContainer.viewportGlobalPosition.x;
             viewportLongitudinalSize = viewportContainer.viewportRectangle.width;
         } else {
             tileLongitudinalCoordinate = tileGlobalPosition.y;
-            viewportLongitudinalCoordinate = viewportContainerGlobalPosition.y;
+            viewportLongitudinalCoordinate = viewportContainer.viewportGlobalPosition.y;
             viewportLongitudinalSize = viewportContainer.viewportRectangle.height;
         }
 
@@ -606,10 +622,11 @@ export class TileLineContainer extends Container {
     }
 
     public destroy(options?: DestroyOptions): void {
-        this.resizeController.removeEventListeners();
+        this.resizeController.destroy();
         if (this.backgroundContainer) {
             this.backgroundContainer.destroy();
         }
+        this.tileViews.length = 0;       
         super.destroy(options);
     }
 }

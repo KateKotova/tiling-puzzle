@@ -1,5 +1,4 @@
 import { Ticker } from "pixi.js";
-import { GlowFilter } from "pixi-filters";
 import { TileModel } from "../../models/tiles/TileModel.ts";
 import { DraggableTileView } from "../tile-decorators/DraggableTileView.ts";
 import { draggingTileData } from "../tile-decorators/DraggingTileData.ts";
@@ -13,6 +12,7 @@ import { TileRotationController as TileRotationModelController}
  */
 export class TileRotationController extends EntityController<DraggableTileView, number> {
     private readonly controller: TileRotationModelController;
+    public hasDragTarget: boolean = false;
 
     constructor(target: DraggableTileView, ticker: Ticker) {
         super(target, ticker);
@@ -21,6 +21,7 @@ export class TileRotationController extends EntityController<DraggableTileView, 
 
     public restart(dragTargetModel?: TileModel): void {
         this.stop();
+        this.hasDragTarget = !!dragTargetModel;
         const rotationAngle = dragTargetModel
             ? dragTargetModel.targetRotationAngle
             : Math.random() * 2 * Math.PI;
@@ -56,7 +57,7 @@ export class TileRotationController extends EntityController<DraggableTileView, 
         this.target.addTileToSelectedContainer();
         
         if (!this.target.isDragging) {
-            const filter = new GlowFilter(this.target.parameters.selectedGlowFilterOptions);
+            const filter = this.target.getSelectedGlowFilter();
             this.target.view.setFilter(filter);
         }
     }
@@ -76,11 +77,14 @@ export class TileRotationController extends EntityController<DraggableTileView, 
         
         view.tile.rotation = view.model.currentRotationAngle;
         
+        const targetContainer = this.hasDragTarget
+            ? this.target.targetContainer
+            : this.target.initialContainer;
         if (
             !this.target.isDragging
-            && view.tile.parent !== this.target.targetContainer
+            && view.tile.parent !== targetContainer
         ) {
-            this.target.addTileToTargetContainer();
+            this.target.addTileToContainer(targetContainer);
         }
 
         if (view.model.getIsLocatedCorrectly()) {

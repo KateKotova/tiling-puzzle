@@ -10,6 +10,9 @@ import { TileLineParameters } from "./views/components/TileLineParameters.ts";
 import { TilingParameters } from "./views/tilings/TilingParameters.ts";
 import { TileLineLayoutType } from "./views/components/TileLineLayoutType.ts";
 import { AnimationParameters } from "./AnimationParameters.ts";
+import { CarouselDirectionType } from "./views/components/CarouselDirectionType.ts";
+import { CarouselParameters } from "./views/components/CarouselParameters.ts";
+import { HintButtonParameters } from "./views/components/HintButtonParameters.ts";
 
 /**
  * Singleton-класс настроек представления.
@@ -71,7 +74,9 @@ export class Settings {
             color: new Color(0x3F00FF),
             quality: 0.5,
             knockout: false
-        }
+        },
+        defaultAlpha: 1,
+        hintAlpha: 0.7
     };
 
     public readonly draggableTileParameters: DraggableTileParameters = {
@@ -97,7 +102,9 @@ export class Settings {
 
     public readonly tilingParameters: TilingParameters = {
         tileParameters: this.tileViewParameters,
-        staticTileParameters: this.staticTileParameters
+        staticTileParameters: this.staticTileParameters,
+        animationParameters: this.animationParameters,
+        tapParameters: this.tapParameters
     };
 
     public readonly tileLineParameters: TileLineParameters = {
@@ -105,9 +112,47 @@ export class Settings {
         layoutType: TileLineLayoutType.Bottom,
         longitudinalContentOffset: 12,
         transverseContentOffset: 12,
-        betweenTilesOffset: 12,
+        betweenTilesOffset: 40,
         tileParameters: this.tileViewParameters,
         draggableTileParameters: this.draggableTileParameters,
         animationParameters: this.animationParameters
     }
+
+    public readonly carouselParameters: CarouselParameters = {
+        direction: CarouselDirectionType.Horizontal,
+        pointerSensitivity: 1,
+        velocityParameters: {
+            minValue: 0.5,
+            maxValue: 100,
+            maxValueCount: 5,
+            extremeZoneMaxValueMultiplier: 2
+        },
+        velocityMultiplier: 30,
+        deceleratedMotionParameters: {
+            absoluteAcceleration: 0.00004,
+            minMotionTime: 1500,
+            minMotionToBoundTime: 750
+        }
+    };
+
+    public readonly hintButtonParameters: HintButtonParameters = {
+        generateTextureResolution: 2,
+        glowFilterOptions: {
+            distance: 7,
+            outerStrength: 3,
+            innerStrength: 2,
+            color: new Color(0xFFFF00),
+            quality: 0.5,
+            knockout: false
+        },
+        radius: 25,
+        iconSide: 30,
+        defaultFillColor: new Color(0x008800),
+        activeFillColor: new Color(0x888800),
+        strokeWidth: 2,
+        defaultStrokeColor: new Color(0x006600),
+        activeStrokeColor: new Color(0x666600),
+        defaultIconFillColor: new Color(0xFFFFFF),
+        activeIconFillColor: new Color(0x000000)
+    };
 }

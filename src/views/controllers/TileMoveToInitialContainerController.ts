@@ -1,5 +1,4 @@
 import { Point, Ticker } from "pixi.js";
-import { GlowFilter } from "pixi-filters";
 import { DraggableTileView } from "../tile-decorators/DraggableTileView.ts";
 import { draggingTileData } from "../tile-decorators/DraggingTileData.ts";
 import { EntityController } from "./EntityController.ts";
@@ -63,7 +62,7 @@ export class TileMoveToInitialContainerController
             this.target.addTileToSelectedContainer();
         }
 
-        const filter = new GlowFilter(this.target.parameters.selectedGlowFilterOptions);
+        const filter = this.target.getSelectedGlowFilter();
         this.target.view.setFilter(filter);
     }
 
@@ -83,7 +82,7 @@ export class TileMoveToInitialContainerController
         view.tile.position.copyFrom(view.model.currentPositionPoint);
         
         if (view.tile.parent !== this.target.initialContainer) {
-            this.target.addTileToInitialContainer();
+            this.target.addTileToContainer(this.target.initialContainer);
         }
 
         draggingTileData.animatingViews.delete(this.target);

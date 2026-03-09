@@ -3,24 +3,24 @@ import { Ticker } from "pixi.js";
 /**
  * Класс контроллера для сущности, величина которой меняется со временем
  */
-export abstract class EntityController<TEntity, TValue> {
-    protected readonly target: TEntity;
+export abstract class EntityController<EntityType, ValueType> {
+    protected readonly target: EntityType;
     protected readonly ticker: Ticker;
 
     protected readonly boundOnTicker: (ticker: Ticker) => void = this.onTicker.bind(this);
 
-    constructor(target: TEntity, ticker: Ticker) {
+    constructor(target: EntityType, ticker: Ticker) {
         this.target = target;
         this.ticker = ticker;
     }
 
     public abstract stop(): void;
 
-    public abstract start(valueDifference: TValue): void;
+    public abstract start(valueDifference: ValueType): void;
 
     protected abstract onTicker(ticker: Ticker): void;
 
-    protected abstract prepareToExecute(valueDifference: TValue): void;
+    protected abstract prepareToExecute(valueDifference: ValueType): void;
 
     protected abstract execute(deltaTime: number): void;
 

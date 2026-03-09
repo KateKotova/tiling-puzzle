@@ -1,0 +1,50 @@
+build_job:
+  stage: build
+  tags:
+    - docker
+    - local
+  image: node:18
+  cache:
+    key: 
+      files:
+        - package-lock.json
+    paths:
+      - node_modules/
+  script:
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 hour
+
+deploy_job:
+  stage: deploy
+  tags:
+    - docker
+    - local
+  image:
+    name: public.ecr.aws/aws-cli/aws-cli:latest
+    entrypoint: [""]
+    pull_policy: if-not-present
+  needs:
+    - build_job
+  variables:
+    AWS_ACCESS_KEY_ID: $YC_STORAGE_ACCESS_KEY
+    AWS_SECRET_ACCESS_KEY: $YC_STORAGE_SECRET_KEY
+    AWS_DEFAULT_REGION: ru-central1
+  script:
+    - echo "=== ДЕПЛОЙ ==="
+    - echo "Проверяем настройки AWS:"
+    - aws configure list
+    
+    - echo "Содержимое папки dist:"
+    - ls -la dist/
+    
+    - echo "Синхронизация с Яндекс.Облаком..."
+    - aws s3 sync dist/ s3://$YC_BUCKET_NAME/ --endpoint-url=https://storage.yandexcloud.net --delete --size-only
+    
+    - echo "Деплой завершён!"
+  only:
+    - master
+    - develop
