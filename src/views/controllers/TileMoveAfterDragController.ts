@@ -53,22 +53,23 @@ export class TileMoveAfterDragController
     }
 
     public stop(): void {
-        this.ticker.remove(this.boundOnTicker);
+        this.removeTickerListener();
         this.target.isMoving = false;
     }
 
     public start(moveDifference: Point): void {
+        this.removeTickerListener();
         this.target.isMoving = true;
         this.target.setOnPointerDownActivity(false);
         this.prepareToExecute(moveDifference);        
-        this.ticker.add(this.boundOnTicker);
+        this.addTickerListener();
     }
 
-    protected onTicker(ticker: Ticker): void {
-        this.execute(ticker.deltaMS);
+    protected onTicker(): void {
+        this.execute(this.ticker.deltaMS);
         if (this.controller.getIsCompleted()) {
             this.complete();
-            this.ticker.remove(this.boundOnTicker);
+            this.removeTickerListener();
             this.target.setOnPointerDownActivity(true);
         }        
     }

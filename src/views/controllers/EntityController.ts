@@ -7,18 +7,34 @@ export abstract class EntityController<EntityType, ValueType> {
     protected readonly target: EntityType;
     protected readonly ticker: Ticker;
 
-    protected readonly boundOnTicker: (ticker: Ticker) => void = this.onTicker.bind(this);
+    protected readonly tickerListener: () => void;
+    private tickerListenerWasAdded: boolean = false;
 
     constructor(target: EntityType, ticker: Ticker) {
         this.target = target;
         this.ticker = ticker;
+        this.tickerListener = () => this.onTicker();
+    }
+
+    protected removeTickerListener(): void {
+        if (this.tickerListenerWasAdded) {
+            this.ticker.remove(this.tickerListener);
+            this.tickerListenerWasAdded = false;
+        }
+    }
+
+    protected addTickerListener(): void {
+        if (!this.tickerListenerWasAdded) {
+            this.ticker.add(this.tickerListener);
+            this.tickerListenerWasAdded = true;
+        }
     }
 
     public abstract stop(): void;
 
     public abstract start(valueDifference: ValueType): void;
 
-    protected abstract onTicker(ticker: Ticker): void;
+    protected abstract onTicker(): void;
 
     protected abstract prepareToExecute(valueDifference: ValueType): void;
 
@@ -27,7 +43,7 @@ export abstract class EntityController<EntityType, ValueType> {
     protected abstract complete(): void;
 
     public removeEventListeners(): void {
-        this.ticker.remove(this.boundOnTicker);
+        this.removeTickerListener();
     }
 
     public destroy(): void {

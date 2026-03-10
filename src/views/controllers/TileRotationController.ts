@@ -31,20 +31,21 @@ export class TileRotationController extends EntityController<DraggableTileView, 
     }
 
     public stop(): void {
-        this.ticker.remove(this.boundOnTicker);
+        this.removeTickerListener();
     }
 
     public start(rotationAngleDifference: number): void {
+        this.removeTickerListener();
         this.target.setOnPointerDownActivity(false);
         this.prepareToExecute(rotationAngleDifference);        
-        this.ticker.add(this.boundOnTicker);
+        this.addTickerListener();
     }
 
-    protected onTicker(ticker: Ticker): void {
-        this.execute(ticker.deltaMS);
+    protected onTicker(): void {
+        this.execute(this.ticker.deltaMS);
         if (this.controller.getIsCompleted()) {
             this.complete();
-            this.ticker.remove(this.boundOnTicker);
+            this.removeTickerListener();
             this.target.setOnPointerDownActivity(true);
         }        
     }

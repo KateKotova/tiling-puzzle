@@ -18,7 +18,8 @@ export class CarouselInertiaController {
     private readonly deceleratedMotionController: DeceleratedMotionController;
     private inertiaController?: InertiaController;
 
-    private readonly boundOnTicker: (ticker: Ticker) => void = this.onTicker.bind(this);
+    private readonly tickerListener: () => void;
+    private tickerListenerWasAdded: boolean = false;
 
     constructor(
         target: CarouselContainer,
@@ -43,6 +44,22 @@ export class CarouselInertiaController {
             minMotionTime: deceleratedMotionParameters.minMotionTime,
             minMotionToBoundTime: deceleratedMotionParameters.minMotionToBoundTime
         });
+
+        this.tickerListener = () => this.onTicker();
+    }
+
+    private removeTickerListener(): void {
+        if (this.tickerListenerWasAdded) {
+            this.ticker.remove(this.tickerListener);
+            this.tickerListenerWasAdded = false;
+        }
+    }
+
+    private addTickerListener(): void {
+        if (!this.tickerListenerWasAdded) {
+            this.ticker.add(this.tickerListener);
+            this.tickerListenerWasAdded = true;
+        }
     }
 
     public restart(): void {
@@ -54,7 +71,7 @@ export class CarouselInertiaController {
     public stop(): void {
         this.target.isMoving = false;
         this.inertiaController = undefined;
-        this.ticker.remove(this.boundOnTicker);
+        this.removeTickerListener();
     }
 
     private start(velocity: number): void {
@@ -64,6 +81,8 @@ export class CarouselInertiaController {
         ) {
             return;
         }
+
+        this.removeTickerListener();
         
         const currentCoordinate = this.target.getCoordinate();
         
@@ -82,7 +101,7 @@ export class CarouselInertiaController {
         );
         
         this.target.isMoving = true;
-        this.ticker.add(this.boundOnTicker);
+        this.addTickerListener();
     }
 
     private onTicker(): void {
@@ -126,7 +145,7 @@ export class CarouselInertiaController {
     }
 
     public removeEventListeners(): void {
-        this.ticker.remove(this.boundOnTicker);
+        this.removeTickerListener();
     }
 
     public destroy(): void {

@@ -14,7 +14,8 @@ export class TilesAlphaController {
     private readonly ticker: Ticker;
     private controller?: SmoothNumberStepController;
 
-    private readonly boundOnTicker: (ticker: Ticker) => void = this.onTicker.bind(this);
+    private readonly tickerListener: () => void;
+    private tickerListenerWasAdded: boolean = false;
 
     constructor(
         parameters: AnimationParameters,
@@ -24,6 +25,21 @@ export class TilesAlphaController {
         this.parameters = parameters;
         this.tileViews = tileViews;
         this.ticker = ticker;
+        this.tickerListener = () => this.onTicker();
+    }
+
+    private removeTickerListener(): void {
+        if (this.tickerListenerWasAdded) {
+            this.ticker.remove(this.tickerListener);
+            this.tickerListenerWasAdded = false;
+        }
+    }
+
+    private addTickerListener(): void {
+        if (!this.tickerListenerWasAdded) {
+            this.ticker.add(this.tickerListener);
+            this.tickerListenerWasAdded = true;
+        }
     }
 
     public restart(newStartValue: number, newTargetValue: number): void {
@@ -33,18 +49,19 @@ export class TilesAlphaController {
     }
 
     private stop(): void {
-        this.ticker.remove(this.boundOnTicker);
+        this.removeTickerListener();
     }
 
     private start(): void {
-        this.ticker.add(this.boundOnTicker);
+        this.removeTickerListener();
+        this.addTickerListener();
     }
 
-    private onTicker(ticker: Ticker): void {
-        this.execute(ticker.deltaMS);
+    private onTicker(): void {
+        this.execute(this.ticker.deltaMS);
         if (this.controller?.getIsCompleted()) {
             this.complete();
-            this.ticker.remove(this.boundOnTicker);
+            this.removeTickerListener();
         }        
     }
 
@@ -89,7 +106,7 @@ export class TilesAlphaController {
     }
 
     public removeEventListeners(): void {
-        this.ticker.remove(this.boundOnTicker);
+        this.removeTickerListener();
     }
 
     public destroy(): void {
