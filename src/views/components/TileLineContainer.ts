@@ -622,11 +622,30 @@ export class TileLineContainer extends Container {
     }
 
     public destroy(options?: DestroyOptions): void {
-        this.resizeController.destroy();
-        if (this.backgroundContainer) {
-            this.backgroundContainer.destroy();
+        if (this.destroyed) {
+            return;
         }
-        this.tileViews.length = 0;       
+        
+        this.isResizing = false;
+        this.resizeController.destroy();
+        
+        this.tileViews.forEach(tileView => {
+            if (tileView.view.tile.parent === this) {
+                // Удаляем фигуру с ленты, но она должна оставаться во view замощения
+                this.removeChild(tileView.view.tile);
+            }
+        });
+        this.tileViews.length = 0;
+        
+        if (this.backgroundContainer && !this.backgroundContainer.destroyed) {
+            this.removeChild(this.backgroundContainer);            
+            this.backgroundContainer.cacheAsTexture(false);            
+            this.backgroundContainer.destroy({ children: true });
+        }
+        
+        this.viewportContainer = undefined;
+        this.scaleChangeGlobalRectangle = undefined;
+        
         super.destroy(options);
     }
 }

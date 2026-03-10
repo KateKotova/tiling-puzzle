@@ -240,6 +240,10 @@ export class CarouselContainer extends ViewportContainer {
             ? this.viewportRectangle.left 
             : this.viewportRectangle.top;
     }
+
+    public stopInertia(): void {
+        this.inertiaController.stop();
+    }
     
     public setContentSize(contentWidth: number, contentHeight: number): void {
         super.setContentSize(contentWidth, contentHeight);
@@ -254,6 +258,9 @@ export class CarouselContainer extends ViewportContainer {
     }
     
     public destroy(options?: DestroyOptions): void {
+        if (this.destroyed) {
+            return;
+        }
         this.inertiaController.stop();
         this.removeEventListeners();
         this.inertiaController.clearVelocities();

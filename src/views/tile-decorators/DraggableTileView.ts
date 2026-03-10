@@ -96,6 +96,7 @@ export class DraggableTileView implements TileView {
      * и с правильным углом вращения, чтобы мозаика была собрана
      */
     private isLocatedCorrectly: boolean = false;
+    private fixAsLocatedCorrectlyTimer?: number;
 
     private selectedGlowFilter?: GlowFilter;
     private correctLocatedGlowFilter?: GlowFilter;
@@ -108,6 +109,7 @@ export class DraggableTileView implements TileView {
 
     private boundOnGlobalPointerUp: (event: PointerEvent) => void
         = this.onGlobalPointerUp.bind(this);
+    private boundOnGlobalPointerLeave: () => void = this.onGlobalPointerLeave.bind(this);
     public boundPreventScrollOnWheel: (event: WheelEvent) => void
         = this.preventScrollOnWheel.bind(this);
 
@@ -282,6 +284,7 @@ export class DraggableTileView implements TileView {
         this.setOnPointerDownActivity(false);
         this.view.tile.on('globalpointermove', this.onPointerMove, this);
         window.addEventListener('pointerup', this.boundOnGlobalPointerUp);
+        document.addEventListener('pointerleave', this.boundOnGlobalPointerLeave);
 
         this.dragTarget = this.dragSource;
         this.dragStartPosition = this.view.tile.position.clone();
@@ -358,11 +361,19 @@ export class DraggableTileView implements TileView {
     }
 
     public onGlobalPointerUp(event: PointerEvent): void {
+        this.onGlobalPointerUpOrLeave(event);
+    }
+
+    public onGlobalPointerLeave(): void {
+        this.onGlobalPointerUpOrLeave();
+    }
+
+    private onGlobalPointerUpOrLeave(event?: PointerEvent): void {
         if (!this.isDragging || draggingTileData.view !== this) {
             return;
         }
 
-        if (event.pointerType === 'touch') {
+        if (event?.pointerType === 'touch') {
             if (this.pointerDownId === event.pointerId) {
                 this.pointerDownId = undefined;
             } else {
@@ -395,7 +406,8 @@ export class DraggableTileView implements TileView {
 
         const tapParameters = this.parameters.tapParameters;
         const tapWasExecuted
-            = (event.timeStamp - this.dragStartTime <= tapParameters.maxDuration)
+            = event
+            && (event.timeStamp - this.dragStartTime <= tapParameters.maxDuration)
             && Math.abs(targetPosition.x - this.dragStartPosition.x)
                 <= tapParameters.maxDistance
             && Math.abs(targetPosition.y - this.dragStartPosition.y)
@@ -428,6 +440,7 @@ export class DraggableTileView implements TileView {
 
         this.view.tile.off('globalpointermove', this.onPointerMove, this);
         window.removeEventListener('pointerup', this.boundOnGlobalPointerUp);
+        document.removeEventListener('pointerleave', this.boundOnGlobalPointerLeave);
 
         if (!finalSource && finalTarget) {
             this.initialContainer.removeTileView(this);
@@ -569,8 +582,9 @@ export class DraggableTileView implements TileView {
         this.moveToInitialContainerController.removeEventListeners();
         this.view.tile.off('pointerdown', this.onPointerDown, this);
         this.view.tile.off('globalpointermove', this.onPointerMove, this);
-        window.removeEventListener('pointerup', this.boundOnGlobalPointerUp);
-        window.removeEventListener('wheel', this.boundPreventScrollOnWheel);
+        window.removeEventListener('pointerup', this.boundOnGlobalPointerUp);     
+        document.removeEventListener('pointerleave', this.boundOnGlobalPointerLeave);
+        window.removeEventListener('wheel', this.boundPreventScrollOnWheel);   
     }
 
     /**
@@ -592,11 +606,16 @@ export class DraggableTileView implements TileView {
         const filter = this.getCorrectLocatedGlowFilter();
         this.view.setFilter(filter);
 
-        setTimeout(() => {
+        if (this.fixAsLocatedCorrectlyTimer !== null) {
+            clearTimeout(this.fixAsLocatedCorrectlyTimer);
+        }
+
+        this.fixAsLocatedCorrectlyTimer = setTimeout(() => {
                 this.removeFilters();
                 this.addTileToTargetContainerOnFixAsLocatedCorrectly();
                 const contentWithoutBevelFilter = this.view.createContent(false);
                 this.view.replaceContent(contentWithoutBevelFilter);
+                this.fixAsLocatedCorrectlyTimer = undefined;
             }, 
             this.parameters.correctLocatedFilterShowTime
         );
@@ -623,7 +642,13 @@ export class DraggableTileView implements TileView {
     }
 
     public destroy(): void {
+        if (this.fixAsLocatedCorrectlyTimer) {
+            clearTimeout(this.fixAsLocatedCorrectlyTimer);
+            this.fixAsLocatedCorrectlyTimer = undefined;
+        }
+
         this.removeEventListeners();
+        
         this.rotationController.destroy();
         this.moveAfterDragController.destroy();
         this.moveInsideInitialContainerController.destroy();
@@ -632,11 +657,21 @@ export class DraggableTileView implements TileView {
         this.view.removeFilters();
         if (this.selectedGlowFilter) {
             this.selectedGlowFilter.destroy();
+            this.selectedGlowFilter = undefined;
         }
         if (this.correctLocatedGlowFilter) {
             this.correctLocatedGlowFilter.destroy();
+            this.correctLocatedGlowFilter = undefined;
         }
 
+        if (draggingTileData.view === this) {
+            draggingTileData.view = undefined;
+        }
+        draggingTileData.animatingViews.delete(this);
+
+        this.dragSource = undefined;
+        this.dragTarget = undefined;
+        
         this.view.destroy();
     }
 }

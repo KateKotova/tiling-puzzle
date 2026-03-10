@@ -16,6 +16,7 @@ import { HintButtonParameters } from "./HintButtonParameters.ts";
 
 export class HintButton extends Container {
     private readonly parameters: HintButtonParameters;
+    private readonly invisibleRectangle: Graphics;
     private readonly circle: Graphics;
     private readonly iconGraphicsPath: GraphicsPath;
     private readonly defaultIconTexture: Texture;
@@ -48,8 +49,8 @@ export class HintButton extends Container {
         const glowDistance = this.parameters.glowFilterOptions.distance ?? 0;
         this.pivotPointCoordinate = this.parameters.radius + glowDistance;
 
-        const invisibleRectangle = this.createInvisibleRectangle(this.pivotPointCoordinate * 2);
-        this.addChild(invisibleRectangle);
+        this.invisibleRectangle = this.createInvisibleRectangle(this.pivotPointCoordinate * 2);
+        this.addChild(this.invisibleRectangle);
 
         const circleCoordinate = this.pivotPointCoordinate - this.parameters.radius;
         this.circle = this.createCircle(circleCoordinate, circleCoordinate);
@@ -185,7 +186,7 @@ export class HintButton extends Container {
 
     private showActivityOnPointerUp(): void {
         this.update();
-        this.filters = [];
+        this.filters = null;
     }
 
     private update(): void {
@@ -214,11 +215,48 @@ export class HintButton extends Container {
     }
 
     public destroy(options?: DestroyOptions): void {
+        if (this.destroyed) {
+            return;
+        }
+        
+        this.eventMode = 'none';
         this.removeEventListeners();
-        this.filters = [];
+        
+        this.onActivate = undefined;
+        this.onDeactivate = undefined;
+        
+        this.filters = null;
+        
+        if (this.icon) {
+            this.removeChild(this.icon);
+            this.icon.destroy();
+        }
+        
+        if (this.circle) {
+            this.circle.cacheAsTexture(false);
+            this.removeChild(this.circle);
+            this.circle.destroy();
+        }
+        
+        if (this.invisibleRectangle) {
+            this.removeChild(this.invisibleRectangle);
+            this.invisibleRectangle.destroy();
+        }
+        
         if (this.glowFilter) {
             this.glowFilter.destroy();
+            this.glowFilter = undefined;
         }
+        
+        if (this.defaultIconTexture && !this.defaultIconTexture.destroyed) {
+            this.defaultIconTexture.destroy(true);
+        }
+        
+        if (this.activeIconTexture && !this.activeIconTexture.destroyed) {
+            this.activeIconTexture.destroy(true);
+            this.activeIconTexture = undefined;
+        }
+        
         super.destroy(options);
     }
 }

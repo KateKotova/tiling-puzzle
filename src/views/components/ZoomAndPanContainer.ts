@@ -338,10 +338,31 @@ export class ZoomAndPanContainer extends ViewportContainer {
     private onContextMenu(e: Event): void {
         e.preventDefault();
     }
+
+    private stopAllGestures(): void {
+        this.isDragging = false;
+        this.isPinching = false;
+        
+        window.removeEventListener('mousemove', this.boundOnMouseMove);
+        
+        this.lastMousePosition.set(0, 0);
+        this.lastTouch1.set(0, 0);
+        this.lastTouch2.set(0, 0);
+        this.pinchDistance = 0;
+    }
     
     public destroy(options?: DestroyOptions): void {
+        if (this.destroyed) {
+            return;
+        }
+        
+        this.stopAllGestures();
         this.removeEventListeners();
+        this.getShouldPreventEvents = () => false;
+        
         this.onDestroy?.();
+        this.onDestroy = undefined;
+
         super.destroy(options);
     }
 }

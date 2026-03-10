@@ -81,12 +81,22 @@ export abstract class TileBaseView implements TileView {
     }
 
     public removeFilters(): void {
-        this.tile.filters = [];
+        this.tile.filters = null;
         this.tile.updateCacheTexture();
     }
 
+    private destroyTexture(): void {
+        if (this.texture && !this.texture.destroyed) {
+            this.texture.destroy(true);
+        }
+        this.texture = undefined;
+    }
+
     public destroy(): void {
-        this.removeFilters();
-        this.tile.destroy();
+        if (this.tile) {
+            this.tile.filters = null;
+            this.tile.destroy({ children: true });
+        }        
+        this.destroyTexture();
     }
 }
