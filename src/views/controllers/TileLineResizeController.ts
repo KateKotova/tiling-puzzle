@@ -12,10 +12,8 @@ export class TileLineResizeController
     private controller?: SmoothNumberStepController;
 
     public stop(): void {
-        if (!this.controller?.getIsCompleted()) {
-            this.ticker.remove(this.boundOnTicker);
-            this.target.isResizing = false;
-        }
+        this.ticker.remove(this.boundOnTicker);
+        this.target.isResizing = false;
     }
 
     public start(longitudinalSizeDifference: number): void {

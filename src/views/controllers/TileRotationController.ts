@@ -31,9 +31,7 @@ export class TileRotationController extends EntityController<DraggableTileView, 
     }
 
     public stop(): void {
-        if (!this.controller.getIsCompleted()) {
-            this.ticker.remove(this.boundOnTicker);
-        }
+        this.ticker.remove(this.boundOnTicker);
     }
 
     public start(rotationAngleDifference: number): void {

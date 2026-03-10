@@ -112,6 +112,7 @@ export class CarouselContainer extends ViewportContainer {
     }
     
     private removeEventListeners(): void {
+        this.ticker.remove(this.boundOnTicker);
         this.off('pointerdown', this.onPointerDown, this);
         this.off('globalpointermove', this.onPointerMove, this);
         this.off('pointerup', this.onPointerUp, this);
@@ -204,10 +205,7 @@ export class CarouselContainer extends ViewportContainer {
         this.isPointerDown = false;
         this.pointerId = undefined;
         
-        const velocity = this.velocityController.getAverageValue()
-            * this.parameters.velocityMultiplier;
-        
-        this.startInertia(velocity);
+        this.restartInertia();
         
         event.stopPropagation();
     }
@@ -244,6 +242,13 @@ export class CarouselContainer extends ViewportContainer {
     private getIsHorizontal(): boolean {
         return this.parameters.direction === CarouselDirectionType.Horizontal;
     }
+
+    private restartInertia(): void {
+        this.stopInertia();
+        const velocity = this.velocityController.getAverageValue()
+            * this.parameters.velocityMultiplier;        
+        this.startInertia(velocity);
+    }
     
     private startInertia(velocity: number): void {
         if (
@@ -274,11 +279,9 @@ export class CarouselContainer extends ViewportContainer {
     }
     
     public stopInertia(): void {
-        if (this.isMoving) {
-            this.isMoving = false;
-            this.inertiaController = undefined;
-            this.ticker.remove(this.boundOnTicker);
-        }
+        this.isMoving = false;
+        this.inertiaController = undefined;
+        this.ticker.remove(this.boundOnTicker);
     }
 
     private getMaxCoordinate(): number {

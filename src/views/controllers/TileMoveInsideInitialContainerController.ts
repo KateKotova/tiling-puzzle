@@ -30,10 +30,8 @@ export class TileMoveInsideInitialContainerController
     }
 
     public stop(): void {
-        if (!this.controller.getIsCompleted()) {
-            this.ticker.remove(this.boundOnTicker);
-            this.target.isMoving = false;
-        }
+        this.ticker.remove(this.boundOnTicker);
+        this.target.isMoving = false;
     }
 
     public start(moveDifference: Point): void {

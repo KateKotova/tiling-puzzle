@@ -33,9 +33,7 @@ export class TilesAlphaController {
     }
 
     private stop(): void {
-        if (!this.controller?.getIsCompleted()) {
-            this.ticker.remove(this.boundOnTicker);
-        }
+        this.ticker.remove(this.boundOnTicker);
     }
 
     private start(): void {
