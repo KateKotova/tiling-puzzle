@@ -629,6 +629,7 @@ export class DraggableTileView implements TileView {
         this.moveInsideInitialContainerController.destroy();
         this.moveToInitialContainerController.destroy();
 
+        this.view.removeFilters();
         if (this.selectedGlowFilter) {
             this.selectedGlowFilter.destroy();
         }

@@ -86,6 +86,7 @@ export abstract class TileBaseView implements TileView {
     }
 
     public destroy(): void {
+        this.removeFilters();
         this.tile.destroy();
     }
 }

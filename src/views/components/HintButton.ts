@@ -215,6 +215,7 @@ export class HintButton extends Container {
 
     public destroy(options?: DestroyOptions): void {
         this.removeEventListeners();
+        this.filters = [];
         if (this.glowFilter) {
             this.glowFilter.destroy();
         }

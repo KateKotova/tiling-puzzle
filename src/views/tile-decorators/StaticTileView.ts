@@ -158,7 +158,8 @@ export class StaticTileView implements TileView {
     }
 
     public destroy(): void {
-        this.removeEventListeners();        
+        this.removeEventListeners();
+        this.view.removeFilters();    
         if (this.targetGlowFilter) {
             this.targetGlowFilter.destroy();
         }    
