@@ -18,6 +18,14 @@ export class TileMoveInsideInitialContainerController
         this.controller = this.target.view.model.moveController;
     }
 
+    protected get staticTickerListenersCount(): number {
+        return TileMoveInsideInitialContainerController.tickerListenerCount;
+    }
+
+    protected set staticTickerListenersCount(value: number) {
+        TileMoveInsideInitialContainerController.tickerListenerCount = value;
+    }
+
     public restart(targetPoint: Point): void {
         this.stop();
         

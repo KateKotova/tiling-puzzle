@@ -22,6 +22,14 @@ export class TileMoveAfterDragController
         this.controller = this.target.view.model.moveController;
     }
 
+    protected get staticTickerListenersCount(): number {
+        return TileMoveAfterDragController.tickerListenerCount;
+    }
+
+    protected set staticTickerListenersCount(value: number) {
+        TileMoveAfterDragController.tickerListenerCount = value;
+    }
+
     public restart(dragTargetModel?: TileModel): void {
         const view = this.target.view;
         this.stop();

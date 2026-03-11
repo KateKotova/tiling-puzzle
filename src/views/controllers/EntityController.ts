@@ -9,17 +9,28 @@ export abstract class EntityController<EntityType, ValueType> {
 
     protected readonly tickerListener: () => void;
     private tickerListenerWasAdded: boolean = false;
+    protected static tickerListenerCount: number = 0;
 
     constructor(target: EntityType, ticker: Ticker) {
         this.target = target;
         this.ticker = ticker;
         this.tickerListener = () => this.onTicker();
     }
+    
+    protected get staticTickerListenersCount(): number {
+        return EntityController.tickerListenerCount;
+    }
+
+    protected set staticTickerListenersCount(value: number) {
+        EntityController.tickerListenerCount = value;
+    }
 
     protected removeTickerListener(): void {
         if (this.tickerListenerWasAdded) {
             this.ticker.remove(this.tickerListener);
             this.tickerListenerWasAdded = false;
+            this.staticTickerListenersCount--;
+            //this.logTickerListener();
         }
     }
 
@@ -27,7 +38,13 @@ export abstract class EntityController<EntityType, ValueType> {
         if (!this.tickerListenerWasAdded) {
             this.ticker.add(this.tickerListener);
             this.tickerListenerWasAdded = true;
+            this.staticTickerListenersCount++;
+            //this.logTickerListener();
         }
+    }
+
+    public logTickerListener() {
+        console.log(`${this.constructor.name}: ${this.staticTickerListenersCount}`);
     }
 
     public abstract stop(): void;

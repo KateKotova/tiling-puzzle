@@ -16,6 +16,7 @@ export class TilesAlphaController {
 
     private readonly tickerListener: () => void;
     private tickerListenerWasAdded: boolean = false;
+    private static tickerListenerCount: number = 0;
 
     constructor(
         parameters: AnimationParameters,
@@ -32,6 +33,8 @@ export class TilesAlphaController {
         if (this.tickerListenerWasAdded) {
             this.ticker.remove(this.tickerListener);
             this.tickerListenerWasAdded = false;
+            TilesAlphaController.tickerListenerCount--;
+            //this.logTickerListener();
         }
     }
 
@@ -39,7 +42,13 @@ export class TilesAlphaController {
         if (!this.tickerListenerWasAdded) {
             this.ticker.add(this.tickerListener);
             this.tickerListenerWasAdded = true;
+            TilesAlphaController.tickerListenerCount++;
+            //this.logTickerListener();
         }
+    }
+
+    public logTickerListener() {
+        console.log(`${this.constructor.name}: ${TilesAlphaController.tickerListenerCount}`);
     }
 
     public restart(newStartValue: number, newTargetValue: number): void {

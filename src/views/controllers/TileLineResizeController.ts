@@ -10,6 +10,14 @@ export class TileLineResizeController
     extends EntityController<TileLineContainer, number> {
     private controller?: SmoothNumberStepController;
 
+    protected get staticTickerListenersCount(): number {
+        return TileLineResizeController.tickerListenerCount;
+    }
+
+    protected set staticTickerListenersCount(value: number) {
+        TileLineResizeController.tickerListenerCount = value;
+    }
+
     public stop(): void {
         this.removeTickerListener();
         this.target.isResizing = false;

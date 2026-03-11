@@ -20,6 +20,14 @@ export class TileRotationController extends EntityController<DraggableTileView, 
         this.controller = this.target.view.model.rotationController;
     }
 
+    protected get staticTickerListenersCount(): number {
+        return TileRotationController.tickerListenerCount;
+    }
+
+    protected set staticTickerListenersCount(value: number) {
+        TileRotationController.tickerListenerCount = value;
+    }
+
     public restart(dragTargetModel?: TileModel): void {
         this.stop();
         this.hasDragTarget = !!dragTargetModel;

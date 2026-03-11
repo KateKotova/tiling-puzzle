@@ -20,6 +20,7 @@ export class CarouselInertiaController {
 
     private readonly tickerListener: () => void;
     private tickerListenerWasAdded: boolean = false;
+    private static tickerListenerCount: number = 0;
 
     constructor(
         target: CarouselContainer,
@@ -52,6 +53,8 @@ export class CarouselInertiaController {
         if (this.tickerListenerWasAdded) {
             this.ticker.remove(this.tickerListener);
             this.tickerListenerWasAdded = false;
+            CarouselInertiaController.tickerListenerCount--;
+            //this.logTickerListener();
         }
     }
 
@@ -59,7 +62,13 @@ export class CarouselInertiaController {
         if (!this.tickerListenerWasAdded) {
             this.ticker.add(this.tickerListener);
             this.tickerListenerWasAdded = true;
+            CarouselInertiaController.tickerListenerCount++;
+            //this.logTickerListener();
         }
+    }
+
+    public logTickerListener() {
+        console.log(`${this.constructor.name}: ${CarouselInertiaController.tickerListenerCount}`);
     }
 
     public restart(): void {
