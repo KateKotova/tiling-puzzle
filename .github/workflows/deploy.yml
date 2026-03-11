@@ -34,7 +34,7 @@ jobs:
 
       - name: Build project
         run: npm run build
-        env:
+        # env:
           # Важно: если роутинг требует базовый путь, передаём его.
           # PUBLIC_PATH: /tiling-puzzle/
 
