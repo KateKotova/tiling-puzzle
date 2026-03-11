@@ -5,6 +5,7 @@ import { draggingTileData } from "../tile-decorators/DraggingTileData.ts";
 import { EntityController } from "./EntityController.ts";
 import { TileRotationController as TileRotationModelController}
     from "../../models/controllers/TileRotationController.ts";
+import { WheelController } from "./WheelController.ts";
 
 /**
  * Класс контроллера для перетаскиваемого элемента замощения,
@@ -92,7 +93,7 @@ export class TileRotationController extends EntityController<DraggableTileView, 
 
         if (!this.target.isDragging && !this.target.isMoving) {
             draggingTileData.animatingViews.delete(this.target);
-            window.removeEventListener('wheel', this.target.boundPreventScrollOnWheel);
-        }
+            WheelController.getInstance().setScrollOnWheelActivity(true);
+        }        
     }
 }

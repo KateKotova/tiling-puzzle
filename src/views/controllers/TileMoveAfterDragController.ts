@@ -4,6 +4,7 @@ import { TileModel } from "../../models/tiles/TileModel.ts";
 import { draggingTileData } from "../tile-decorators/DraggingTileData.ts";
 import { EntityController } from "./EntityController.ts";
 import { TileMoveController } from "../../models/controllers/TileMoveController.ts";
+import { WheelController } from "./WheelController.ts";
 
 /**
  * Класс контроллера для перетаскиваемого элемента замощения,
@@ -113,7 +114,7 @@ export class TileMoveAfterDragController
         }
 
         draggingTileData.animatingViews.delete(this.target);
-        window.removeEventListener('wheel', this.target.boundPreventScrollOnWheel);
+        WheelController.getInstance().setScrollOnWheelActivity(true);
 
         this.target.isMoving = false;
     }
