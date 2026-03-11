@@ -116,6 +116,11 @@ export class DraggableTileView implements TileView {
         TileMoveInsideInitialContainerController;
     private readonly moveToInitialContainerController: TileMoveToInitialContainerController;
 
+    private static onPointerDownCount: number = 0;
+    private static onGlobalPointerMoveCount: number = 0;
+    private static onPointerUpCount: number = 0;
+    private static onPointerLeaveCount: number = 0;
+
     private boundOnGlobalPointerUp: (event: PointerEvent) => void
         = this.onGlobalPointerUp.bind(this);
     private boundOnGlobalPointerLeave: () => void = this.onGlobalPointerLeave.bind(this);
@@ -154,6 +159,8 @@ export class DraggableTileView implements TileView {
 
         this.view.tile.eventMode = "static";
         this.view.tile.on('pointerdown', this.onPointerDown, this);
+        DraggableTileView.onPointerDownCount++;
+        //DraggableTileView.logPointerDown();
 
         this.saveHitArea();
     }
@@ -180,6 +187,22 @@ export class DraggableTileView implements TileView {
 
     public set replacingTextureFillColor(color: Color) {
         this.view.replacingTextureFillColor = color;
+    }
+
+    public static logPointerDown() {
+        console.log(`onPointerDownCount: ${DraggableTileView.onPointerDownCount}`);
+    }
+
+    public static logGlobalPointerMove() {
+        console.log(`onGlobalPointerMoveCount: ${DraggableTileView.onGlobalPointerMoveCount}`);
+    }
+
+    public static logPointerUp() {
+        console.log(`onPointerUpCount: ${DraggableTileView.onPointerUpCount}`);
+    }
+
+    public static logPointerLeave() {
+        console.log(`onPointerLeaveCount: ${DraggableTileView.onPointerLeaveCount}`);
     }
 
     private saveHitArea(): void {
@@ -266,9 +289,12 @@ export class DraggableTileView implements TileView {
         this.onPointerDownIsActive = isActive;
         if (isActive) {
             this.view.tile.on('pointerdown', this.onPointerDown, this);
+            DraggableTileView.onPointerDownCount++;
         } else {
             this.view.tile.off('pointerdown', this.onPointerDown, this);
+            DraggableTileView.onPointerDownCount--;
         }
+        //DraggableTileView.logPointerDown();
     }
 
     private onPointerTap(event: PointerEvent): void {
@@ -350,8 +376,14 @@ export class DraggableTileView implements TileView {
 
         this.setOnPointerDownActivity(false);
         this.view.tile.on('globalpointermove', this.onPointerMove, this);
+        DraggableTileView.onGlobalPointerMoveCount++;
+        //DraggableTileView.logGlobalPointerMove();
         window.addEventListener('pointerup', this.boundOnGlobalPointerUp);
+        DraggableTileView.onPointerUpCount++;
+        //DraggableTileView.logPointerUp();
         document.addEventListener('pointerleave', this.boundOnGlobalPointerLeave);
+        DraggableTileView.onPointerLeaveCount++;
+        //DraggableTileView.logPointerLeave();
 
         this.dragTarget = this.dragSource;
         this.dragStartPosition = this.view.tile.position.clone();
@@ -504,8 +536,14 @@ export class DraggableTileView implements TileView {
         this.dispatchDraggingTileIsDeselectedEvent();      
 
         this.view.tile.off('globalpointermove', this.onPointerMove, this);
+        DraggableTileView.onGlobalPointerMoveCount--;
+        //DraggableTileView.logGlobalPointerMove();
         window.removeEventListener('pointerup', this.boundOnGlobalPointerUp);
+        DraggableTileView.onPointerUpCount--;
+        //DraggableTileView.logPointerUp();
         document.removeEventListener('pointerleave', this.boundOnGlobalPointerLeave);
+        DraggableTileView.onPointerLeaveCount--;
+        //DraggableTileView.logPointerLeave();
 
         if (!finalSource && finalTarget) {
             this.initialContainer.removeTileView(this);
@@ -637,11 +675,23 @@ export class DraggableTileView implements TileView {
         this.rotationController.removeEventListeners();
         this.moveAfterDragController.removeEventListeners();
         this.moveInsideInitialContainerController.removeEventListeners();
-        this.moveToInitialContainerController.removeEventListeners();
+        this.moveToInitialContainerController.removeEventListeners(); 
+
         this.view.tile.off('pointerdown', this.onPointerDown, this);
+        DraggableTileView.onPointerDownCount--;
+        //DraggableTileView.logPointerDown();
+
         this.view.tile.off('globalpointermove', this.onPointerMove, this);
-        window.removeEventListener('pointerup', this.boundOnGlobalPointerUp);     
+        DraggableTileView.onGlobalPointerMoveCount--;
+        //DraggableTileView.logGlobalPointerMove();
+
+        window.removeEventListener('pointerup', this.boundOnGlobalPointerUp); 
+        DraggableTileView.onPointerUpCount--;
+        //DraggableTileView.logPointerUp();
+
         document.removeEventListener('pointerleave', this.boundOnGlobalPointerLeave);
+        DraggableTileView.onPointerLeaveCount--;
+        //DraggableTileView.logPointerLeave();
     }
 
     /**

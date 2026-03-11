@@ -62,6 +62,7 @@ export class RegularPolygonTileView extends TileBaseView {
                 scaleMode: "nearest"
             }
         });
+        graphics.filters = null;
         graphics.destroy();
         if (bevelFilter) {
             bevelFilter.destroy();
