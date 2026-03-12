@@ -1,67 +1,53 @@
-# Этапы конвейера: сборка и деплой
-stages:
-  - build
-  - deploy
-
-# Переменные, доступные во всех задачах
-variables:
-  # Используем образ Node.js для сборки
-  BUILD_IMAGE: node:18
-  # Каталог, куда соберется проект (обычно 'build' или 'dist')
-  BUILD_DIR: dist
-
-# Задача для этапа сборки
 build_job:
   stage: build
   tags:
     - docker
     - local
-    - windows  # или тег, который вы указали при регистрации
   image: node:18
-  # Кэшируем папку node_modules для ускорения следующих сборок
   cache:
-    key: node-modules-cache
+    key: 
+      files:
+        - package-lock.json
     paths:
       - node_modules/
   script:
-    - echo "Installing dependencies..."
-    - npm ci # Чистая установка по package-lock.json
-    - echo "Building project..."
-    - npm run build # Команда из package.json
+    - npm ci
+    - npm run build
   artifacts:
-    # Сохраняем результат сборки (папку build/dist) для передачи в задачу деплоя
     paths:
-      - $BUILD_DIR/
-    expire_in: 1 hour # Артефакты не нужны дольше часа
+      - dist/
+    expire_in: 1 hour
+  only:
+    - master
+    - develop
 
-# Задача для этапа деплоя в Яндекс.Облако
 deploy_job:
   stage: deploy
   tags:
     - docker
     - local
-    - windows
-  # Используем официальный AWS CLI образ (совместим с S3)
-  image: amazon/aws-cli
-  # Зависимость от задачи сборки (получит ее артефакты)
+  image:
+    name: public.ecr.aws/aws-cli/aws-cli:latest
+    entrypoint: [""]
+    pull_policy: if-not-present
   needs:
     - build_job
+  variables:
+    AWS_ACCESS_KEY_ID: $YC_STORAGE_ACCESS_KEY
+    AWS_SECRET_ACCESS_KEY: $YC_STORAGE_SECRET_KEY
+    AWS_DEFAULT_REGION: ru-central1
   script:
-    - echo "Deploying to Yandex Cloud Bucket..."
-
-    # Настраиваем AWS CLI для работы с Яндекс.Облаком
-    - aws configure set aws_access_key_id $YC_STORAGE_ACCESS_KEY
-    - aws configure set aws_secret_access_key $YC_STORAGE_SECRET_KEY
-    - aws configure set region ru-central1 # Регион бакета - ЦФО России
-
-    # Синхронизируем содержимое папки сборки с бакетом
-    # Флаг --delete удаляет из бакета файлы, которых нет в локальной сборке
-    - aws s3 sync $BUILD_DIR/ s3://$YC_BUCKET_NAME/ --endpoint-url=https://storage.yandexcloud.net --delete
-
-    - echo "Deployment finished successfully!"
-  # Ограничиваем запуск: только для ветки main (или master)
+    - echo "=== ДЕПЛОЙ ==="
+    - echo "Проверяем настройки AWS:"
+    - aws configure list
+    
+    - echo "Содержимое папки dist:"
+    - ls -la dist/
+    
+    - echo "Синхронизация с Яндекс.Облаком..."
+    - aws s3 sync dist/ s3://$YC_BUCKET_NAME/ --endpoint-url=https://storage.yandexcloud.net --delete --size-only
+    
+    - echo "Деплой завершён!"
   only:
-    - main
     - master
     - develop
-    - t-0020-hint-button

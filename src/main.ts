@@ -13,6 +13,8 @@ import { draggingTileData } from "./views/tile-decorators/DraggingTileData.ts";
 import { TileLineContainer } from "./views/components/TileLineContainer.ts";
 import { TileLineDirectionType } from "./views/components/TileLineDirectionType.ts";
 import { CarouselContainer } from "./views/components/CarouselContainer.ts";
+import { DraggableTileView } from "./views/tile-decorators/DraggableTileView.ts";
+import { HintButton } from "./views/components/HintButton.ts";
 
 async function main(): Promise<void> {
   try {
@@ -21,11 +23,8 @@ async function main(): Promise<void> {
     //const exampleImageSrc = "assets/horse-example-image-rotated.png";
     const exampleImageSrc = "assets/horse-example-image.png";
 
-    const containerWidth = 500;
-    const containerHeight = 400;
-
     const textureMinSideTileCount = 4;
-    const tilingType = TilingType.SquareWithSingleLock;
+    const tilingType = TilingType.OctagonAndSquareWithSingleLock;
 
     //#endregion test data end
 
@@ -40,10 +39,19 @@ async function main(): Promise<void> {
     });
     document.getElementById("pixi-container")!.appendChild(app.canvas);
 
-    await Assets.load({
-      alias: "example-image",
-      src: exampleImageSrc,
-    });
+    await Assets.load([
+      {
+        alias: "example-image",
+        src: exampleImageSrc,
+      },
+      {
+        alias: "hint-icon-path",
+        src: "assets/hint-icon-path.txt",
+        data: {
+            parseAsGraphicsContext: true,
+        }
+      },
+    ]);
 
     // TODO: сделать контроллер для этого функционала.
     // Столько всего не будет просто лежать в main.
@@ -53,6 +61,9 @@ async function main(): Promise<void> {
   
     const texture = Assets.get("example-image");
     const textureModel = new TilingTextureModel(texture);
+
+    const containerWidth = app.screen.width;
+    const containerHeight = app.screen.height * 2 / 3.0;
 
     const imageContainerModel = new ImageContainerModel(textureModel,
       containerWidth, containerHeight);      
@@ -87,6 +98,8 @@ async function main(): Promise<void> {
     const greenBackground = new Graphics()
       .rect(0, 0, containerWidth, containerHeight)
       .fill({ color: "green" });
+    greenBackground.eventMode = 'none';
+    greenBackground.interactiveChildren = false;
     container.addChild(greenBackground);
 
     const containerCenterX = containerWidth / 2.0;
@@ -129,7 +142,7 @@ async function main(): Promise<void> {
       settings.tilingParameters,
       tilingModel
     );
-    tilingView.createStaticTileViews(app.renderer);
+    tilingView.createStaticTileViews(app.renderer, app.ticker);
     imageContainer.addChild(tilingView.tilingContainer);
     zoomAndPanContainer.setContentSize(imageContainerModel.width, imageContainerModel.height);
     zoomAndPanContainer.getShouldPreventEvents = (): boolean => {
@@ -160,14 +173,48 @@ async function main(): Promise<void> {
         width: tileLineContainerSize.width,
         height: app.screen.height - 50
       };
+
+    const carouselContainer = new CarouselContainer(
+      settings.carouselParameters,
+      app.ticker,
+      carouselContainerOptions
+    );
     
-    const carouselContainer = new CarouselContainer(carouselContainerOptions);
-    carouselContainer.beforeAddingToParent(app.stage);
+    carouselContainer.onBeforeAddToParent(app.stage);
     app.stage.addChild(carouselContainer);
     carouselContainer.onAddedToParent();
     carouselContainer.addChild(tileLineContainer);
     tileLineContainer.onAddedToParent(carouselContainer);
     carouselContainer.setContentSize(tileLineContainerSize.width, tileLineContainerSize.height);
+    carouselContainer.getShouldPreventEvents = (): boolean => {
+      return !!draggingTileData.view;
+    };
+    
+    window.addEventListener(TileLineContainer.startResizeEventName, () => {
+      carouselContainer.setOnPointerDownActivity(false);
+    });
+    window.addEventListener(TileLineContainer.stopResizeEventName, () => {
+      carouselContainer.setOnPointerDownActivity(true);
+    });
+    window.addEventListener(DraggableTileView.draggingTileIsSelectedEventName, () => {
+      carouselContainer.stopInertia();
+    });
+
+    const hintIconSvgPath = Assets.get("hint-icon-path");
+    const hintButton = new HintButton(
+      settings.hintButtonParameters,
+      app.renderer,
+      hintIconSvgPath,
+      tilingView.setHintAlphaForStaticTiles.bind(tilingView),
+      tilingView.setDefaultAlphaForStaticTiles.bind(tilingView),
+      {
+        x: screenCenterX,
+        y: settings.hintButtonParameters.radius
+          + (settings.hintButtonParameters.glowFilterOptions.distance ?? 0)
+          + 20
+      }
+    );
+    app.stage.addChild(hintButton);
 
     app.stage.addChild(selectedTileContainer);
   } catch (error) {

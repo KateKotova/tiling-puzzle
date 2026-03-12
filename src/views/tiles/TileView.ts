@@ -1,4 +1,4 @@
-import { Texture, Container, Filter } from "pixi.js";
+import { Texture, Container, Filter, Color } from "pixi.js";
 import { TileModel } from "../../models/tiles/TileModel.ts";
 
 /**
@@ -15,6 +15,10 @@ export interface TileView {
      * Содержимое, дочерний элемент контейнера фигуры
      */
     content: Container;
+    /**
+     * Цвет заливки, применяемый в отсутствии текстуры
+     */
+    replacingTextureFillColor: Color;
     /**
      * Установка единственного фильтра
      * @param filter Фильтр

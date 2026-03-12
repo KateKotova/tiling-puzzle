@@ -1,4 +1,4 @@
-import { Texture, Container, Renderer, Color, Filter } from "pixi.js";
+import { Texture, Container, Renderer, Color, Filter, Sprite, ContainerChild } from "pixi.js";
 import { BevelFilter } from "pixi-filters";
 import { TileModel } from "../../models/tiles/TileModel.ts";
 import { TileView } from "./TileView.ts";
@@ -18,7 +18,7 @@ export abstract class TileBaseView implements TileView {
     /**
      * Цвет заливки, применяемый в отсутствии текстуры
      */
-    protected replacingTextureFillColor: Color;
+    public replacingTextureFillColor: Color;
 
     constructor (
         parameters: TileParameters,
@@ -36,12 +36,21 @@ export abstract class TileBaseView implements TileView {
     public abstract createContent(shouldAddBevelFilter: boolean): Container;
 
     public replaceContent(newContent: Container): void {
-        this.tile.removeChild(this.content);
-        this.content.destroy();
+        const oldContent = this.content;
+        TileBaseView.prepareContainerChildForDestroy(oldContent);
+        oldContent.children.forEach(child => TileBaseView.prepareContainerChildForDestroy(child));
+        
         this.content = newContent;
-        this.tile.addChild(this.content); 
+        this.tile.addChild(this.content);        
+        
+        if (oldContent) {
+            this.tile.removeChild(oldContent);                       
+            requestAnimationFrame(() => oldContent.destroy({ children: true }));
+        }
+
+        this.tile.updateCacheTexture();
     }
-    
+
     protected createTile(): Container {
         const result = new Container();       
         result.addChild(this.content);        
@@ -73,11 +82,60 @@ export abstract class TileBaseView implements TileView {
     }
 
     public removeFilters(): void {
-        this.tile.filters = [];
+        this.tile.filters = null;
         this.tile.updateCacheTexture();
     }
 
+    private static prepareContainerChildForDestroy(containerChild: ContainerChild): void {
+        if (containerChild.isCachedAsTexture) {
+            containerChild.cacheAsTexture(false);
+        }
+        if (containerChild.filters?.length) {
+            containerChild.filters = null;
+        }
+        if (containerChild.hitArea) {
+            containerChild.hitArea = undefined;
+        }
+        if (containerChild.mask) {
+            containerChild.mask = null;
+        }
+        this.destroyContainerChildTextures(containerChild);
+    }
+
+    private static destroyContainerChildTextures(containerChild: ContainerChild): void {
+        if (containerChild instanceof Sprite) {
+            TileBaseView.destroySpriteTexture(containerChild);
+        }
+        
+        if (containerChild instanceof Container) {
+            containerChild.children.forEach(child => TileBaseView.destroySpriteTexture(child));
+        }
+    }
+
+    private static destroySpriteTexture(sprite: ContainerChild): void {
+        if (sprite instanceof Sprite) {
+            if (sprite.texture && !sprite.texture.destroyed) {
+                sprite.texture.destroy(true);
+                sprite.texture = Texture.EMPTY;
+            }
+        }
+    }
+
+    private destroyTexture(): void {
+        if (this.texture && !this.texture.destroyed) {
+            this.texture.destroy(true);
+        }
+        this.texture = undefined;
+    }
+
     public destroy(): void {
-        this.tile.destroy();
+        TileBaseView.prepareContainerChildForDestroy(this.content);
+        this.content.children.forEach(child => TileBaseView.prepareContainerChildForDestroy(child));
+
+        TileBaseView.prepareContainerChildForDestroy(this.tile);
+        this.tile.children.forEach(child => TileBaseView.prepareContainerChildForDestroy(child));
+
+        this.tile.destroy({ children: true });            
+        this.destroyTexture();
     }
 }

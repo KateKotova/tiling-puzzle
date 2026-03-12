@@ -1,5 +1,5 @@
+import { Texture, Container, Filter, FederatedPointerEvent, Color } from "pixi.js";
 import { GlowFilter } from "pixi-filters";
-import { Texture, Container, Filter, FederatedPointerEvent } from "pixi.js";
 import { TileModel } from "../../models/tiles/TileModel.ts";
 import { TileView } from "../tiles/TileView.ts";
 import { draggingTileData } from "./DraggingTileData.ts";
@@ -20,6 +20,8 @@ export class StaticTileView implements TileView {
      * для перетаскивания подвижной фигуры
      */
     private isDragTarget: boolean = false;
+
+    private targetGlowFilter?: GlowFilter;
 
     /**
      * Создание неподвижного элемента замощения,
@@ -51,6 +53,14 @@ export class StaticTileView implements TileView {
 
     public get content(): Container {
         return this.view.content;
+    }
+
+    public get replacingTextureFillColor(): Color {
+        return this.view.replacingTextureFillColor;
+    }
+
+    public set replacingTextureFillColor(color: Color) {
+        this.view.replacingTextureFillColor = color;
     }
 
     public setFilter(filter: Filter): void {
@@ -91,7 +101,7 @@ export class StaticTileView implements TileView {
         
         this.isDragTarget = true;
         
-        const filter = new GlowFilter(this.parameters.targetGlowFilterOptions);      
+        const filter = this.getTargetGlowFilter();      
         this.view.setFilter(filter);
 
         draggingTileData.view?.rotateToDragTarget(this.view.model);     
@@ -105,7 +115,7 @@ export class StaticTileView implements TileView {
         this.isDragTarget = false;
         this.view.removeFilters();
         if (draggingTileData.view) {
-            draggingTileData.view.dragTarget = undefined;
+            draggingTileData.view.dragTarget = draggingTileData.view.dragSource;
         }
     }
 
@@ -120,6 +130,13 @@ export class StaticTileView implements TileView {
             this.stopBeingDragTarget();            
             draggingTileData.view.onGlobalPointerUp(event);
         }
+    }
+
+    private getTargetGlowFilter(): GlowFilter {
+        if (!this.targetGlowFilter) {
+            this.targetGlowFilter = new GlowFilter(this.parameters.targetGlowFilterOptions);
+        }
+        return this.targetGlowFilter;
     }
 
     public stopBeingDragTarget(): void {
@@ -141,7 +158,24 @@ export class StaticTileView implements TileView {
     }
 
     public destroy(): void {
-        this.removeEventListeners();       
+        this.removeEventListeners();
+        
+        this.view.removeFilters();
+        if (this.targetGlowFilter) {
+            this.targetGlowFilter.destroy();
+            this.targetGlowFilter = undefined;
+        }
+        
+        if (draggingTileData.view) {
+            const draggingTileView = draggingTileData.view;
+            if (draggingTileView.dragSource === this) {
+                draggingTileView.dragSource = undefined;
+            }
+            if (draggingTileView.dragTarget === this) {
+                draggingTileView.dragTarget = undefined;
+            }
+        }
+        
         this.view.destroy();
     }
 }

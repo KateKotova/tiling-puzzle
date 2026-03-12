@@ -1,8 +1,18 @@
-import { Color, Container, ContainerChild, ContainerOptions, DestroyOptions, Graphics, Point, Rectangle, Renderer, Ticker } from "pixi.js";
+import { 
+    Color,
+    Container,
+    ContainerChild,
+    ContainerOptions,
+    DestroyOptions,
+    Graphics,
+    Point,
+    Rectangle,
+    Renderer,
+    Ticker
+} from "pixi.js";
 import { TileLineParameters } from "./TileLineParameters.ts";
 import { TilingView } from "../tilings/TilingView.ts";
 import { TileLineDirectionType } from "./TileLineDirectionType.ts";
-import { TilePosition } from "../../models/tiles/TilePosition.ts";
 import { TileViewCreationParameters } from "../tiles/TileViewCreationParameters.ts";
 import { TileViewFactory } from "../tiles/TileViewFactory.ts";
 import { DraggableTileView } from "../tile-decorators/DraggableTileView.ts";
@@ -12,22 +22,24 @@ import { TileLineLayoutType } from "./TileLineLayoutType.ts";
 import { Algorithm } from "../../math/Algorithm.ts";
 import { TileView } from "../tiles/TileView.ts";
 import { ViewportContainer } from "./ViewportContainer.ts";
-import { OverTimeNumberChangeController }
-    from "../../math/over-time-value-changes/OverTimeNumberChangeController.ts";
+import { TileLineResizeController } from "../controllers/TileLineResizeController.ts";
 
 /**
  * Класс контейнера линии, в которой содержатся элементы мозаики для сборки.
  * Может быть вертикальной (сверху вниз) или горизонтальной (слева направо).
  */
 export class TileLineContainer extends Container {
+    public static readonly startResizeEventName: string = "startResizeEvent";
+    public static readonly stopResizeEventName: string = "stopResizeEvent";
+
     public readonly parameters: TileLineParameters;
-    private readonly tilingView: TilingView;
+    private readonly tilingView: TilingView;    
     /**
      * Продольный размер.
      * Для направления слева направо это ширина.
      * Для направления сверху вниз это высота.
      */
-    private longitudinalSize: number;
+    public longitudinalSize: number;
     /**
      * Поперечный размер.
      * Для направления слева направо это высота.
@@ -53,24 +65,17 @@ export class TileLineContainer extends Container {
     private readonly maxScaledBoundingSize: number;
 
     private viewportContainer?: ViewportContainer;
-    private selectedContainer: Container;
+    private readonly selectedContainer: Container;
 
-    private backgroundContainer: Container;
+    public readonly backgroundContainer: Container;
     private backgroundFillColor: Color = new Color(0x00AA00);
 
-    private tileViews: DraggableTileView[] = [];
+    public tileViews: DraggableTileView[] = [];
 
-    /**
-     * Контроллер изменения размера ленты
-     */
-    private sizeController?: OverTimeNumberChangeController;
-    // @ts-expect-error TODO: необходимо для остановки прокрутки, которой пока нет
-    private isResizing: boolean = false;
-    private targetLongitudinalSize: number = 0;
+    public isResizing: boolean = false;
+    public targetLongitudinalSize: number = 0;
 
-    private ticker: Ticker;
-
-    private boundOnResizeTicker: (ticker: Ticker) => void = this.onResizeTicker.bind(this);
+    private readonly resizeController: TileLineResizeController;
 
     constructor(
         parameters: TileLineParameters,
@@ -85,7 +90,8 @@ export class TileLineContainer extends Container {
         this.transverseSize = transverseSize;
         this.tilingView = tilingView;
         this.selectedContainer = selectedContainer;
-        this.ticker = ticker;
+
+        this.resizeController = new TileLineResizeController(this, ticker);
 
         this.maxScaledBoundingSize = this.transverseSize
             - 2 * this.parameters.transverseContentOffset;
@@ -106,6 +112,16 @@ export class TileLineContainer extends Container {
         this.addChild(this.backgroundContainer);
     }
 
+    public dispatchStartResizeEvent(): void {
+        const event = new CustomEvent(TileLineContainer.startResizeEventName);
+        window.dispatchEvent(event);
+    }
+
+    public dispatchStopResizeEvent(): void {
+        const event = new CustomEvent(TileLineContainer.stopResizeEventName);
+        window.dispatchEvent(event);
+    }
+
     private getViewportContainerOrThrow(): ViewportContainer {
         if (!this.viewportContainer) {
             throw new Error('viewportContainer is not defined');
@@ -122,11 +138,18 @@ export class TileLineContainer extends Container {
         this.scaleChangeGlobalRectangle = this.getTileScaleChangeGlobalRectangle();
     }
 
+    public getPointIsInsideViewportRectangle(globalPoint: Point): boolean {
+        return this.getViewportContainerOrThrow()
+            .getPointIsInsideViewportRectangle(globalPoint);
+    }
+
     private getTileScaleChangeGlobalRectangle(): Rectangle {
-        const viewportRectangle = this.getViewportContainerOrThrow().viewportRectangle;
-        const globalLeftTop = this.toGlobal(new Point(0, 0));
+        const viewportContainer = this.getViewportContainerOrThrow();
+        const viewportRectangle = viewportContainer.viewportRectangle;
+        const globalLeftTop = viewportContainer.viewportGlobalPosition;
         const widthHalf = this.width / 2.0;
         const heightHalf = this.height / 2.0;
+
         switch (this.parameters.layoutType) {
             case TileLineLayoutType.Top:
                 return new Rectangle(
@@ -212,7 +235,7 @@ export class TileLineContainer extends Container {
                 model: model,
                 texture: this.tilingView.model.getTileTexture(model),
                 renderer,
-                replacingTextureFillColor: this.tilingView.staticTileFillColor
+                replacingTextureFillColor: this.tilingView.defaultStaticTileFillColor
             };
             const view = viewFactory.getView(
                 this.parameters.tileParameters,
@@ -222,29 +245,26 @@ export class TileLineContainer extends Container {
 
             this.addChild(view.tile);
 
-            this.tileViews.push(new DraggableTileView(
+            const decoratedView = new DraggableTileView(
                 this.parameters.draggableTileParameters,
                 view,
                 this,
                 this.tilingView.draggableTilesContainer,
                 this.selectedContainer,
                 ticker
-            ));
+            );
+
+            this.tileViews.push(decoratedView);
+
+            this.tilingView.draggableTileViewsByTilePositionStrings.set(
+                view.model.targetTilePosition.toString(),
+                decoratedView
+            );
         }
     }
 
-    private onResizeTicker(ticker: Ticker): void {
-        this.executeResize(ticker.deltaMS);
-        if (this.sizeController?.getIsCompleted()) {
-            this.completeResize();
-            this.ticker.remove(this.boundOnResizeTicker);
-            // TODO: это будет, когда линия будет перетаскиваться
-            //this.setOnPointerDownActivity(true);
-        }        
-    }
-
     public resize(targetLongitudinalSize: number): void {
-        this.stopResize();
+        this.resizeController.stop();
 
         const bounds = this.backgroundContainer.getBounds();
         const globalRightBottom = new Point(bounds.right, bounds.bottom);
@@ -261,13 +281,13 @@ export class TileLineContainer extends Container {
             : globalRightBottom.y <= viewportRightBottom.y + offset;
 
         if (endIsVisible) {
-            this.startResize(targetLongitudinalSize - this.longitudinalSize);
+            this.resizeController.start(targetLongitudinalSize - this.longitudinalSize);
         } else {
             this.resizeWithoutAnimation(targetLongitudinalSize);
         }
     }
 
-    private resizeWithoutAnimation(targetLongitudinalSize: number): void {
+    public resizeWithoutAnimation(targetLongitudinalSize: number): void {
         if (this.parameters.directionType === TileLineDirectionType.FromLeftToRight) {
             this.backgroundContainer.width = targetLongitudinalSize;            
         } else {
@@ -282,51 +302,6 @@ export class TileLineContainer extends Container {
             this.backgroundContainer.width,
             this.backgroundContainer.height
         );
-    }
-
-    private stopResize(): void {
-        if (!this.sizeController?.getIsCompleted()) {
-            this.ticker.remove(this.boundOnResizeTicker);
-            this.isResizing = false;
-        }
-    }
-
-    private startResize(longitudinalSizeDifference: number): void {
-        this.isResizing = true;
-        // TODO: это будет, когда линия будет перетаскиваться
-        //this.setOnPointerDownActivity(false);
-        this.prepareToResize(longitudinalSizeDifference);        
-        this.ticker.add(this.boundOnResizeTicker);
-    }
-
-    private prepareToResize(longitudinalSizeDifference: number): void {
-        this.targetLongitudinalSize = this.longitudinalSize + longitudinalSizeDifference;
-
-        if (!this.sizeController) {            
-            this.sizeController = new OverTimeNumberChangeController(
-                this.longitudinalSize,
-                this.targetLongitudinalSize,
-                this.parameters.animationParameters.animationTime,
-                this.parameters.animationParameters.accelerationTimeToAnimationTimeRatio
-            );
-        } else {
-            this.sizeController.reset(this.longitudinalSize, this.targetLongitudinalSize);
-        }
-    }
-
-    private executeResize(deltaTime: number): void {
-        const sizeIncrement = this.sizeController?.getIsCompleted()
-            ? 0
-            : (this.sizeController?.getIncrement(deltaTime) ?? 0);
-        this.resizeWithoutAnimation(this.longitudinalSize + sizeIncrement);
-    }
-
-    private completeResize(): void {
-        this.resizeWithoutAnimation(this.targetLongitudinalSize);
-        if (!this.tileViews.length) {
-            this.backgroundContainer.visible = false;
-        }
-        this.isResizing = false;
     }
 
     public setScaleRelativeToScaleChangeGlobalRectangle(
@@ -400,7 +375,6 @@ export class TileLineContainer extends Container {
         const targetPositions: Point[] = [];
         let lastMovingTileIndex = -1;
 
-        // Эти фигуры видны, поэтому у них будет анимация движения
         for (
             let tileIndex = removingTileIndex + 1;
             tileIndex < this.tileViews.length;
@@ -408,6 +382,7 @@ export class TileLineContainer extends Container {
         ) {
             const tile = this.tileViews[tileIndex];
             if (this.getTileIsVisibleInViewportContainer(tile)) {
+                // Эти фигуры видны, поэтому у них будет анимация движения
                 visibleMovingTiles.push(tile);
                 const previousTile = this.tileViews[tileIndex - 1];
                 targetPositions.push(previousTile.model.currentPositionPoint.clone());
@@ -417,7 +392,7 @@ export class TileLineContainer extends Container {
             }
         }
 
-        // Фигуры движутся влево, поэтому ещё одну невидимую фигуру захватим,
+        // Фигуры движутся влево/вверху, поэтому ещё одну невидимую фигуру захватим,
         // потому что она подвинется и станет видимой
         if (
             lastMovingTileIndex > 0
@@ -425,7 +400,7 @@ export class TileLineContainer extends Container {
         ) {
             visibleMovingTiles.push(this.tileViews[lastMovingTileIndex]);
             const previousTile = this.tileViews[lastMovingTileIndex - 1];
-            targetPositions.push(previousTile.model.currentPositionPoint.clone());
+            targetPositions.push(previousTile.model.currentPositionPoint.clone());            
         }
 
         // Корректирую первую позицию,
@@ -437,18 +412,19 @@ export class TileLineContainer extends Container {
         }        
 
         for (let tileIndex = 0; tileIndex < visibleMovingTiles.length; tileIndex++) {
-            visibleMovingTiles[tileIndex].moveInInitialContainer(targetPositions[tileIndex]);
+            visibleMovingTiles[tileIndex].moveInsideInitialContainer(targetPositions[tileIndex]);
             visibleMovingTiles[tileIndex].model.targetTilePosition.shuffledIndex--;
         }
 
-        // Остальные фигуры справа просто поменяют координаты, потому что их не видно
+        // Остальные фигуры справа/снизу просто поменяют координаты, потому что их не видно
         if (lastMovingTileIndex > 0) {
             for (
                 let tileIndex = this.tileViews.length - 1;
                 tileIndex >= lastMovingTileIndex + 1;
                 tileIndex--
             ) {
-                const previousTilePosition = this.tileViews[tileIndex - 1].model.currentPositionPoint;
+                const previousTilePosition = this.tileViews[tileIndex - 1].model
+                    .currentPositionPoint;
                 const tile = this.tileViews[tileIndex];
                 tile.model.currentPositionPoint.copyFrom(previousTilePosition);
                 tile.tile.position.copyFrom(previousTilePosition);
@@ -464,6 +440,108 @@ export class TileLineContainer extends Container {
         this.resize(newSize);
     }
 
+    /**
+     * Добавление фигуры на ленту.
+     * Фигура добавляется в массив, а также фигуры справа от неё подвигаются.
+     * @param tileView Добавляемая перетаскиваемая фигура
+     */
+    public addTileView(tileView: DraggableTileView): void {
+        const viewportContainer = this.getViewportContainerOrThrow();
+        const viewportGlobalRectangle = viewportContainer.getViewportGlobalRectangle();
+
+        // Добавляем новый единственный элемент мозаики в пустой массив
+        if (!this.tileViews.length) {
+            tileView.model.targetTilePosition.shuffledIndex = 0;
+            
+            const targetGlobalPosition = new Point(
+                viewportGlobalRectangle.x + viewportGlobalRectangle.width / 2.0,
+                viewportGlobalRectangle.y + viewportGlobalRectangle.height / 2.0
+            );
+
+            tileView.moveToInitialContainer(targetGlobalPosition);
+            this.tileViews.push(tileView);
+
+            this.backgroundContainer.visible = true;
+            const newSize = 2 * this.parameters.longitudinalContentOffset
+                + this.maxScaledBoundingSize;
+            this.resize(newSize);
+            return;            
+        }
+
+        const globalPosition = tileView.getGlobalPosition();
+        const localPosition = this.toLocal(globalPosition);
+        const isHorizontal = this.parameters.directionType
+            === TileLineDirectionType.FromLeftToRight;
+
+        const coordinate = isHorizontal ? localPosition.x : localPosition.y;       
+        const coordinates = isHorizontal
+            ? this.tileViews.map(tileView => tileView.tile.position.x)
+            : this.tileViews.map(tileView => tileView.tile.position.y);
+
+        const shuffledIndex = coordinate < coordinates[0]
+            ? 0
+            : coordinate > coordinates[coordinates.length - 1]
+                ? coordinates.length
+                : Algorithm.findSegmentIndex(coordinates, coordinate);
+
+        tileView.model.targetTilePosition.shuffledIndex = shuffledIndex;
+        for (let tileIndex = shuffledIndex; tileIndex < this.tileViews.length; tileIndex++) {
+            const tileView = this.tileViews[tileIndex];
+            tileView.model.targetTilePosition.shuffledIndex++;
+            const newPosition = this.getTilePositionPoint(tileIndex + 1);
+
+            if (this.getTileIsVisibleInViewportContainer(tileView)) {
+                // Эти фигуры видны, поэтому у них будет анимация движения
+                tileView.moveInsideInitialContainer(newPosition);
+            } else {
+                tileView.model.currentPositionPoint.copyFrom(newPosition);
+                tileView.tile.position.copyFrom(newPosition);
+            }
+        }
+
+        const sizeDifference = this.getTileLongitudinalCoordinateMultiplier();
+        const newSize = this.longitudinalSize + sizeDifference;
+
+        const viewportSize = isHorizontal
+            ? viewportGlobalRectangle.width
+            : viewportGlobalRectangle.height;
+
+        const targetLocalPosition = this.getTilePositionPoint(shuffledIndex);
+        const thisGlobalPosition = this.parent?.toGlobal(this.position) ?? this.position;
+
+        let thisNewGlobalPosition: number;
+        if (newSize < viewportSize) {
+            // При малой ширине полоски происходит её центрирование во вьюпорте
+            const viewportSizeDifferenceHalf = (viewportSize - newSize) / 2.0;
+            thisNewGlobalPosition = isHorizontal
+                ? viewportGlobalRectangle.x + viewportSizeDifferenceHalf
+                : viewportGlobalRectangle.y + viewportSizeDifferenceHalf;
+        } else {
+            // Корректировка позиции в границах вьюпорта
+            thisNewGlobalPosition = isHorizontal
+                ? viewportContainer.getClampedX(thisGlobalPosition.x, newSize)
+                : viewportContainer.getClampedY(thisGlobalPosition.y, newSize);
+        }
+
+        const targetGlobalPosition = new Point(
+            isHorizontal
+                ? thisNewGlobalPosition + targetLocalPosition.x
+                : targetLocalPosition.x + viewportGlobalRectangle.x,
+            isHorizontal
+                ? targetLocalPosition.y + viewportGlobalRectangle.y
+                : thisNewGlobalPosition + targetLocalPosition.y
+        );
+
+        tileView.moveToInitialContainer(targetGlobalPosition);
+        if (shuffledIndex >= this.tileViews.length) {
+            this.tileViews.push(tileView);
+        } else {
+            this.tileViews.splice(shuffledIndex, 0, tileView);
+        }
+
+        this.resize(newSize);        
+    }
+
     private getTileIsVisibleInViewportContainer(tileView: TileView): boolean {
         const viewportContainer = this.getViewportContainerOrThrow();
 
@@ -471,11 +549,6 @@ export class TileLineContainer extends Container {
         const tileGlobalPosition = tileView.tile.parent
             ? tileView.tile.parent.toGlobal(tileView.tile.position)
             : tileView.tile.position;
-        const viewportContainerPosition = new Point(viewportContainer.x,
-            viewportContainer.y);
-        const viewportContainerGlobalPosition = viewportContainer.parent
-            ? viewportContainer.parent.toGlobal(viewportContainerPosition)
-            : viewportContainerPosition;
         
         let tileLongitudinalCoordinate: number;
         let viewportLongitudinalCoordinate: number;
@@ -483,11 +556,11 @@ export class TileLineContainer extends Container {
 
         if (this.parameters.directionType === TileLineDirectionType.FromLeftToRight) {
             tileLongitudinalCoordinate = tileGlobalPosition.x;
-            viewportLongitudinalCoordinate = viewportContainerGlobalPosition.x;
+            viewportLongitudinalCoordinate = viewportContainer.viewportGlobalPosition.x;
             viewportLongitudinalSize = viewportContainer.viewportRectangle.width;
         } else {
             tileLongitudinalCoordinate = tileGlobalPosition.y;
-            viewportLongitudinalCoordinate = viewportContainerGlobalPosition.y;
+            viewportLongitudinalCoordinate = viewportContainer.viewportGlobalPosition.y;
             viewportLongitudinalSize = viewportContainer.viewportRectangle.height;
         }
 
@@ -523,10 +596,10 @@ export class TileLineContainer extends Container {
         return result;
     }
 
-    public getTilePositionPoint(tilePosition: TilePosition): Point {
+    public getTilePositionPoint(shuffledIndex: number,): Point {
         const transverseCoordinate = this.getTileTransverseCoordinate();
         const longitudinalCoordinate = this.getTileLongitudinalCoordinateOffset()
-            + tilePosition.shuffledIndex * this.getTileLongitudinalCoordinateMultiplier();
+            + shuffledIndex * this.getTileLongitudinalCoordinateMultiplier();
         return this.getPoint(longitudinalCoordinate, transverseCoordinate);
     }
 
@@ -557,9 +630,30 @@ export class TileLineContainer extends Container {
     }
 
     public destroy(options?: DestroyOptions): void {
-        if (this.backgroundContainer) {
-            this.backgroundContainer.destroy();
+        if (this.destroyed) {
+            return;
         }
+        
+        this.isResizing = false;
+        this.resizeController.destroy();
+        
+        this.tileViews.forEach(tileView => {
+            if (tileView.view.tile.parent === this) {
+                // Удаляем фигуру с ленты, но она должна оставаться во view замощения
+                this.removeChild(tileView.view.tile);
+            }
+        });
+        this.tileViews.length = 0;
+        
+        if (this.backgroundContainer && !this.backgroundContainer.destroyed) {
+            this.removeChild(this.backgroundContainer);            
+            this.backgroundContainer.cacheAsTexture(false);            
+            this.backgroundContainer.destroy({ children: true });
+        }
+        
+        this.viewportContainer = undefined;
+        this.scaleChangeGlobalRectangle = undefined;
+        
         super.destroy(options);
     }
 }

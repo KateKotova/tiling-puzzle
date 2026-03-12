@@ -4,9 +4,11 @@ import {
     ContainerOptions,
     DestroyOptions,
     Graphics,
+    Point,
     Rectangle
 } from 'pixi.js';
 import { Size } from '../../math/Size.ts';
+import { Algorithm } from '../../math/Algorithm.ts';
 
 /**
  * Класс контейнера-viewport-а,
@@ -19,6 +21,10 @@ export class ViewportContainer extends Container {
      * Здесь позиция - координаты левого верхнего угла относительно родительского контейнера.
      */
     public viewportRectangle: Rectangle;
+    /**
+     * Глобальные координаты левого верхнего угла вьюпорта.
+     */
+    public viewportGlobalPosition: Point = new Point(0, 0);
     /**
      * Оригинальные размеры контента без масштабирования
      */
@@ -66,15 +72,34 @@ export class ViewportContainer extends Container {
      * Добавляет маску в родительский контейнер
      */
     public onAddedToParent(): void {
-        if (
-            this.parent
-            && this.contentMaskGraphics
-            && !this.contentMaskGraphics.parent
-        ) {
-            this.parent.addChild(this.contentMaskGraphics);
+        if (this.parent) {
+            this.viewportGlobalPosition = this.parent.toGlobal(new Point(
+                this.viewportRectangle.x,
+                this.viewportRectangle.y
+            ));
+
+            if (this.contentMaskGraphics && !this.contentMaskGraphics.parent) {
+                this.parent.addChild(this.contentMaskGraphics);
+            }
         }
     }
-    
+
+    public getViewportGlobalRectangle(): Rectangle {
+        return new Rectangle(
+            this.viewportGlobalPosition.x,
+            this.viewportGlobalPosition.y,
+            this.viewportRectangle.width,
+            this.viewportRectangle.height
+        );
+    }
+
+    public getPointIsInsideViewportRectangle(globalPoint: Point): boolean {
+        return Algorithm.getPointIsInsideRectangle(
+            globalPoint,
+            this.getViewportGlobalRectangle()
+        );
+    }
+
     /**
      * Установка размеров контента.
      * Этот метод нужно вызывать после добавления контента
@@ -165,10 +190,15 @@ export class ViewportContainer extends Container {
      * Получение откорректированной абсциссы с учетом текущего масштаба,
      * чтобы границы контента не вылезали за границы viewport-а
      * @param x Предполагающаяся абсцисса
+     * @param contentHypotheticalOriginalWidth Гипотетическая оригинальная ширина контенты,
+     * то есть не такая, какая есть сейчас на самом деле, а такая,
+     * которая будет или предполагается
      * @returns Скорректированная абсцисса
      */
-    private getClampedX(x: number): number {
-        const contentScaledWidth = this.contentOriginalSize.width * this.scale.x;
+    public getClampedX(x: number, contentHypotheticalOriginalWidth?: number): number {
+        const contentOriginalWidth = contentHypotheticalOriginalWidth
+            ?? this.contentOriginalSize.width;
+        const contentScaledWidth = contentOriginalWidth * this.scale.x;
 
         const viewportLeft = this.viewportRectangle.left;
         const viewportRight = this.viewportRectangle.right;
@@ -186,10 +216,15 @@ export class ViewportContainer extends Container {
      * Получение откорректированной ординаты с учетом текущего масштаба,
      * чтобы границы контента не вылезали за границы viewport-а
      * @param y Предполагающаяся ордината
+     * @param contentHypotheticalOriginalHeight Гипотетическая оригинальная высота контенты,
+     * то есть не такая, какая есть сейчас на самом деле, а такая,
+     * которая будет или предполагается
      * @returns Скорректированная ордината
      */
-    private getClampedY(y: number): number {
-        const contentScaledHeight = this.contentOriginalSize.height * this.scale.y;
+    public getClampedY(y: number, contentHypotheticalOriginalHeight?: number): number {
+        const contentOriginalHeight = contentHypotheticalOriginalHeight
+            ?? this.contentOriginalSize.height;
+        const contentScaledHeight = contentOriginalHeight * this.scale.y;
 
         const viewportTop = this.viewportRectangle.top;
         const viewportBottom = this.viewportRectangle.bottom;
@@ -204,10 +239,19 @@ export class ViewportContainer extends Container {
     }
 
     public destroy(options?: DestroyOptions): void {
+        if (this.destroyed) {
+            return;
+        }
+       
+        this.mask = null;        
+        if (this.contentMaskGraphics && this.contentMaskGraphics.parent) {
+            this.contentMaskGraphics.parent.removeChild(this.contentMaskGraphics);
+        }        
         if (this.contentMaskGraphics) {
             this.contentMaskGraphics.destroy();
             this.contentMaskGraphics = undefined;
         }
+        
         super.destroy(options);
     }
 }
