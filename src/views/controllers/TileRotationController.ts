@@ -21,11 +21,11 @@ export class TileRotationController extends EntityController<DraggableTileView, 
     }
 
     protected get staticTickerListenersCount(): number {
-        return TileRotationController.tickerListenerCount;
+        return TileRotationController.onTickerCount;
     }
 
     protected set staticTickerListenersCount(value: number) {
-        TileRotationController.tickerListenerCount = value;
+        TileRotationController.onTickerCount = value;
     }
 
     public restart(dragTargetModel?: TileModel): void {

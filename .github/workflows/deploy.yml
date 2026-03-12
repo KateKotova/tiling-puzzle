@@ -1,9 +1,9 @@
 name: Deploy to GitHub Pages
 
-# Триггер: запускать при пуше в ветку master, develop, t-0021-improve-performance
+# Триггер: запускать при push в ветку master, develop
 on:
   push:
-    branches: ["master", "develop", "t-0021-improve-performance"]
+    branches: ["master", "develop"]
 
 # Разрешаем GITHUB_TOKEN запись в Pages
 permissions:
@@ -35,7 +35,7 @@ jobs:
       - name: Build project
         run: npm run build
         # env:
-          # Важно: если роутинг требует базовый путь, передаём его.
+          # Важно: если routing требует базовый путь, передаём его.
           # PUBLIC_PATH: /tiling-puzzle/
 
       - name: Upload artifact

@@ -11,11 +11,11 @@ export class TileLineResizeController
     private controller?: SmoothNumberStepController;
 
     protected get staticTickerListenersCount(): number {
-        return TileLineResizeController.tickerListenerCount;
+        return TileLineResizeController.onTickerCount;
     }
 
     protected set staticTickerListenersCount(value: number) {
-        TileLineResizeController.tickerListenerCount = value;
+        TileLineResizeController.onTickerCount = value;
     }
 
     public stop(): void {

@@ -23,11 +23,11 @@ export class TileMoveAfterDragController
     }
 
     protected get staticTickerListenersCount(): number {
-        return TileMoveAfterDragController.tickerListenerCount;
+        return TileMoveAfterDragController.onTickerCount;
     }
 
     protected set staticTickerListenersCount(value: number) {
-        TileMoveAfterDragController.tickerListenerCount = value;
+        TileMoveAfterDragController.onTickerCount = value;
     }
 
     public restart(dragTargetModel?: TileModel): void {

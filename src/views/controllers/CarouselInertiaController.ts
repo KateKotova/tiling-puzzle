@@ -18,9 +18,9 @@ export class CarouselInertiaController {
     private readonly deceleratedMotionController: DeceleratedMotionController;
     private inertiaController?: InertiaController;
 
-    private readonly tickerListener: () => void;
-    private tickerListenerWasAdded: boolean = false;
-    private static tickerListenerCount: number = 0;
+    private readonly boundOnTicker: () => void = this.onTicker.bind(this);
+    private onTickerWasAdded: boolean = false;
+    private static onTickerCount: number = 0;
 
     constructor(
         target: CarouselContainer,
@@ -45,30 +45,28 @@ export class CarouselInertiaController {
             minMotionTime: deceleratedMotionParameters.minMotionTime,
             minMotionToBoundTime: deceleratedMotionParameters.minMotionToBoundTime
         });
-
-        this.tickerListener = () => this.onTicker();
     }
 
     private removeTickerListener(): void {
-        if (this.tickerListenerWasAdded) {
-            this.ticker.remove(this.tickerListener);
-            this.tickerListenerWasAdded = false;
-            CarouselInertiaController.tickerListenerCount--;
-            //this.logTickerListener();
+        if (this.onTickerWasAdded) {
+            this.ticker.remove(this.boundOnTicker);
+            this.onTickerWasAdded = false;
+            CarouselInertiaController.onTickerCount--;
+            //this.logTicker();
         }
     }
 
     private addTickerListener(): void {
-        if (!this.tickerListenerWasAdded) {
-            this.ticker.add(this.tickerListener);
-            this.tickerListenerWasAdded = true;
-            CarouselInertiaController.tickerListenerCount++;
-            //this.logTickerListener();
+        if (!this.onTickerWasAdded) {
+            this.ticker.add(this.boundOnTicker);
+            this.onTickerWasAdded = true;
+            CarouselInertiaController.onTickerCount++;
+            //this.logTicker();
         }
     }
 
-    public logTickerListener() {
-        console.log(`${this.constructor.name}: ${CarouselInertiaController.tickerListenerCount}`);
+    public logTicker() {
+        console.log(`${this.constructor.name}: ${CarouselInertiaController.onTickerCount}`);
     }
 
     public restart(): void {

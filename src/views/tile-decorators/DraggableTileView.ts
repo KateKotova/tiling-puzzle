@@ -116,10 +116,14 @@ export class DraggableTileView implements TileView {
         TileMoveInsideInitialContainerController;
     private readonly moveToInitialContainerController: TileMoveToInitialContainerController;
 
+    //#region Отладочная информация
+
     private static onPointerDownCount: number = 0;
     private static onGlobalPointerMoveCount: number = 0;
     private static onPointerUpCount: number = 0;
     private static onPointerLeaveCount: number = 0;
+
+    //#endregion Отладочная информация
 
     private boundOnGlobalPointerUp: (event: PointerEvent) => void
         = this.onGlobalPointerUp.bind(this);
@@ -189,6 +193,8 @@ export class DraggableTileView implements TileView {
         this.view.replacingTextureFillColor = color;
     }
 
+    //#region Отладочная информация
+
     public static logPointerDown() {
         console.log(`onPointerDownCount: ${DraggableTileView.onPointerDownCount}`);
     }
@@ -204,6 +210,8 @@ export class DraggableTileView implements TileView {
     public static logPointerLeave() {
         console.log(`onPointerLeaveCount: ${DraggableTileView.onPointerLeaveCount}`);
     }
+
+    //#endregion Отладочная информация
 
     private saveHitArea(): void {
         if (this.view.tile.hitArea) {

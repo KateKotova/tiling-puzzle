@@ -21,11 +21,11 @@ export class TileMoveToInitialContainerController
     }
 
     protected get staticTickerListenersCount(): number {
-        return TileMoveToInitialContainerController.tickerListenerCount;
+        return TileMoveToInitialContainerController.onTickerCount;
     }
 
     protected set staticTickerListenersCount(value: number) {
-        TileMoveToInitialContainerController.tickerListenerCount = value;
+        TileMoveToInitialContainerController.onTickerCount = value;
     }
 
     public restart(targetGlobalPosition: Point): void {

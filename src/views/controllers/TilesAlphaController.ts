@@ -14,9 +14,9 @@ export class TilesAlphaController {
     private readonly ticker: Ticker;
     private controller?: SmoothNumberStepController;
 
-    private readonly tickerListener: () => void;
-    private tickerListenerWasAdded: boolean = false;
-    private static tickerListenerCount: number = 0;
+    private readonly boundOnTicker: () => void = this.onTicker.bind(this);
+    private onTickerWasAdded: boolean = false;
+    private static onTickerCount: number = 0;
 
     constructor(
         parameters: AnimationParameters,
@@ -26,29 +26,28 @@ export class TilesAlphaController {
         this.parameters = parameters;
         this.tileViews = tileViews;
         this.ticker = ticker;
-        this.tickerListener = () => this.onTicker();
     }
 
     private removeTickerListener(): void {
-        if (this.tickerListenerWasAdded) {
-            this.ticker.remove(this.tickerListener);
-            this.tickerListenerWasAdded = false;
-            TilesAlphaController.tickerListenerCount--;
-            //this.logTickerListener();
+        if (this.onTickerWasAdded) {
+            this.ticker.remove(this.boundOnTicker);
+            this.onTickerWasAdded = false;
+            TilesAlphaController.onTickerCount--;
+            //this.logTicker();
         }
     }
 
     private addTickerListener(): void {
-        if (!this.tickerListenerWasAdded) {
-            this.ticker.add(this.tickerListener);
-            this.tickerListenerWasAdded = true;
-            TilesAlphaController.tickerListenerCount++;
-            //this.logTickerListener();
+        if (!this.onTickerWasAdded) {
+            this.ticker.add(this.boundOnTicker);
+            this.onTickerWasAdded = true;
+            TilesAlphaController.onTickerCount++;
+            //this.logTicker();
         }
     }
 
-    public logTickerListener() {
-        console.log(`${this.constructor.name}: ${TilesAlphaController.tickerListenerCount}`);
+    public logTicker() {
+        console.log(`${this.constructor.name}: ${TilesAlphaController.onTickerCount}`);
     }
 
     public restart(newStartValue: number, newTargetValue: number): void {

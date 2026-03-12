@@ -7,43 +7,42 @@ export abstract class EntityController<EntityType, ValueType> {
     protected readonly target: EntityType;
     protected readonly ticker: Ticker;
 
-    protected readonly tickerListener: () => void;
-    private tickerListenerWasAdded: boolean = false;
-    protected static tickerListenerCount: number = 0;
+    protected readonly boundOnTicker: () => void = this.onTicker.bind(this);
+    private onTickerWasAdded: boolean = false;
+    protected static onTickerCount: number = 0;
 
     constructor(target: EntityType, ticker: Ticker) {
         this.target = target;
         this.ticker = ticker;
-        this.tickerListener = () => this.onTicker();
     }
     
     protected get staticTickerListenersCount(): number {
-        return EntityController.tickerListenerCount;
+        return EntityController.onTickerCount;
     }
 
     protected set staticTickerListenersCount(value: number) {
-        EntityController.tickerListenerCount = value;
+        EntityController.onTickerCount = value;
     }
 
     protected removeTickerListener(): void {
-        if (this.tickerListenerWasAdded) {
-            this.ticker.remove(this.tickerListener);
-            this.tickerListenerWasAdded = false;
+        if (this.onTickerWasAdded) {
+            this.ticker.remove(this.boundOnTicker);
+            this.onTickerWasAdded = false;
             this.staticTickerListenersCount--;
-            //this.logTickerListener();
+            //this.logTicker();
         }
     }
 
     protected addTickerListener(): void {
-        if (!this.tickerListenerWasAdded) {
-            this.ticker.add(this.tickerListener);
-            this.tickerListenerWasAdded = true;
+        if (!this.onTickerWasAdded) {
+            this.ticker.add(this.boundOnTicker);
+            this.onTickerWasAdded = true;
             this.staticTickerListenersCount++;
-            //this.logTickerListener();
+            //this.logTicker();
         }
     }
 
-    public logTickerListener() {
+    public logTicker() {
         console.log(`${this.constructor.name}: ${this.staticTickerListenersCount}`);
     }
 

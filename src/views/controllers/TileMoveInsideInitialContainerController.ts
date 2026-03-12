@@ -19,11 +19,11 @@ export class TileMoveInsideInitialContainerController
     }
 
     protected get staticTickerListenersCount(): number {
-        return TileMoveInsideInitialContainerController.tickerListenerCount;
+        return TileMoveInsideInitialContainerController.onTickerCount;
     }
 
     protected set staticTickerListenersCount(value: number) {
-        TileMoveInsideInitialContainerController.tickerListenerCount = value;
+        TileMoveInsideInitialContainerController.onTickerCount = value;
     }
 
     public restart(targetPoint: Point): void {
