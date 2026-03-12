@@ -1,4 +1,12 @@
-import { Application, Assets, Container, ContainerChild, ContainerOptions, Graphics } from "pixi.js";
+import {
+  Application,
+  Assets,
+  Container,
+  ContainerChild,
+  ContainerOptions,
+  Graphics,
+  Texture
+} from "pixi.js";
 import { TilingType } from "./models/tilings/TilingType.ts";
 import { Settings } from "./Settings.ts";
 import { TilingTextureModel } from "./models/TilingTextureModel.ts";
@@ -20,9 +28,6 @@ async function main(): Promise<void> {
   try {
     //#region test data
 
-    //const exampleImageSrc = "assets/horse-example-image-rotated.png";
-    const exampleImageSrc = "assets/horse-example-image.png";
-
     const textureMinSideTileCount = 4;
     const tilingType = TilingType.OctagonAndSquareWithSingleLock;
 
@@ -39,27 +44,65 @@ async function main(): Promise<void> {
     });
     document.getElementById("pixi-container")!.appendChild(app.canvas);
 
-    await Assets.load([
-      {
-        alias: "example-image",
-        src: exampleImageSrc,
-      },
-      {
-        alias: "hint-icon-path",
-        src: "assets/hint-icon-path.txt",
-        data: {
-            parseAsGraphicsContext: true,
-        }
-      },
-    ]);
+    const assetSizes = {
+      '0.5x': { maxSize: 256, quality: 1 },
+      '1x': { maxSize: 512, quality: 0.9 },
+      '2x': { maxSize: 1024, quality: 0.8 },
+      '3x': { maxSize: 2048, quality: 0.7 }
+    };
+
+    const manifest = {
+      bundles: [
+        {
+          name: 'every-level-screen',
+          assets: [
+            {
+              alias: "hint-icon-path",
+              src: "assets/hint-icon-path.txt",
+              data: {
+                  parseAsGraphicsContext: true
+              }
+            }
+          ]
+        },
+        {
+          name: 'horse-level-screen',
+          assets: [
+            {
+              alias: 'horse',
+              src: 'assets/horse@{0.5,1,2,3}x.{png,webp}',
+              loadParser: 'loadTextures',
+              format: 'webp',
+              data: {
+                sizes: assetSizes
+              }
+            },
+            {
+              alias: 'horse-rotated',
+              src: 'assets/horse-rotated@{0.5,1,2,3}x.{png,webp}',
+              loadParser: 'loadTextures',
+              format: 'webp',
+              data: {
+                sizes: assetSizes
+              }
+            }
+          ],
+        },
+      ],
+    };
+
+    await Assets.init({ manifest });
+    // TODO: не забыть сделать Assets.unloadBundle
+    await Assets.loadBundle('every-level-screen');
+    await Assets.loadBundle('horse-level-screen');
 
     // TODO: сделать контроллер для этого функционала.
     // Столько всего не будет просто лежать в main.
     // я это сделаю в другой задаче.
 
     const settings = Settings.getInstance();
-  
-    const texture = Assets.get("example-image");
+
+    const texture = Assets.get<Texture>("horse");
     const textureModel = new TilingTextureModel(texture);
 
     const containerWidth = app.screen.width;
@@ -69,14 +112,15 @@ async function main(): Promise<void> {
       containerWidth, containerHeight);      
 
     const rectangularGridTilingModelFactory = new RectangularGridTilingModelFactory();
-    const tilingModel: RectangularGridTilingModel | null
-      = rectangularGridTilingModelFactory.getTilingModel(
-        settings.tileModelParameters,
-        tilingType,
-        textureMinSideTileCount,
-        textureModel,
-        imageContainerModel,
-        app.renderer);
+    const tilingModel: RectangularGridTilingModel | null =
+      rectangularGridTilingModelFactory.getTilingModel(
+      settings.tileModelParameters,
+      tilingType,
+      textureMinSideTileCount,
+      textureModel,
+      imageContainerModel,
+      app.renderer
+    );
     if (!tilingModel) {
       return;
     }
@@ -200,7 +244,7 @@ async function main(): Promise<void> {
       carouselContainer.stopInertia();
     });
 
-    const hintIconSvgPath = Assets.get("hint-icon-path");
+    const hintIconSvgPath = Assets.get<string>("hint-icon-path");
     const hintButton = new HintButton(
       settings.hintButtonParameters,
       app.renderer,

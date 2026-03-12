@@ -97,7 +97,14 @@ export abstract class TileBaseView implements TileView {
             containerChild.hitArea = undefined;
         }
         if (containerChild.mask) {
+            const mask = containerChild.mask as ContainerChild;
             containerChild.mask = null;
+            if (mask && !mask.destroyed) {
+                if (mask.parent) {
+                    mask.parent.removeChild(mask);
+                }
+                mask.destroy();
+            }
         }
         this.destroyContainerChildTextures(containerChild);
     }
