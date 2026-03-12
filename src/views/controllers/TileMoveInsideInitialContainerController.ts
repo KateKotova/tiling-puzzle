@@ -18,6 +18,14 @@ export class TileMoveInsideInitialContainerController
         this.controller = this.target.view.model.moveController;
     }
 
+    protected get staticTickerListenersCount(): number {
+        return TileMoveInsideInitialContainerController.onTickerCount;
+    }
+
+    protected set staticTickerListenersCount(value: number) {
+        TileMoveInsideInitialContainerController.onTickerCount = value;
+    }
+
     public restart(targetPoint: Point): void {
         this.stop();
         
@@ -30,24 +38,23 @@ export class TileMoveInsideInitialContainerController
     }
 
     public stop(): void {
-        if (!this.controller.getIsCompleted()) {
-            this.ticker.remove(this.boundOnTicker);
-            this.target.isMoving = false;
-        }
+        this.removeTickerListener();
+        this.target.isMoving = false;
     }
 
     public start(moveDifference: Point): void {
+        this.removeTickerListener();
         this.target.isMoving = true;
         this.target.setOnPointerDownActivity(false);
         this.prepareToExecute(moveDifference);        
-        this.ticker.add(this.boundOnTicker);
+        this.addTickerListener();
     }
 
-    protected onTicker(ticker: Ticker): void {
-        this.execute(ticker.deltaMS);
+    protected onTicker(): void {
+        this.execute(this.ticker.deltaMS);
         if (this.controller.getIsCompleted()) {
             this.complete();
-            this.ticker.remove(this.boundOnTicker);
+            this.removeTickerListener();
             this.target.setOnPointerDownActivity(true);
         }        
     }

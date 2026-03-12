@@ -23,9 +23,6 @@ async function main(): Promise<void> {
     //const exampleImageSrc = "assets/horse-example-image-rotated.png";
     const exampleImageSrc = "assets/horse-example-image.png";
 
-    const containerWidth = 500;
-    const containerHeight = 400;
-
     const textureMinSideTileCount = 4;
     const tilingType = TilingType.OctagonAndSquareWithSingleLock;
 
@@ -64,6 +61,9 @@ async function main(): Promise<void> {
   
     const texture = Assets.get("example-image");
     const textureModel = new TilingTextureModel(texture);
+
+    const containerWidth = app.screen.width;
+    const containerHeight = app.screen.height * 2 / 3.0;
 
     const imageContainerModel = new ImageContainerModel(textureModel,
       containerWidth, containerHeight);      

@@ -17,6 +17,10 @@ build_job:
     paths:
       - dist/
     expire_in: 1 hour
+  only:
+    - master
+    - develop
+    - t-0021-improve-performance
 
 deploy_job:
   stage: deploy
@@ -48,3 +52,4 @@ deploy_job:
   only:
     - master
     - develop
+    - t-0021-improve-performance

@@ -1,4 +1,3 @@
-import { Ticker } from "pixi.js";
 import { TileLineContainer } from "../components/TileLineContainer.ts";
 import { SmoothNumberStepController }
     from "../../math/controllers/SmoothNumberStepController.ts";
@@ -11,25 +10,32 @@ export class TileLineResizeController
     extends EntityController<TileLineContainer, number> {
     private controller?: SmoothNumberStepController;
 
+    protected get staticTickerListenersCount(): number {
+        return TileLineResizeController.onTickerCount;
+    }
+
+    protected set staticTickerListenersCount(value: number) {
+        TileLineResizeController.onTickerCount = value;
+    }
+
     public stop(): void {
-        if (!this.controller?.getIsCompleted()) {
-            this.ticker.remove(this.boundOnTicker);
-            this.target.isResizing = false;
-        }
+        this.removeTickerListener();
+        this.target.isResizing = false;
     }
 
     public start(longitudinalSizeDifference: number): void {
+        this.removeTickerListener();
         this.target.isResizing = true;
         this.target.dispatchStartResizeEvent();
         this.prepareToExecute(longitudinalSizeDifference);        
-        this.ticker.add(this.boundOnTicker);
+        this.addTickerListener();
     }
 
-    protected onTicker(ticker: Ticker): void {
-        this.execute(ticker.deltaMS);
+    protected onTicker(): void {
+        this.execute(this.ticker.deltaMS);
         if (this.controller?.getIsCompleted()) {
             this.complete();
-            this.ticker.remove(this.boundOnTicker);
+            this.removeTickerListener();
             this.target.dispatchStopResizeEvent();
         }        
     }

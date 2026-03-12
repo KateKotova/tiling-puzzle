@@ -239,10 +239,19 @@ export class ViewportContainer extends Container {
     }
 
     public destroy(options?: DestroyOptions): void {
+        if (this.destroyed) {
+            return;
+        }
+       
+        this.mask = null;        
+        if (this.contentMaskGraphics && this.contentMaskGraphics.parent) {
+            this.contentMaskGraphics.parent.removeChild(this.contentMaskGraphics);
+        }        
         if (this.contentMaskGraphics) {
             this.contentMaskGraphics.destroy();
             this.contentMaskGraphics = undefined;
         }
+        
         super.destroy(options);
     }
 }

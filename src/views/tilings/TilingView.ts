@@ -196,12 +196,22 @@ export class TilingView {
             this.boundOnDraggingTileIsDeselected as EventListener);
 
         this.staticTilesAlphaController?.destroy();
+
+        draggingTileData.view = undefined;
+        draggingTileData.animatingViews.clear();
+
         for (const tileView of this.draggableTileViewsByTilePositionStrings.values()) {
+            tileView.view.tile.parent?.removeChild(tileView.view.tile);
             tileView.destroy();
         }
+        this.draggableTileViewsByTilePositionStrings.clear();
+
         for (const tileView of this.staticTileViewsByTilePositionStrings.values()) {
+            tileView.view.tile.parent?.removeChild(tileView.view.tile);
             tileView.destroy();
-        }        
+        }
+        this.staticTileViewsByTilePositionStrings.clear();
+
         this.staticTilesContainer.destroy();
         this.draggableTilesContainer.destroy();
         this.tilingContainer.destroy();

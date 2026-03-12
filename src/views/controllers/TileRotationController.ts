@@ -5,6 +5,7 @@ import { draggingTileData } from "../tile-decorators/DraggingTileData.ts";
 import { EntityController } from "./EntityController.ts";
 import { TileRotationController as TileRotationModelController}
     from "../../models/controllers/TileRotationController.ts";
+import { WheelController } from "./WheelController.ts";
 
 /**
  * Класс контроллера для перетаскиваемого элемента замощения,
@@ -19,6 +20,14 @@ export class TileRotationController extends EntityController<DraggableTileView, 
         this.controller = this.target.view.model.rotationController;
     }
 
+    protected get staticTickerListenersCount(): number {
+        return TileRotationController.onTickerCount;
+    }
+
+    protected set staticTickerListenersCount(value: number) {
+        TileRotationController.onTickerCount = value;
+    }
+
     public restart(dragTargetModel?: TileModel): void {
         this.stop();
         this.hasDragTarget = !!dragTargetModel;
@@ -31,22 +40,21 @@ export class TileRotationController extends EntityController<DraggableTileView, 
     }
 
     public stop(): void {
-        if (!this.controller.getIsCompleted()) {
-            this.ticker.remove(this.boundOnTicker);
-        }
+        this.removeTickerListener();
     }
 
     public start(rotationAngleDifference: number): void {
+        this.removeTickerListener();
         this.target.setOnPointerDownActivity(false);
         this.prepareToExecute(rotationAngleDifference);        
-        this.ticker.add(this.boundOnTicker);
+        this.addTickerListener();
     }
 
-    protected onTicker(ticker: Ticker): void {
-        this.execute(ticker.deltaMS);
+    protected onTicker(): void {
+        this.execute(this.ticker.deltaMS);
         if (this.controller.getIsCompleted()) {
             this.complete();
-            this.ticker.remove(this.boundOnTicker);
+            this.removeTickerListener();
             this.target.setOnPointerDownActivity(true);
         }        
     }
@@ -93,7 +101,7 @@ export class TileRotationController extends EntityController<DraggableTileView, 
 
         if (!this.target.isDragging && !this.target.isMoving) {
             draggingTileData.animatingViews.delete(this.target);
-            window.removeEventListener('wheel', this.target.boundPreventScrollOnWheel);
-        }
+            WheelController.getInstance().setScrollOnWheelActivity(true);
+        }        
     }
 }

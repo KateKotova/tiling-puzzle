@@ -8,7 +8,11 @@ import {
     Matrix,
     IHitArea,
     Ticker,
-    Color
+    Color,
+    Rectangle,
+    Circle,
+    Ellipse,
+    RoundedRectangle
 } from "pixi.js";
 import { GlowFilter } from "pixi-filters";
 import { TileModel } from "../../models/tiles/TileModel.ts";
@@ -25,6 +29,7 @@ import { TileMoveInsideInitialContainerController }
     from "../controllers/TileMoveInsideInitialContainerController.ts";
 import { TileMoveToInitialContainerController }
     from "../controllers/TileMoveToInitialContainerController.ts";
+import { WheelController } from "../controllers/WheelController.ts";
 
 /**
  * Класс декоратора представления подвижного элемента замощения
@@ -46,7 +51,11 @@ export class DraggableTileView implements TileView {
      * чтобы события указателя были видны элементам мозаики ниже.
      * После окончания движения зона попадания восстанавливается.
      */
-    private hitArea?: IHitArea;
+    private savedTileHitArea?: IHitArea;
+    /**
+     * Сохраняемая область попадания контента.
+     */
+    private savedContentHitArea?: IHitArea;
     /**
      * Контейнер, в котором фигура должна находиться, чтобы картинка была собрана
      */
@@ -96,6 +105,7 @@ export class DraggableTileView implements TileView {
      * и с правильным углом вращения, чтобы мозаика была собрана
      */
     private isLocatedCorrectly: boolean = false;
+    private fixAsLocatedCorrectlyTimer?: number;
 
     private selectedGlowFilter?: GlowFilter;
     private correctLocatedGlowFilter?: GlowFilter;
@@ -106,10 +116,18 @@ export class DraggableTileView implements TileView {
         TileMoveInsideInitialContainerController;
     private readonly moveToInitialContainerController: TileMoveToInitialContainerController;
 
+    //#region Отладочная информация
+
+    private static onPointerDownCount: number = 0;
+    private static onGlobalPointerMoveCount: number = 0;
+    private static onPointerUpCount: number = 0;
+    private static onPointerLeaveCount: number = 0;
+
+    //#endregion Отладочная информация
+
     private boundOnGlobalPointerUp: (event: PointerEvent) => void
         = this.onGlobalPointerUp.bind(this);
-    public boundPreventScrollOnWheel: (event: WheelEvent) => void
-        = this.preventScrollOnWheel.bind(this);
+    private boundOnGlobalPointerLeave: () => void = this.onGlobalPointerLeave.bind(this);
 
     /**
      * Создание подвижного элемента замощения
@@ -145,8 +163,10 @@ export class DraggableTileView implements TileView {
 
         this.view.tile.eventMode = "static";
         this.view.tile.on('pointerdown', this.onPointerDown, this);
+        DraggableTileView.onPointerDownCount++;
+        //DraggableTileView.logPointerDown();
 
-        this.hitArea = (this.view.tile.hitArea as unknown as Polygon).clone();
+        this.saveHitArea();
     }
 
     public get model(): TileModel {
@@ -173,6 +193,86 @@ export class DraggableTileView implements TileView {
         this.view.replacingTextureFillColor = color;
     }
 
+    //#region Отладочная информация
+
+    public static logPointerDown() {
+        console.log(`onPointerDownCount: ${DraggableTileView.onPointerDownCount}`);
+    }
+
+    public static logGlobalPointerMove() {
+        console.log(`onGlobalPointerMoveCount: ${DraggableTileView.onGlobalPointerMoveCount}`);
+    }
+
+    public static logPointerUp() {
+        console.log(`onPointerUpCount: ${DraggableTileView.onPointerUpCount}`);
+    }
+
+    public static logPointerLeave() {
+        console.log(`onPointerLeaveCount: ${DraggableTileView.onPointerLeaveCount}`);
+    }
+
+    //#endregion Отладочная информация
+
+    private saveHitArea(): void {
+        if (this.view.tile.hitArea) {
+            this.savedTileHitArea = this.cloneHitArea(this.view.tile.hitArea);
+        }        
+        if (this.view.content.hitArea) {
+            this.savedContentHitArea = this.cloneHitArea(this.view.content.hitArea);
+        }
+    }
+
+    private cloneHitArea(hitArea: IHitArea): IHitArea | undefined {
+        if (!hitArea) { 
+            return undefined;
+        }
+        
+        if (hitArea instanceof Polygon) {
+            return new Polygon([...hitArea.points]);
+        } else if (hitArea instanceof Rectangle) {
+            return new Rectangle(hitArea.x, hitArea.y, hitArea.width, hitArea.height);
+        } else if (hitArea instanceof Circle) {
+            return new Circle(hitArea.x, hitArea.y, hitArea.radius);
+        } else if (hitArea instanceof Ellipse) {
+            return new Ellipse(hitArea.x, hitArea.y, hitArea.halfWidth, hitArea.halfHeight);
+        } else if (hitArea instanceof RoundedRectangle) {
+            return new RoundedRectangle(
+                hitArea.x,
+                hitArea.y,
+                hitArea.width,
+                hitArea.height,
+                hitArea.radius
+            );
+        }
+        
+        return hitArea;
+    }
+
+    private clearHitArea(): void {
+        this.savedTileHitArea = undefined;
+        this.savedContentHitArea = undefined;
+    }
+
+    private disableHitArea(): void {
+        if (!this.savedTileHitArea && this.view.tile.hitArea) {
+            this.savedTileHitArea = this.cloneHitArea(this.view.tile.hitArea);
+        }
+        if (!this.savedContentHitArea && this.view.content.hitArea) {
+            this.savedContentHitArea = this.cloneHitArea(this.view.content.hitArea);
+        }        
+        this.view.tile.hitArea = undefined;
+        this.view.content.hitArea = undefined;
+    }
+
+    private restoreHitArea(): void {
+        this.view.tile.hitArea = this.savedTileHitArea 
+            ? this.cloneHitArea(this.savedTileHitArea) 
+            : undefined;
+        this.view.content.hitArea = this.savedContentHitArea 
+            ? this.cloneHitArea(this.savedContentHitArea) 
+            : undefined;
+    }
+
     public setFilter(filter: Filter): void {
         this.view.setFilter(filter);
     }
@@ -197,9 +297,12 @@ export class DraggableTileView implements TileView {
         this.onPointerDownIsActive = isActive;
         if (isActive) {
             this.view.tile.on('pointerdown', this.onPointerDown, this);
+            DraggableTileView.onPointerDownCount++;
         } else {
             this.view.tile.off('pointerdown', this.onPointerDown, this);
+            DraggableTileView.onPointerDownCount--;
         }
+        //DraggableTileView.logPointerDown();
     }
 
     private onPointerTap(event: PointerEvent): void {
@@ -271,7 +374,7 @@ export class DraggableTileView implements TileView {
         }
 
         if (event.pointerType === 'mouse') {
-            window.addEventListener('wheel', this.boundPreventScrollOnWheel, { passive: false });
+            WheelController.getInstance().setScrollOnWheelActivity(false);
         }
 
         this.isDragging = true;
@@ -281,7 +384,14 @@ export class DraggableTileView implements TileView {
 
         this.setOnPointerDownActivity(false);
         this.view.tile.on('globalpointermove', this.onPointerMove, this);
+        DraggableTileView.onGlobalPointerMoveCount++;
+        //DraggableTileView.logGlobalPointerMove();
         window.addEventListener('pointerup', this.boundOnGlobalPointerUp);
+        DraggableTileView.onPointerUpCount++;
+        //DraggableTileView.logPointerUp();
+        document.addEventListener('pointerleave', this.boundOnGlobalPointerLeave);
+        DraggableTileView.onPointerLeaveCount++;
+        //DraggableTileView.logPointerLeave();
 
         this.dragTarget = this.dragSource;
         this.dragStartPosition = this.view.tile.position.clone();
@@ -317,8 +427,7 @@ export class DraggableTileView implements TileView {
 
         // Убираем зону попадания, чтобы события указателя были видны
         // статическим элементам замощения уровнем ниже
-        this.view.tile.hitArea = undefined;
-        this.view.content.hitArea = undefined;
+        this.disableHitArea();
     }
 
     private onPointerMove(event: FederatedPointerEvent): void {
@@ -358,11 +467,19 @@ export class DraggableTileView implements TileView {
     }
 
     public onGlobalPointerUp(event: PointerEvent): void {
+        this.onGlobalPointerUpOrLeave(event);
+    }
+
+    public onGlobalPointerLeave(): void {
+        this.onGlobalPointerUpOrLeave();
+    }
+
+    private onGlobalPointerUpOrLeave(event?: PointerEvent): void {
         if (!this.isDragging || draggingTileData.view !== this) {
             return;
         }
 
-        if (event.pointerType === 'touch') {
+        if (event?.pointerType === 'touch') {
             if (this.pointerDownId === event.pointerId) {
                 this.pointerDownId = undefined;
             } else {
@@ -385,8 +502,7 @@ export class DraggableTileView implements TileView {
         }
 
         // Восстанавливаем зону попадания, чтобы снова получать события указателя
-        this.view.tile.hitArea = this.hitArea;
-        this.view.content.hitArea = this.hitArea;
+        this.restoreHitArea();
 
         const globalPosition = this.getGlobalPosition();
         const targetPosition = this.view.tile.parent !== finalTargetContainer
@@ -395,7 +511,8 @@ export class DraggableTileView implements TileView {
 
         const tapParameters = this.parameters.tapParameters;
         const tapWasExecuted
-            = (event.timeStamp - this.dragStartTime <= tapParameters.maxDuration)
+            = event
+            && (event.timeStamp - this.dragStartTime <= tapParameters.maxDuration)
             && Math.abs(targetPosition.x - this.dragStartPosition.x)
                 <= tapParameters.maxDistance
             && Math.abs(targetPosition.y - this.dragStartPosition.y)
@@ -427,7 +544,14 @@ export class DraggableTileView implements TileView {
         this.dispatchDraggingTileIsDeselectedEvent();      
 
         this.view.tile.off('globalpointermove', this.onPointerMove, this);
+        DraggableTileView.onGlobalPointerMoveCount--;
+        //DraggableTileView.logGlobalPointerMove();
         window.removeEventListener('pointerup', this.boundOnGlobalPointerUp);
+        DraggableTileView.onPointerUpCount--;
+        //DraggableTileView.logPointerUp();
+        document.removeEventListener('pointerleave', this.boundOnGlobalPointerLeave);
+        DraggableTileView.onPointerLeaveCount--;
+        //DraggableTileView.logPointerLeave();
 
         if (!finalSource && finalTarget) {
             this.initialContainer.removeTileView(this);
@@ -435,13 +559,6 @@ export class DraggableTileView implements TileView {
             this.dragSource = undefined;
             this.dragTarget = undefined;
             this.initialContainer.addTileView(this);
-        }
-    }
-
-    private preventScrollOnWheel(event: WheelEvent): void {
-        if (this.isDragging) {
-            event.preventDefault();
-            event.stopPropagation();
         }
     }
 
@@ -566,11 +683,23 @@ export class DraggableTileView implements TileView {
         this.rotationController.removeEventListeners();
         this.moveAfterDragController.removeEventListeners();
         this.moveInsideInitialContainerController.removeEventListeners();
-        this.moveToInitialContainerController.removeEventListeners();
+        this.moveToInitialContainerController.removeEventListeners(); 
+
         this.view.tile.off('pointerdown', this.onPointerDown, this);
+        DraggableTileView.onPointerDownCount--;
+        //DraggableTileView.logPointerDown();
+
         this.view.tile.off('globalpointermove', this.onPointerMove, this);
-        window.removeEventListener('pointerup', this.boundOnGlobalPointerUp);
-        window.removeEventListener('wheel', this.boundPreventScrollOnWheel);
+        DraggableTileView.onGlobalPointerMoveCount--;
+        //DraggableTileView.logGlobalPointerMove();
+
+        window.removeEventListener('pointerup', this.boundOnGlobalPointerUp); 
+        DraggableTileView.onPointerUpCount--;
+        //DraggableTileView.logPointerUp();
+
+        document.removeEventListener('pointerleave', this.boundOnGlobalPointerLeave);
+        DraggableTileView.onPointerLeaveCount--;
+        //DraggableTileView.logPointerLeave();
     }
 
     /**
@@ -592,11 +721,16 @@ export class DraggableTileView implements TileView {
         const filter = this.getCorrectLocatedGlowFilter();
         this.view.setFilter(filter);
 
-        setTimeout(() => {
+        if (this.fixAsLocatedCorrectlyTimer !== null) {
+            clearTimeout(this.fixAsLocatedCorrectlyTimer);
+        }
+
+        this.fixAsLocatedCorrectlyTimer = setTimeout(() => {
                 this.removeFilters();
                 this.addTileToTargetContainerOnFixAsLocatedCorrectly();
                 const contentWithoutBevelFilter = this.view.createContent(false);
                 this.view.replaceContent(contentWithoutBevelFilter);
+                this.fixAsLocatedCorrectlyTimer = undefined;
             }, 
             this.parameters.correctLocatedFilterShowTime
         );
@@ -623,19 +757,41 @@ export class DraggableTileView implements TileView {
     }
 
     public destroy(): void {
+        if (this.fixAsLocatedCorrectlyTimer) {
+            clearTimeout(this.fixAsLocatedCorrectlyTimer);
+            this.fixAsLocatedCorrectlyTimer = undefined;
+        }
+
         this.removeEventListeners();
+
+        this.view.tile.hitArea = undefined;
+        this.view.content.hitArea = undefined;
+        this.clearHitArea();
+        this.dragSourceWorldHitArea = undefined;
+        
         this.rotationController.destroy();
         this.moveAfterDragController.destroy();
         this.moveInsideInitialContainerController.destroy();
         this.moveToInitialContainerController.destroy();
 
+        this.view.removeFilters();
         if (this.selectedGlowFilter) {
             this.selectedGlowFilter.destroy();
+            this.selectedGlowFilter = undefined;
         }
         if (this.correctLocatedGlowFilter) {
             this.correctLocatedGlowFilter.destroy();
+            this.correctLocatedGlowFilter = undefined;
         }
 
+        if (draggingTileData.view === this) {
+            draggingTileData.view = undefined;
+        }
+        draggingTileData.animatingViews.delete(this);
+
+        this.dragSource = undefined;
+        this.dragTarget = undefined;
+        
         this.view.destroy();
     }
 }

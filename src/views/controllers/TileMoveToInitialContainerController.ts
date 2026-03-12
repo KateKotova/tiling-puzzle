@@ -3,6 +3,7 @@ import { DraggableTileView } from "../tile-decorators/DraggableTileView.ts";
 import { draggingTileData } from "../tile-decorators/DraggingTileData.ts";
 import { EntityController } from "./EntityController.ts";
 import { TileMoveController } from "../../models/controllers/TileMoveController.ts";
+import { WheelController } from "./WheelController.ts";
 
 /**
  * Класс контроллера для перетаскиваемого элемента замощения,
@@ -19,6 +20,14 @@ export class TileMoveToInitialContainerController
         this.controller = this.target.view.model.moveController;
     }
 
+    protected get staticTickerListenersCount(): number {
+        return TileMoveToInitialContainerController.onTickerCount;
+    }
+
+    protected set staticTickerListenersCount(value: number) {
+        TileMoveToInitialContainerController.onTickerCount = value;
+    }
+
     public restart(targetGlobalPosition: Point): void {
         this.stop();
 
@@ -32,24 +41,23 @@ export class TileMoveToInitialContainerController
     }
 
     public stop(): void {
-        if (!this.controller.getIsCompleted()) {
-            this.ticker.remove(this.boundOnTicker);
-            this.target.isMoving = false;
-        }
+        this.removeTickerListener();
+        this.target.isMoving = false;
     }
 
     public start(moveDifference: Point): void {
+        this.removeTickerListener();
         this.target.isMoving = true;
         this.target.setOnPointerDownActivity(false);
         this.prepareToExecute(moveDifference);        
-        this.ticker.add(this.boundOnTicker);
+        this.addTickerListener();
     }
 
-    protected onTicker(ticker: Ticker): void {
-        this.execute(ticker.deltaMS);
+    protected onTicker(): void {
+        this.execute(this.ticker.deltaMS);
         if (this.controller.getIsCompleted()) {
             this.complete();
-            this.ticker.remove(this.boundOnTicker);
+            this.removeTickerListener();
             this.target.setOnPointerDownActivity(true);
         }        
     }
@@ -86,7 +94,7 @@ export class TileMoveToInitialContainerController
         }
 
         draggingTileData.animatingViews.delete(this.target);
-        window.removeEventListener('wheel', this.target.boundPreventScrollOnWheel);
+        WheelController.getInstance().setScrollOnWheelActivity(true);
 
         this.target.isMoving = false;
     }

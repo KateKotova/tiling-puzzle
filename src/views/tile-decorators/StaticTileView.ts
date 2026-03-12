@@ -158,10 +158,24 @@ export class StaticTileView implements TileView {
     }
 
     public destroy(): void {
-        this.removeEventListeners();        
+        this.removeEventListeners();
+        
+        this.view.removeFilters();
         if (this.targetGlowFilter) {
             this.targetGlowFilter.destroy();
-        }    
+            this.targetGlowFilter = undefined;
+        }
+        
+        if (draggingTileData.view) {
+            const draggingTileView = draggingTileData.view;
+            if (draggingTileView.dragSource === this) {
+                draggingTileView.dragSource = undefined;
+            }
+            if (draggingTileView.dragTarget === this) {
+                draggingTileView.dragTarget = undefined;
+            }
+        }
+        
         this.view.destroy();
     }
 }

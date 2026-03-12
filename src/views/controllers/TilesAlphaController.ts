@@ -14,7 +14,9 @@ export class TilesAlphaController {
     private readonly ticker: Ticker;
     private controller?: SmoothNumberStepController;
 
-    private readonly boundOnTicker: (ticker: Ticker) => void = this.onTicker.bind(this);
+    private readonly boundOnTicker: () => void = this.onTicker.bind(this);
+    private onTickerWasAdded: boolean = false;
+    private static onTickerCount: number = 0;
 
     constructor(
         parameters: AnimationParameters,
@@ -26,6 +28,28 @@ export class TilesAlphaController {
         this.ticker = ticker;
     }
 
+    private removeTickerListener(): void {
+        if (this.onTickerWasAdded) {
+            this.ticker.remove(this.boundOnTicker);
+            this.onTickerWasAdded = false;
+            TilesAlphaController.onTickerCount--;
+            //this.logTicker();
+        }
+    }
+
+    private addTickerListener(): void {
+        if (!this.onTickerWasAdded) {
+            this.ticker.add(this.boundOnTicker);
+            this.onTickerWasAdded = true;
+            TilesAlphaController.onTickerCount++;
+            //this.logTicker();
+        }
+    }
+
+    public logTicker() {
+        console.log(`${this.constructor.name}: ${TilesAlphaController.onTickerCount}`);
+    }
+
     public restart(newStartValue: number, newTargetValue: number): void {
         this.stop();
         this.prepareToExecute(newStartValue, newTargetValue);  
@@ -33,20 +57,19 @@ export class TilesAlphaController {
     }
 
     private stop(): void {
-        if (!this.controller?.getIsCompleted()) {
-            this.ticker.remove(this.boundOnTicker);
-        }
+        this.removeTickerListener();
     }
 
     private start(): void {
-        this.ticker.add(this.boundOnTicker);
+        this.removeTickerListener();
+        this.addTickerListener();
     }
 
-    private onTicker(ticker: Ticker): void {
-        this.execute(ticker.deltaMS);
+    private onTicker(): void {
+        this.execute(this.ticker.deltaMS);
         if (this.controller?.getIsCompleted()) {
             this.complete();
-            this.ticker.remove(this.boundOnTicker);
+            this.removeTickerListener();
         }        
     }
 
@@ -91,7 +114,7 @@ export class TilesAlphaController {
     }
 
     public removeEventListeners(): void {
-        this.ticker.remove(this.boundOnTicker);
+        this.removeTickerListener();
     }
 
     public destroy(): void {

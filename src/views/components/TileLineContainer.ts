@@ -375,7 +375,6 @@ export class TileLineContainer extends Container {
         const targetPositions: Point[] = [];
         let lastMovingTileIndex = -1;
 
-        // Эти фигуры видны, поэтому у них будет анимация движения
         for (
             let tileIndex = removingTileIndex + 1;
             tileIndex < this.tileViews.length;
@@ -383,6 +382,7 @@ export class TileLineContainer extends Container {
         ) {
             const tile = this.tileViews[tileIndex];
             if (this.getTileIsVisibleInViewportContainer(tile)) {
+                // Эти фигуры видны, поэтому у них будет анимация движения
                 visibleMovingTiles.push(tile);
                 const previousTile = this.tileViews[tileIndex - 1];
                 targetPositions.push(previousTile.model.currentPositionPoint.clone());
@@ -486,9 +486,17 @@ export class TileLineContainer extends Container {
 
         tileView.model.targetTilePosition.shuffledIndex = shuffledIndex;
         for (let tileIndex = shuffledIndex; tileIndex < this.tileViews.length; tileIndex++) {
-            const tileViews = this.tileViews[tileIndex];
-            tileViews.model.targetTilePosition.shuffledIndex++;
-            tileViews.moveInsideInitialContainer(this.getTilePositionPoint(tileIndex + 1));
+            const tileView = this.tileViews[tileIndex];
+            tileView.model.targetTilePosition.shuffledIndex++;
+            const newPosition = this.getTilePositionPoint(tileIndex + 1);
+
+            if (this.getTileIsVisibleInViewportContainer(tileView)) {
+                // Эти фигуры видны, поэтому у них будет анимация движения
+                tileView.moveInsideInitialContainer(newPosition);
+            } else {
+                tileView.model.currentPositionPoint.copyFrom(newPosition);
+                tileView.tile.position.copyFrom(newPosition);
+            }
         }
 
         const sizeDifference = this.getTileLongitudinalCoordinateMultiplier();
@@ -622,11 +630,30 @@ export class TileLineContainer extends Container {
     }
 
     public destroy(options?: DestroyOptions): void {
-        this.resizeController.destroy();
-        if (this.backgroundContainer) {
-            this.backgroundContainer.destroy();
+        if (this.destroyed) {
+            return;
         }
-        this.tileViews.length = 0;       
+        
+        this.isResizing = false;
+        this.resizeController.destroy();
+        
+        this.tileViews.forEach(tileView => {
+            if (tileView.view.tile.parent === this) {
+                // Удаляем фигуру с ленты, но она должна оставаться во view замощения
+                this.removeChild(tileView.view.tile);
+            }
+        });
+        this.tileViews.length = 0;
+        
+        if (this.backgroundContainer && !this.backgroundContainer.destroyed) {
+            this.removeChild(this.backgroundContainer);            
+            this.backgroundContainer.cacheAsTexture(false);            
+            this.backgroundContainer.destroy({ children: true });
+        }
+        
+        this.viewportContainer = undefined;
+        this.scaleChangeGlobalRectangle = undefined;
+        
         super.destroy(options);
     }
 }
