@@ -58,7 +58,7 @@ export abstract class TileBaseView implements TileView {
         result.pivot.set(this.model.geometry.pivotPoint.x, this.model.geometry.pivotPoint.y);        
         result.rotation = this.model.currentRotationAngle;   
         result.position.copyFrom(this.model.currentPositionPoint);
-        result.hitArea = this.content.hitArea;     
+        result.hitArea = this.model.geometry.hitArea.clone();     
         return result;
     }
 

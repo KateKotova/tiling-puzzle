@@ -1,4 +1,6 @@
+import { Polygon } from "pixi.js";
 import { TileGeometry } from "./TileGeometry.ts";
+import { Algorithm } from "../../math/Algorithm.ts";
 
 /**
  * Класс геометрии построения элемента замощения, являющегося правильным многоугольником.
@@ -59,5 +61,14 @@ export abstract class RegularPolygonTileGeometry extends TileGeometry {
     protected setCircumscribedAndInscribedCircleRadiuses() {
         this.circumscribedCircleRadius = this.side * this.circumscribedCircleRadiusToSideRatio;
         this.inscribedCircleRadius = this.side * this.inscribedCircleRadiusToSideRatio;
+    }
+
+    protected getHitAreaRegularPolygon(hitAreaSizeMultiplier: number): Polygon {
+        return Algorithm.getRegularPolygon(
+            this.pivotPoint,
+            this.circumscribedCircleRadius * hitAreaSizeMultiplier,
+            this.sideCount,
+            this.regularPolygonInitialRotationAngle
+        );
     }
 }

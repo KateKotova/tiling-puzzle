@@ -1,4 +1,4 @@
-import { Point, Polygon } from "pixi.js";
+import { Point } from "pixi.js";
 import { TileLockType } from "../../tile-locks/TileLockType.ts";
 import { TileGeometryType } from "../TileGeometryType.ts";
 import { Size } from "../../../math/Size.ts";
@@ -31,7 +31,11 @@ c-1.9,0-3.7-0.6-5.2-1.7c-4-2.9-4.8-8.4-2-12.4c5-6.9,3.5-16.5-3.4-21.5c-6.9-5-16.
 c1.1,1.5,1.7,3.3,1.7,5.2c0,4.9-4,8.9-8.9,8.9c0,0-51.2,0-51.2,0v51.2c0,4.9,4,8.9,8.9,8.9c1.9,0,3.7-0.6,5.2-1.7
 c5.4-3.9,12.7-3.9,18.1,0c6.9,5,8.4,14.6,3.4,21.5C30.6,125.3,21,126.9,14.1,121.9z`;
 
-    constructor(baseValue: number, sideToBaseValueRatio: number = 1) {
+    constructor(
+        baseValue: number,
+        sideToBaseValueRatio: number = 1,
+        hitAreaSizeMultiplier: number = 1
+    ) {
         super(baseValue, sideToBaseValueRatio);
 
         this.freedomDegree = this.sideCount / 2;
@@ -42,12 +46,7 @@ c5.4-3.9,12.7-3.9,18.1,0c6.9,5,8.4,14.6,3.4,21.5C30.6,125.3,21,126.9,14.1,121.9z
         const sideHalf = this.side / 2.0;
         this.pivotPoint = new Point(sideHalf, sideHalf + this.lockHeight);
         this.defaultBoundingRectangleSize = new Size(this.side, this.side + this.lockHeight * 2);
-        this.hitArea = new Polygon([
-            new Point(0, this.lockHeight),
-            new Point(this.side, this.lockHeight),
-            new Point(this.side, this.side + this.lockHeight),
-            new Point(0, this.side + this.lockHeight)
-        ]);
+        this.hitArea = this.getHitAreaRegularPolygon(hitAreaSizeMultiplier);
         this.maxBoundingSize = Math.max(
             2 * this.circumscribedCircleRadius,
             2 * (this.inscribedCircleRadius + this.lockHeight)

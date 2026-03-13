@@ -36,6 +36,8 @@ export class SquareTilingModel extends RectangularGridTilingModel {
      * Инструменты для геометрических построений квадрата, один экземпляр на все квадраты
      */
     private tileGeometry?: SquareGeometry;
+    public tileZIndicesByTileGeometryTypes: Map<TileGeometryType, number>
+        = new Map<TileGeometryType, number>([[TileGeometryType.Square, 0]]);
 
     /**
      * Создание замощения квадратами

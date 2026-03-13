@@ -22,5 +22,6 @@ export class SquareBaseGeometry extends RegularPolygonTileGeometry {
     constructor(baseValue: number, sideToBaseValueRatio: number = 1) {
         super(baseValue, 4, sideToBaseValueRatio);
         this.setCircumscribedAndInscribedCircleRadiuses();
+        this.regularPolygonInitialRotationAngle = Math.PI / 4;
     }
 }

@@ -17,6 +17,14 @@ import { RectangularGridTilingModel } from "./RectangularGridTilingModel";
  * чем столбцов, содержащих восьмиугольники.
  */
 export abstract class OctagonAndSquareTilingBaseModel extends RectangularGridTilingModel {
+    /**
+     * Множитель области попадания квадрата.
+     * Квадраты значительно меньше восьмиугольников в даном замощении,
+     * и пользователю сложно по ним попадать.
+     * Поэтому расширяем зоны попадания в квадраты на величину этого множителя.
+     */
+    public static readonly squareHitAreaSizeMultiplier: number = (Math.sqrt(2) + 0.8) / Math.sqrt(2);
+
     public getGridIndicesAreCorrect(rowIndex: number, columnIndex: number): boolean {
         return rowIndex >= 0
             && rowIndex < this.tileRowCount

@@ -1,7 +1,6 @@
 import { Point } from "pixi.js";
 import { TileGeometryType } from "../TileGeometryType.ts";
 import { Size } from "../../../math/Size.ts";
-import { Algorithm } from "../../../math/Algorithm.ts";
 import { OctagonBaseGeometry } from "../polygon-bases/OctagonBaseGeometry.ts";
 
 /**
@@ -16,23 +15,21 @@ import { OctagonBaseGeometry } from "../polygon-bases/OctagonBaseGeometry.ts";
 export class OctagonGeometry extends OctagonBaseGeometry {
     public readonly geometryType: TileGeometryType = TileGeometryType.Octagon;
 
-    constructor(baseValue: number, sideToBaseValueRatio: number = 1) {
+    constructor(
+        baseValue: number,
+        sideToBaseValueRatio: number = 1,
+        hitAreaSizeMultiplier: number = 1
+    ) {
         super(baseValue, sideToBaseValueRatio);
 
         this.freedomDegree = this.sideCount;
         this.freedomDegreeRotationAngle = this.getFreedomDegreeRotationAngle();
 
         const inscribedCircleDiameter = this.inscribedCircleRadius * 2;
-        this.pivotPoint = new Point(this.inscribedCircleRadius, this.inscribedCircleRadius);
-        this.regularPolygonInitialRotationAngle = 3 / 8.0 * Math.PI;     
+        this.pivotPoint = new Point(this.inscribedCircleRadius, this.inscribedCircleRadius);             
         this.defaultBoundingRectangleSize = new Size(inscribedCircleDiameter,
             inscribedCircleDiameter);
-        this.hitArea = Algorithm.getRegularPolygon(
-            this.pivotPoint,
-            this.circumscribedCircleRadius,
-            8,
-            this.regularPolygonInitialRotationAngle
-        );
+        this.hitArea = this.getHitAreaRegularPolygon(hitAreaSizeMultiplier);
         this.maxBoundingSize = this.circumscribedCircleRadius * 2;
     }
 }

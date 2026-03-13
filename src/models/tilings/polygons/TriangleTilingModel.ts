@@ -49,6 +49,8 @@ export class TriangleTilingModel extends RectangularGridTilingModel {
      * один экземпляр на все элементы мозаики
      */
     private tileGeometry?: TriangleGeometry;
+    public tileZIndicesByTileGeometryTypes: Map<TileGeometryType, number>
+        = new Map<TileGeometryType, number>([[TileGeometryType.Triangle, 0]]);
 
     /**
      * Создание замощения правильными треугольниками

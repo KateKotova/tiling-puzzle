@@ -58,6 +58,11 @@ export class OctagonAndSquareTilingModel extends OctagonAndSquareTilingBaseModel
      * один экземпляр на все квадраты мозаики
      */
     private squareTileGeometry?: SquareGeometry;
+    public tileZIndicesByTileGeometryTypes: Map<TileGeometryType, number>
+        = new Map<TileGeometryType, number>([
+            [TileGeometryType.Octagon, 0],
+            [TileGeometryType.Square, 1],
+        ]);
 
     /**
      * Создание замощения правильными восьмиугольниками и квадратами
@@ -112,7 +117,8 @@ export class OctagonAndSquareTilingModel extends OctagonAndSquareTilingBaseModel
     protected initializeImageTileInfo(): void {
         const tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
         this.octagonTileGeometry = new OctagonGeometry(tileSide);
-        this.squareTileGeometry = new SquareGeometry(tileSide);
+        this.squareTileGeometry = new SquareGeometry(tileSide, 1,
+            OctagonAndSquareTilingBaseModel.squareHitAreaSizeMultiplier);
         this.maxTileBoundingSizesByTileGeometryTypes.set(TileGeometryType.Octagon,
             this.octagonTileGeometry.maxBoundingSize);
         this.maxTileBoundingSizesByTileGeometryTypes.set(TileGeometryType.Square,
@@ -127,7 +133,7 @@ export class OctagonAndSquareTilingModel extends OctagonAndSquareTilingBaseModel
         const tileIsOctagon = targetTilePosition.rowIndex % 2 === 0;
         const tileGeometry: TileGeometry = tileIsOctagon
             ? this.octagonTileGeometry
-            : this.squareTileGeometry;
+            : this.squareTileGeometry;        
         const result = new TileModel(this.tileParameters, tileGeometry);
         result.targetTilePosition = targetTilePosition.clone();
         result.targetRotationAngle = tileIsOctagon ? 0 : Math.PI / 4.0;

@@ -279,6 +279,8 @@ export class TileLineContainer extends Container {
                 decoratedView
             );
         }
+
+        this.tilingView.setDraggableTileZIndices();
     }
 
     public resize(targetLongitudinalSize: number): void {

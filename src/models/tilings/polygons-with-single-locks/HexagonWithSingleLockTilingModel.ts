@@ -53,6 +53,8 @@ export class HexagonWithSingleLockTilingModel extends RectangularGridTilingModel
      * с одинарными замками, один экземпляр на все элементы мозаики
      */
     private tileGeometry?: HexagonWithSingleLockGeometry;
+    public tileZIndicesByTileGeometryTypes: Map<TileGeometryType, number>
+        = new Map<TileGeometryType, number>([[TileGeometryType.HexagonWithSingleLock, 0]]);
 
     /**
      * Создание замощения правильными шестиугольниками с одинарными замками
