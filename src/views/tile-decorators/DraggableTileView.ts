@@ -619,7 +619,7 @@ export class DraggableTileView implements TileView {
     private restoreTargetScale(): void {
         this.view.tile.scale = this.dragSource
             ? 1
-            : this.initialContainer.initialTileScale;
+            : this.initialContainer.getInitialTileScaleOrThrow(this.view);
     }
 
     private addTileToTargetContainerOnFixAsLocatedCorrectly(): void {

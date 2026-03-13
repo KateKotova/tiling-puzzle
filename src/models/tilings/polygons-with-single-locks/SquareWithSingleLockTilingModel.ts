@@ -9,6 +9,7 @@ import { TilingType } from "../TilingType.ts";
 import { TileModel } from "../../tiles/TileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
 import { TileParameters } from "../../tiles/TileParameters.ts";
+import { TileGeometryType } from "../../tile-geometries/TileGeometryType.ts";
 
 /**
  * Класс модели замощения, представляющего собой прямоугольную сетку,
@@ -96,7 +97,8 @@ export class SquareWithSingleLockTilingModel extends RectangularGridTilingModel 
     protected initializeImageTileInfo(): void {
         const tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
         this.tileGeometry = new SquareWithSingleLockGeometry(tileSide);
-        this.maxTileBoundingSize = this.tileGeometry.maxBoundingSize;
+        this.maxTileBoundingSizesByTileGeometryTypes.set(TileGeometryType.SquareWithSingleLock,
+            this.tileGeometry.maxBoundingSize);
     }
 
     protected getProtectedTileModel(targetTilePosition: RectangularGridTilePosition): TileModel {
