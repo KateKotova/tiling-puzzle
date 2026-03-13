@@ -23,7 +23,7 @@ export abstract class OctagonAndSquareTilingBaseModel extends RectangularGridTil
      * и пользователю сложно по ним попадать.
      * Поэтому расширяем зоны попадания в квадраты на величину этого множителя.
      */
-    public static readonly squareHitAreaSizeMultiplier: number = (Math.sqrt(2) + 0.8) / Math.sqrt(2);
+    public static readonly squareHitAreaSizeMultiplier: number = 1 + 0.8 / Math.sqrt(2);
 
     public getGridIndicesAreCorrect(rowIndex: number, columnIndex: number): boolean {
         return rowIndex >= 0
