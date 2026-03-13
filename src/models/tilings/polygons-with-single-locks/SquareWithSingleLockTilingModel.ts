@@ -51,6 +51,8 @@ export class SquareWithSingleLockTilingModel extends RectangularGridTilingModel 
      * один экземпляр на все элементы мозаики
      */
     private tileGeometry?: SquareWithSingleLockGeometry;
+    public tileZIndicesByTileGeometryTypes: Map<TileGeometryType, number>
+        = new Map<TileGeometryType, number>([[TileGeometryType.SquareWithSingleLock, 0]]);
 
     /**
      * Создание замощения квадратами c одинарными замками

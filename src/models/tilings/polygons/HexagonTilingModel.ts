@@ -46,6 +46,8 @@ export class HexagonTilingModel extends RectangularGridTilingModel {
      * один экземпляр на все элементы мозаики
      */
     private tileGeometry?: HexagonGeometry;
+    public tileZIndicesByTileGeometryTypes: Map<TileGeometryType, number>
+        = new Map<TileGeometryType, number>([[TileGeometryType.Hexagon, 0]]);
 
     /**
      * Создание замощения правильными шестиугольниками

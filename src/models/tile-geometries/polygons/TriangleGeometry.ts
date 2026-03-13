@@ -1,4 +1,4 @@
-import { Point, Polygon } from "pixi.js";
+import { Point } from "pixi.js";
 import { TileGeometryType } from "../TileGeometryType.ts";
 import { Size } from "../../../math/Size.ts";
 import { TriangleBaseGeometry } from "../polygon-bases/TriangleBaseGeometry.ts";
@@ -15,21 +15,20 @@ import { TriangleBaseGeometry } from "../polygon-bases/TriangleBaseGeometry.ts";
 export class TriangleGeometry extends TriangleBaseGeometry {
     public readonly geometryType: TileGeometryType = TileGeometryType.Triangle;
 
-    constructor(baseValue: number, sideToBaseValueRatio: number = 1) {
+    constructor(
+        baseValue: number,
+        sideToBaseValueRatio: number = 1,
+        hitAreaSizeMultiplier: number = 1
+    ) {
         super(baseValue, sideToBaseValueRatio);
 
         this.freedomDegree = this.sideCount;
         this.freedomDegreeRotationAngle = this.getFreedomDegreeRotationAngle();
 
         const sideHalf = this.side / 2.0;
-        this.pivotPoint = new Point(sideHalf, this.circumscribedCircleRadius);
-        this.regularPolygonInitialRotationAngle = 0;        
+        this.pivotPoint = new Point(sideHalf, this.circumscribedCircleRadius);                
         this.defaultBoundingRectangleSize = new Size(this.side, this.height);
-        this.hitArea = new Polygon([
-            new Point(sideHalf, 0),
-            new Point(this.side, this.height),
-            new Point(0, this.height)
-        ]);
+        this.hitArea = this.getHitAreaRegularPolygon(hitAreaSizeMultiplier);
         this.maxBoundingSize = this.circumscribedCircleRadius * 2;
     }
 }

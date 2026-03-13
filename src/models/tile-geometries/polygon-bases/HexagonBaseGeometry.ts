@@ -25,5 +25,6 @@ export class HexagonBaseGeometry extends RegularPolygonTileGeometry {
     constructor(baseValue: number, sideToBaseValueRatio: number = 1) {
         super(baseValue, 6, sideToBaseValueRatio);
         this.setCircumscribedAndInscribedCircleRadiuses();
+        this.regularPolygonInitialRotationAngle = Math.PI / 6.0;
     }
 }

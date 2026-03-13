@@ -75,6 +75,11 @@ export class OctagonAndSquareWithSpiralLockTilingModel
      * один экземпляр на все квадраты мозаики
      */
     private squareTileGeometry?: SquareWithSingleLockGeometry;
+    public tileZIndicesByTileGeometryTypes: Map<TileGeometryType, number>
+        = new Map<TileGeometryType, number>([
+            [TileGeometryType.OctagonWithSingleLock, 0],
+            [TileGeometryType.SquareWithSingleLock, 1],
+        ]);
 
     /**
      * Создание замощения правильными восьмиугольниками и квадратами с одинарными замками
@@ -138,7 +143,8 @@ export class OctagonAndSquareWithSpiralLockTilingModel
     protected initializeImageTileInfo(): void {
         const tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
         this.octagonTileGeometry = new OctagonWithSingleLockGeometry(tileSide);
-        this.squareTileGeometry = new SquareWithSingleLockGeometry(tileSide);
+        this.squareTileGeometry = new SquareWithSingleLockGeometry(tileSide, 1,
+            OctagonAndSquareTilingBaseModel.squareHitAreaSizeMultiplier);
         this.maxTileBoundingSizesByTileGeometryTypes.set(TileGeometryType.OctagonWithSingleLock,
             this.octagonTileGeometry.maxBoundingSize);
         this.maxTileBoundingSizesByTileGeometryTypes.set(TileGeometryType.SquareWithSingleLock,

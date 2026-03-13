@@ -48,6 +48,15 @@ export abstract class TilingModel {
      */
     public maxTileBoundingSizesByTileGeometryTypes: Map<TileGeometryType, number>
         = new Map<TileGeometryType, number>();
+    /**
+     * Карта, где по типу геометрии элемента мозаики можно найти его z-индекс,
+     * то есть уровень расположения в контейнере замощения.
+     * Это нужно для назначения приоритетов зонам попадания пазлов соответствующих геометрий:
+     * выше предполагается располагать небольшие пазлы с расширенными зонами попадания,
+     * которые будут частично накрывать пазлы больших размеров.
+     */
+    public tileZIndicesByTileGeometryTypes: Map<TileGeometryType, number>
+        = new Map<TileGeometryType, number>();
 
     /**
      * Карта, где по строковому представлению позиции

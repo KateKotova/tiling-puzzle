@@ -27,5 +27,6 @@ export class OctagonBaseGeometry extends RegularPolygonTileGeometry {
     constructor(baseValue: number, sideToBaseValueRatio: number = 1) {
         super(baseValue, 8, sideToBaseValueRatio);
         this.setCircumscribedAndInscribedCircleRadiuses();
+        this.regularPolygonInitialRotationAngle = 3 / 8.0 * Math.PI;
     }
 }
