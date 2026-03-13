@@ -23,6 +23,7 @@ import { Algorithm } from "../../math/Algorithm.ts";
 import { TileView } from "../tiles/TileView.ts";
 import { ViewportContainer } from "./ViewportContainer.ts";
 import { TileLineResizeController } from "../controllers/TileLineResizeController.ts";
+import { TileGeometryType } from "../../models/tile-geometries/TileGeometryType.ts";
 
 /**
  * Класс контейнера линии, в которой содержатся элементы мозаики для сборки.
@@ -47,10 +48,13 @@ export class TileLineContainer extends Container {
      */
     private readonly transverseSize: number;
     /**
-     * Изначальный масштаб элемента мозаики, когда он лежит на ленте,
+     * Карта, где по типу геометрии элемента мозаики
+     * можно найти его изначальный масштаб, когда он лежит на ленте,
      * чтобы фигура полностью вписывалась в ленту
      */
-    public readonly initialTileScale: number;
+    public initialTileScalesByTileGeometryTypes: Map<TileGeometryType, number>
+        = new Map<TileGeometryType, number>();
+
     /**
      * Прямоугольная зона изменения масштаба элемента мозаики.
      * Когда пользователь захватывает фигуру и начинает двигать,
@@ -104,10 +108,15 @@ export class TileLineContainer extends Container {
         const size = this.getSizeByDirection();
         this.width = size.width;
         this.height = size.height;
-        
-        this.initialTileScale = this.maxScaledBoundingSize
-            / this.tilingView.model.maxTileBoundingSize;
 
+        this.tilingView.model.maxTileBoundingSizesByTileGeometryTypes.forEach(
+            (maxTileBoundingSize, geometryType) => {
+            this.initialTileScalesByTileGeometryTypes.set(
+                geometryType,
+                this.maxScaledBoundingSize / maxTileBoundingSize
+            );
+        });
+        
         this.backgroundContainer = this.createBackground();
         this.addChild(this.backgroundContainer);
     }
@@ -127,6 +136,15 @@ export class TileLineContainer extends Container {
             throw new Error('viewportContainer is not defined');
         }
         return this.viewportContainer;
+    }
+
+    public getInitialTileScaleOrThrow(tileView: TileView): number {
+        const result = this.initialTileScalesByTileGeometryTypes.get(
+            tileView.model.geometry.geometryType);
+        if (!result) {
+            throw new Error(`Unexpected geometry type: ${tileView.model.geometry.geometryType}`);
+        }
+        return result;
     }
 
     /**
@@ -241,7 +259,7 @@ export class TileLineContainer extends Container {
                 this.parameters.tileParameters,
                 viewCreationParameters
             );
-            view.tile.scale = this.initialTileScale;
+            view.tile.scale = this.getInitialTileScaleOrThrow(view);
 
             this.addChild(view.tile);
 
@@ -324,8 +342,9 @@ export class TileLineContainer extends Container {
             throw new Error('draggingTileData.viewport should be initialized');
         }
 
+        const initialTileScale = this.getInitialTileScaleOrThrow(tileView);
         const tilingViewportScale = draggingTileData.viewport.scale.x;
-        const scaleDifference = tilingViewportScale - this.initialTileScale;
+        const scaleDifference = tilingViewportScale - initialTileScale;
         const coordinateDifference = this.parameters.layoutType === TileLineLayoutType.Top
             || this.parameters.layoutType === TileLineLayoutType.Bottom
             ? this.scaleChangeGlobalRectangle.height
@@ -355,8 +374,7 @@ export class TileLineContainer extends Container {
                 break;
         }
 
-        tileView.view.tile.scale = this.initialTileScale
-            + scaleToCoordinateRatio * coordinateDistance;
+        tileView.view.tile.scale = initialTileScale + scaleToCoordinateRatio * coordinateDistance;
     }
 
     /**
@@ -544,8 +562,9 @@ export class TileLineContainer extends Container {
 
     private getTileIsVisibleInViewportContainer(tileView: TileView): boolean {
         const viewportContainer = this.getViewportContainerOrThrow();
+        const initialTileScale = this.getInitialTileScaleOrThrow(tileView);
 
-        const tileSizeHalf = tileView.model.geometry.maxBoundingSize * this.initialTileScale / 2.0;
+        const tileSizeHalf = tileView.model.geometry.maxBoundingSize * initialTileScale / 2.0;
         const tileGlobalPosition = tileView.tile.parent
             ? tileView.tile.parent.toGlobal(tileView.tile.position)
             : tileView.tile.position;

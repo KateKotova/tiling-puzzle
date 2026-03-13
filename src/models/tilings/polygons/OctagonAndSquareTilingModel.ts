@@ -10,6 +10,7 @@ import { TileGeometry } from "../../tile-geometries/TileGeometry.ts";
 import { OctagonBaseGeometry } from "../../tile-geometries/polygon-bases/OctagonBaseGeometry.ts";
 import { OctagonAndSquareTilingBaseModel } from "../OctagonAndSquareTilingBaseModel.ts";
 import { TileParameters } from "../../tiles/TileParameters.ts";
+import { TileGeometryType } from "../../tile-geometries/TileGeometryType.ts";
 
 /**
  * Класс модели замощения, представляющего собой прямоугольную сетку,
@@ -112,10 +113,10 @@ export class OctagonAndSquareTilingModel extends OctagonAndSquareTilingBaseModel
         const tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
         this.octagonTileGeometry = new OctagonGeometry(tileSide);
         this.squareTileGeometry = new SquareGeometry(tileSide);
-        this.maxTileBoundingSize = Math.max(
-            this.octagonTileGeometry.maxBoundingSize,
-            this.squareTileGeometry.maxBoundingSize
-        );
+        this.maxTileBoundingSizesByTileGeometryTypes.set(TileGeometryType.Octagon,
+            this.octagonTileGeometry.maxBoundingSize);
+        this.maxTileBoundingSizesByTileGeometryTypes.set(TileGeometryType.Square,
+            this.squareTileGeometry.maxBoundingSize);
     }
 
     protected getProtectedTileModel(targetTilePosition: RectangularGridTilePosition): TileModel {
