@@ -10,6 +10,7 @@ import { TileModel } from "../../tiles/TileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
 import { HexagonBaseGeometry } from "../../tile-geometries/polygon-bases/HexagonBaseGeometry.ts";
 import { TileParameters } from "../../tiles/TileParameters.ts";
+import { TileGeometryType } from "../../tile-geometries/TileGeometryType.ts";
 
 /**
  * Класс модели замощения, представляющего собой прямоугольную сетку,
@@ -52,6 +53,8 @@ export class HexagonWithSingleLockTilingModel extends RectangularGridTilingModel
      * с одинарными замками, один экземпляр на все элементы мозаики
      */
     private tileGeometry?: HexagonWithSingleLockGeometry;
+    public tileZIndicesByTileGeometryTypes: Map<TileGeometryType, number>
+        = new Map<TileGeometryType, number>([[TileGeometryType.HexagonWithSingleLock, 0]]);
 
     /**
      * Создание замощения правильными шестиугольниками с одинарными замками
@@ -110,7 +113,8 @@ export class HexagonWithSingleLockTilingModel extends RectangularGridTilingModel
     protected initializeImageTileInfo(): void {
         const tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
         this.tileGeometry = new HexagonWithSingleLockGeometry(tileSide);
-        this.maxTileBoundingSize = this.tileGeometry.maxBoundingSize;
+        this.maxTileBoundingSizesByTileGeometryTypes.set(TileGeometryType.HexagonWithSingleLock,
+            this.tileGeometry.maxBoundingSize);
     }
 
     protected getProtectedTileModel(targetTilePosition: RectangularGridTilePosition): TileModel {

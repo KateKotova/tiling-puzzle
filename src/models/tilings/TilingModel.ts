@@ -10,6 +10,7 @@ import { TilePosition } from "../tiles/TilePosition.ts";
 import { TilingLayoutStrategyType } from "./TilingLayoutStrategyType.ts";
 import { Algorithm } from "../../math/Algorithm.ts";
 import { TileParameters } from "../tiles/TileParameters.ts";
+import { TileGeometryType } from "../tile-geometries/TileGeometryType.ts";
 
 /**
  * Класс модели замощения
@@ -41,12 +42,21 @@ export abstract class TilingModel {
     //#endregion Texture tile info
 
     /**
-     * Максимальный предельный размер элемента мозаики.
-     * Для каждого типа геометрии фигуры, присутствующего в данном замощении,
-     * определяется предельная сторона прямоугольной границы фигуры при любом угле поворота.
-     * И данное значение - максимальное среди всех полученных.
+     * Карта, где по типу геометрии элемента мозаики
+     * можно найти его максимальный предельный размер,
+     * то есть предельную сторону прямоугольной границы фигуры при любом угле поворота.
      */
-    public maxTileBoundingSize: number = 0;
+    public maxTileBoundingSizesByTileGeometryTypes: Map<TileGeometryType, number>
+        = new Map<TileGeometryType, number>();
+    /**
+     * Карта, где по типу геометрии элемента мозаики можно найти его z-индекс,
+     * то есть уровень расположения в контейнере замощения.
+     * Это нужно для назначения приоритетов зонам попадания пазлов соответствующих геометрий:
+     * выше предполагается располагать небольшие пазлы с расширенными зонами попадания,
+     * которые будут частично накрывать пазлы больших размеров.
+     */
+    public tileZIndicesByTileGeometryTypes: Map<TileGeometryType, number>
+        = new Map<TileGeometryType, number>();
 
     /**
      * Карта, где по строковому представлению позиции

@@ -8,6 +8,7 @@ import { DraggableTileView } from "../tile-decorators/DraggableTileView.ts";
 import { TilesAlphaController } from "../controllers/TilesAlphaController.ts";
 import { TileGeometryType } from "../../models/tile-geometries/TileGeometryType.ts";
 import { draggingTileData } from "../tile-decorators/DraggingTileData.ts";
+import { TileView } from "../tiles/TileView.ts";
 
 /**
  * Класс представления замощения
@@ -61,9 +62,11 @@ export class TilingView {
         this.tilingContainer = this.createTilingContainer();
 
         this.staticTilesContainer = new Container();
+        this.staticTilesContainer.sortableChildren = true;
         this.tilingContainer.addChild(this.staticTilesContainer);
 
         this.draggableTilesContainer = new Container();
+        this.draggableTilesContainer.sortableChildren = true;
         this.tilingContainer.addChild(this.draggableTilesContainer);
 
         window.addEventListener(DraggableTileView.draggingTileIsSelectedEventName,
@@ -130,6 +133,8 @@ export class TilingView {
             }
         }
 
+        this.setStaticTileZIndices();
+
         this.staticTilesAlphaController = new TilesAlphaController(
             this.parameters.animationParameters,
             [...this.staticTileViewsByTilePositionStrings.values()],
@@ -163,6 +168,28 @@ export class TilingView {
             const newContent = tileView.createContent(true);
             tileView.view.replaceContent(newContent);
         });
+    }
+
+    private setStaticTileZIndices(): void {
+        const tileViews = [...this.staticTileViewsByTilePositionStrings.values()];
+        return this.setTileZIndices(tileViews);
+    }
+
+    public setDraggableTileZIndices(): void {
+        const tileViews = [...this.draggableTileViewsByTilePositionStrings.values()];
+        return this.setTileZIndices(tileViews);
+    }
+
+    private setTileZIndices(tileViews: TileView[]): void {
+        const setTileZIndex: (tileView: TileView) => void
+            = this.model.tileZIndicesByTileGeometryTypes.size < 2
+            ? tileView => tileView.tile.zIndex = 0
+            : tileView => {
+                const geometryType = tileView.model.geometry.geometryType;
+                const zIndex = this.model.tileZIndicesByTileGeometryTypes.get(geometryType);
+                tileView.tile.zIndex = zIndex === undefined ? 0 : zIndex;
+            };
+        tileViews.forEach(setTileZIndex);
     }
 
     private onDraggingTileIsSelected(event: CustomEvent<DraggableTileView>): void {

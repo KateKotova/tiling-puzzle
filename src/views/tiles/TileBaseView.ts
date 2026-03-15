@@ -58,7 +58,7 @@ export abstract class TileBaseView implements TileView {
         result.pivot.set(this.model.geometry.pivotPoint.x, this.model.geometry.pivotPoint.y);        
         result.rotation = this.model.currentRotationAngle;   
         result.position.copyFrom(this.model.currentPositionPoint);
-        result.hitArea = this.content.hitArea;     
+        result.hitArea = this.model.geometry.hitArea.clone();     
         return result;
     }
 
@@ -97,7 +97,14 @@ export abstract class TileBaseView implements TileView {
             containerChild.hitArea = undefined;
         }
         if (containerChild.mask) {
+            const mask = containerChild.mask as ContainerChild;
             containerChild.mask = null;
+            if (mask && !mask.destroyed) {
+                if (mask.parent) {
+                    mask.parent.removeChild(mask);
+                }
+                mask.destroy();
+            }
         }
         this.destroyContainerChildTextures(containerChild);
     }

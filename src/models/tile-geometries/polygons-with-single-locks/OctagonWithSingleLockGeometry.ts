@@ -1,5 +1,4 @@
 import { Point } from "pixi.js";
-import { Algorithm } from "../../../math/Algorithm.ts";
 import { Size } from "../../../math/Size.ts";
 import { TileLockType } from "../../tile-locks/TileLockType.ts";
 import { OctagonBaseGeometry } from "../polygon-bases/OctagonBaseGeometry.ts";
@@ -40,7 +39,11 @@ c-1.3,1.3-2.2,3-2.5,4.9c-1,6.6-6.2,11.7-12.8,12.8c-8.4,1.3-16.3-4.4-17.6-12.8c-1
 c4.8-0.8,8.1-5.3,7.4-10.2c-0.3-1.8-1.2-3.6-2.5-4.9l-36.2-36.2c0,0-51.2,0-51.2,0c-1.9,0-3.7-0.6-5.2-1.7
 C220.1,34,219.2,28.4,222.1,24.5z`;
 
-    constructor(baseValue: number, sideToBaseValueRatio: number = 1) {
+    constructor(
+        baseValue: number,
+        sideToBaseValueRatio: number = 1,
+        hitAreaSizeMultiplier: number = 1
+    ) {
         super(baseValue, sideToBaseValueRatio);
 
         this.freedomDegree = this.sideCount / 2;
@@ -58,12 +61,7 @@ C220.1,34,219.2,28.4,222.1,24.5z`;
             defaultBoundingRectangleSide,
             defaultBoundingRectangleSide
         );
-        this.hitArea = Algorithm.getRegularPolygon(
-            this.pivotPoint,
-            this.circumscribedCircleRadius,
-            8,
-            this.regularPolygonInitialRotationAngle
-        );
+        this.hitArea = this.getHitAreaRegularPolygon(hitAreaSizeMultiplier);
         this.maxBoundingSize = Math.max(
             2 * this.circumscribedCircleRadius,
             2 * (this.inscribedCircleRadius + this.lockHeight)

@@ -31,6 +31,7 @@ export class TriangleBaseGeometry extends RegularPolygonTileGeometry {
     constructor(baseValue: number, sideToBaseValueRatio: number = 1) {
         super(baseValue, 3, sideToBaseValueRatio);
         this.setCircumscribedAndInscribedCircleRadiuses();
+        this.regularPolygonInitialRotationAngle = 0;
         this.height = this.circumscribedCircleRadius + this.inscribedCircleRadius;
     }
 }

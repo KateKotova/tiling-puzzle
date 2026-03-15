@@ -7,6 +7,7 @@ import { SquareGeometry } from "../../tile-geometries/polygons/SquareGeometry.ts
 import { TileModel } from "../../tiles/TileModel.ts";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
 import { TileParameters } from "../../tiles/TileParameters.ts";
+import { TileGeometryType } from "../../tile-geometries/TileGeometryType.ts";
 
 /**
  * Класс модели замощения, представляющего собой прямоугольную сетку,
@@ -35,6 +36,8 @@ export class SquareTilingModel extends RectangularGridTilingModel {
      * Инструменты для геометрических построений квадрата, один экземпляр на все квадраты
      */
     private tileGeometry?: SquareGeometry;
+    public tileZIndicesByTileGeometryTypes: Map<TileGeometryType, number>
+        = new Map<TileGeometryType, number>([[TileGeometryType.Square, 0]]);
 
     /**
      * Создание замощения квадратами
@@ -75,7 +78,8 @@ export class SquareTilingModel extends RectangularGridTilingModel {
     protected initializeImageTileInfo(): void {
         const tileSide = this.textureTileSide * this.imageContainerModel.sideToTextureSideRatio;
         this.tileGeometry = new SquareGeometry(tileSide);
-        this.maxTileBoundingSize = this.tileGeometry.maxBoundingSize;
+        this.maxTileBoundingSizesByTileGeometryTypes.set(TileGeometryType.Square,
+            this.tileGeometry.maxBoundingSize);
     }
 
     protected getProtectedTileModel(targetTilePosition: RectangularGridTilePosition): TileModel {

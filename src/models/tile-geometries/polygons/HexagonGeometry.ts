@@ -1,7 +1,6 @@
 import { Point } from "pixi.js";
 import { TileGeometryType } from "../TileGeometryType.ts";
 import { Size } from "../../../math/Size.ts";
-import { Algorithm } from "../../../math/Algorithm.ts";
 import { HexagonBaseGeometry } from "../polygon-bases/HexagonBaseGeometry.ts";
 
 /**
@@ -15,24 +14,22 @@ import { HexagonBaseGeometry } from "../polygon-bases/HexagonBaseGeometry.ts";
 export class HexagonGeometry extends HexagonBaseGeometry {
     public readonly geometryType: TileGeometryType = TileGeometryType.Hexagon;
 
-    constructor(baseValue: number, sideToBaseValueRatio: number = 1) {
+    constructor(
+        baseValue: number,
+        sideToBaseValueRatio: number = 1,
+        hitAreaSizeMultiplier: number = 1
+    ) {
         super(baseValue, sideToBaseValueRatio);
 
         this.freedomDegree = this.sideCount;
         this.freedomDegreeRotationAngle = this.getFreedomDegreeRotationAngle();
 
-        this.pivotPoint = new Point(this.side, this.inscribedCircleRadius);
-        this.regularPolygonInitialRotationAngle = Math.PI / 6.0;   
+        this.pivotPoint = new Point(this.side, this.inscribedCircleRadius);           
         this.defaultBoundingRectangleSize = new Size(
             this.side * 2,
             this.inscribedCircleRadius * 2
         );        
-        this.hitArea = Algorithm.getRegularPolygon(
-            this.pivotPoint,
-            this.circumscribedCircleRadius,
-            6,
-            this.regularPolygonInitialRotationAngle
-        );
+        this.hitArea = this.getHitAreaRegularPolygon(hitAreaSizeMultiplier);
         this.maxBoundingSize = this.circumscribedCircleRadius * 2;
     }
 }
