@@ -196,13 +196,6 @@ export class TilingView {
         );
     }
 
-    public setTransparentAlphaForStaticTiles(): void {
-        this.staticTilesAlphaController?.restart(
-            this.getStaticTilesAlpha() ?? this.parameters.staticTileParameters.defaultAlpha,
-            this.parameters.staticTileParameters.transparentAlpha
-        );
-    }
-
     private setStaticTileFillColor(
         geometryType: TileGeometryType,
         fillColor: Color
