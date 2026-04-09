@@ -361,7 +361,9 @@ export class DraggableTileView implements TileView {
     }
 
     private onPointerDown(event: FederatedPointerEvent): void {
-        if (event.propagationStopped || this.getPointerIsMouseAndButtonIsNotLeft(event)) {
+        if (event.propagationStopped
+            || (event.nativeEvent instanceof PointerEvent
+            && this.getPointerIsMouseAndButtonIsNotLeft(event.nativeEvent))) {
             return;
         }
 
@@ -721,7 +723,7 @@ export class DraggableTileView implements TileView {
         const filter = this.getCorrectLocatedGlowFilter();
         this.view.setFilter(filter);
 
-        if (this.fixAsLocatedCorrectlyTimer !== null) {
+        if (this.fixAsLocatedCorrectlyTimer !== undefined) {
             clearTimeout(this.fixAsLocatedCorrectlyTimer);
         }
 
@@ -757,7 +759,7 @@ export class DraggableTileView implements TileView {
     }
 
     public destroy(): void {
-        if (this.fixAsLocatedCorrectlyTimer) {
+        if (this.fixAsLocatedCorrectlyTimer !== undefined) {
             clearTimeout(this.fixAsLocatedCorrectlyTimer);
             this.fixAsLocatedCorrectlyTimer = undefined;
         }

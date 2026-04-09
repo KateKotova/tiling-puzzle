@@ -76,7 +76,8 @@ export class Settings {
             knockout: false
         },
         defaultAlpha: 1,
-        hintAlpha: 0.7
+        hintAlpha: 0.7,
+        transparentAlpha: 0
     };
 
     public readonly draggableTileParameters: DraggableTileParameters = {
@@ -104,7 +105,8 @@ export class Settings {
         tileParameters: this.tileViewParameters,
         staticTileParameters: this.staticTileParameters,
         animationParameters: this.animationParameters,
-        tapParameters: this.tapParameters
+        tapParameters: this.tapParameters,
+        imageInitialShowTime: 2000
     };
 
     public readonly tileLineParameters: TileLineParameters = {

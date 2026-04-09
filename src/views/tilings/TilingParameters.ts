@@ -11,4 +11,9 @@ export interface TilingParameters {
     staticTileParameters: StaticTileParameters;
     animationParameters: AnimationParameters;
     tapParameters: TapParameters;
+    /**
+     * Время показа картинки в самом начале игры в миллисекундах,
+     * чтобы пользователь понимал, что он будет собирать
+     */
+    imageInitialShowTime: number;
 }

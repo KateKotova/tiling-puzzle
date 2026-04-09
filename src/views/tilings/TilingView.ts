@@ -44,6 +44,17 @@ export class TilingView {
 
     public staticTilesAlphaController?: TilesAlphaController;
 
+    /**
+     * Таймер, который обеспечивает небольшую паузу на время тапа по перетаскиваемой фигуре,
+     * чтобы не было моргания при тапе на фигуре,
+     * потому что тап предполагает только поворот, а не длительное перетаскивание
+     */
+    private draggingTileTapTimer?: number;
+    /**
+     * Таймер, который обеспечивает показ картинки пользователю перед началом сборки
+     */
+    private imageInitialShowTimer?: number;
+
     private boundOnDraggingTileIsSelected: (event: CustomEvent<DraggableTileView>) => void
         = this.onDraggingTileIsSelected.bind(this);
     private boundOnDraggingTileIsDeselected: (event: CustomEvent<DraggableTileView>) => void
@@ -118,7 +129,9 @@ export class TilingView {
                     this.parameters.tileParameters,
                     tileViewCreationParameters
                 );
-                tileView.content.alpha = this.parameters.staticTileParameters.defaultAlpha;
+                // Изначально ячейки прозрачные,
+                // чтобы пользователь увидел картинку на короткое время
+                tileView.tile.alpha = this.parameters.staticTileParameters.transparentAlpha;
 
                 this.staticTilesContainer.addChild(tileView.tile);
 
@@ -140,19 +153,53 @@ export class TilingView {
             [...this.staticTileViewsByTilePositionStrings.values()],
             ticker
         );
+
+        this.hideInitialShownImage();
+    }
+
+    private hideInitialShownImage(): void {
+        if (this.imageInitialShowTimer !== undefined) {
+            clearTimeout(this.imageInitialShowTimer);
+        }
+
+        this.imageInitialShowTimer = setTimeout(() => {
+                if (this.getStaticTilesAlpha()
+                    === this.parameters.staticTileParameters.transparentAlpha) {
+                    this.staticTilesAlphaController?.restart(
+                        this.parameters.staticTileParameters.transparentAlpha,
+                        this.parameters.staticTileParameters.defaultAlpha
+                    );
+                }
+                this.imageInitialShowTimer = undefined;
+            },
+            this.parameters.imageInitialShowTime
+        );
+    }
+
+    private getStaticTilesAlpha(): number | undefined {
+        return this.staticTileViewsByTilePositionStrings.size
+            ? this.staticTileViewsByTilePositionStrings.values().next().value?.tile.alpha
+            : undefined;
     }
 
     public setHintAlphaForStaticTiles(): void {
         this.staticTilesAlphaController?.restart(
-            this.parameters.staticTileParameters.defaultAlpha,
+            this.getStaticTilesAlpha() ?? this.parameters.staticTileParameters.defaultAlpha,
             this.parameters.staticTileParameters.hintAlpha
         );
     }
 
     public setDefaultAlphaForStaticTiles(): void {
         this.staticTilesAlphaController?.restart(
-            this.parameters.staticTileParameters.hintAlpha,
+            this.getStaticTilesAlpha() ?? this.parameters.staticTileParameters.hintAlpha,
             this.parameters.staticTileParameters.defaultAlpha
+        );
+    }
+
+    public setTransparentAlphaForStaticTiles(): void {
+        this.staticTilesAlphaController?.restart(
+            this.getStaticTilesAlpha() ?? this.parameters.staticTileParameters.defaultAlpha,
+            this.parameters.staticTileParameters.transparentAlpha
         );
     }
 
@@ -193,9 +240,13 @@ export class TilingView {
     }
 
     private onDraggingTileIsSelected(event: CustomEvent<DraggableTileView>): void {
+        if (this.draggingTileTapTimer !== undefined) {
+            clearTimeout(this.draggingTileTapTimer);
+        }
+
         // Делаем небольшую паузу на тап, чтобы не было моргания при тапе на фигуре,
-        // потому что тап предполагает только поворот, а не длительное перетаскивание
-        setTimeout(() => {
+        // потому что тап предполагает только поворот, а не длительное перетаскивание        
+        this.draggingTileTapTimer = setTimeout(() => {
                 if (draggingTileData.view) {
                     const geometryType = event.detail.model.geometry.geometryType;
                     this.setStaticTileFillColor(geometryType, this.targetStaticTileFillColor);
@@ -203,6 +254,7 @@ export class TilingView {
                     window.addEventListener(DraggableTileView.draggingTileIsDeselectedEventName,
                         this.boundOnDraggingTileIsDeselected as EventListener);
                 }
+                this.draggingTileTapTimer = undefined;
             }, 
             this.parameters.tapParameters.maxDuration
         );
@@ -217,6 +269,16 @@ export class TilingView {
     }
 
     public destroy(): void {
+        if (this.draggingTileTapTimer !== undefined) {
+            clearTimeout(this.draggingTileTapTimer);
+            this.draggingTileTapTimer = undefined;
+        }
+
+        if (this.imageInitialShowTimer !== undefined) {
+            clearTimeout(this.imageInitialShowTimer);
+            this.imageInitialShowTimer = undefined;
+        }
+
         window.removeEventListener(DraggableTileView.draggingTileIsSelectedEventName,
             this.boundOnDraggingTileIsSelected as EventListener);
         window.removeEventListener(DraggableTileView.draggingTileIsDeselectedEventName,
