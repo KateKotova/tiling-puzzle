@@ -1,10 +1,12 @@
 import {
   Application,
   Assets,
+  Color,
   Container,
   ContainerChild,
   ContainerOptions,
   Graphics,
+  Point,
   Texture
 } from "pixi.js";
 import { TilingType } from "./models/tilings/TilingType.ts";
@@ -23,6 +25,8 @@ import { TileLineDirectionType } from "./views/components/TileLineDirectionType.
 import { CarouselContainer } from "./views/components/CarouselContainer.ts";
 import { DraggableTileView } from "./views/tile-decorators/DraggableTileView.ts";
 import { HintButton } from "./views/components/HintButton.ts";
+import { TileLineLayoutType } from "./views/components/TileLineLayoutType.ts";
+import { CarouselDirectionType } from "./views/components/CarouselDirectionType.ts";
 
 async function main(): Promise<void> {
   try {
@@ -105,14 +109,14 @@ async function main(): Promise<void> {
     const texture = Assets.get<Texture>("horse");
     const textureModel = new TilingTextureModel(texture);
 
-    const containerWidth = app.screen.width;
-    const containerHeight = app.screen.height * 2 / 3.0;
+    const imageMaxAreaWidth = app.screen.width;
+    const imageMaxAreaHeight = app.screen.height * 2 / 3.0;
 
     const imageContainerModel = new ImageContainerModel(textureModel,
-      containerWidth, containerHeight);      
+      imageMaxAreaWidth, imageMaxAreaHeight);      
 
     const rectangularGridTilingModelFactory = new RectangularGridTilingModelFactory();
-    const tilingModel: RectangularGridTilingModel | null =
+    const tilingModel: RectangularGridTilingModel | undefined =
       rectangularGridTilingModelFactory.getTilingModel(
       settings.tileModelParameters,
       tilingType,
@@ -129,27 +133,27 @@ async function main(): Promise<void> {
     const screenCenterX = app.screen.width / 2.0;
     const screenCenterY = app.screen.height / 2.0;
 
-    const container = new Container({
-      x: screenCenterX - containerWidth / 2.0,
-      y: screenCenterY - containerHeight / 2.0,
-      width: containerWidth,
-      height: containerHeight,
+    const imageAreaContainer = new Container({
+      x: screenCenterX - imageMaxAreaWidth / 2.0,
+      y: screenCenterY - imageMaxAreaHeight / 2.0,
+      width: imageMaxAreaWidth,
+      height: imageMaxAreaHeight,
     });
-    app.stage.addChild(container);
+    app.stage.addChild(imageAreaContainer);
 
     const selectedTileContainer = new Container();
 
-    const greenBackground = new Graphics()
-      .rect(0, 0, containerWidth, containerHeight)
+    const imageAreaBackground = new Graphics()
+      .rect(0, 0, imageMaxAreaWidth, imageMaxAreaHeight)
       .fill({ color: "green" });
-    greenBackground.eventMode = 'none';
-    greenBackground.interactiveChildren = false;
-    container.addChild(greenBackground);
+    imageAreaBackground.eventMode = 'none';
+    imageAreaBackground.interactiveChildren = false;
+    imageAreaContainer.addChild(imageAreaBackground);
 
-    const containerCenterX = containerWidth / 2.0;
-    const containerCenterY = containerHeight / 2.0;
+    const containerCenterX = imageMaxAreaWidth / 2.0;
+    const containerCenterY = imageMaxAreaHeight / 2.0;
 
-    const zoomAndPanContainer = new ZoomAndPanContainer(      
+    const imageZoomAndPanContainer = new ZoomAndPanContainer(      
       settings.zoomAndPanParameters,
       {
         x: containerCenterX - imageContainerModel.width / 2.0,
@@ -158,10 +162,10 @@ async function main(): Promise<void> {
         height: imageContainerModel.height,
       }
     );
-    container.addChild(zoomAndPanContainer);
-    zoomAndPanContainer.onAddedToParent();
-    draggingTileData.viewport = zoomAndPanContainer;
-    zoomAndPanContainer.onDestroy = (): void => {
+    imageAreaContainer.addChild(imageZoomAndPanContainer);
+    imageZoomAndPanContainer.onAddedToParent();
+    draggingTileData.viewport = imageZoomAndPanContainer;
+    imageZoomAndPanContainer.onDestroy = (): void => {
       draggingTileData.viewport = undefined;
     };
 
@@ -171,7 +175,7 @@ async function main(): Promise<void> {
       width: imageContainerModel.width,
       height: imageContainerModel.height,
     });
-    zoomAndPanContainer.addChild(imageContainer);
+    imageZoomAndPanContainer.addChild(imageContainer);
     
     const image = new Graphics()
       .rect(0, 0, imageContainerModel.width, imageContainerModel.height)
@@ -184,27 +188,34 @@ async function main(): Promise<void> {
 
     const tilingView = new TilingView(
       settings.tilingParameters,
-      tilingModel
+      tilingModel,
+      new Color(0x008F00),
+      new Color(0x00AF00)
     );
     tilingView.createStaticTileViews(app.renderer, app.ticker);
     imageContainer.addChild(tilingView.tilingContainer);
-    zoomAndPanContainer.setContentSize(imageContainerModel.width, imageContainerModel.height);
-    zoomAndPanContainer.getShouldPreventEvents = (): boolean => {
+    imageZoomAndPanContainer.setContentSize(imageContainerModel.width, imageContainerModel.height);
+    imageZoomAndPanContainer.getShouldPreventEvents = (): boolean => {
       return !!draggingTileData?.animatingViews.size;
     };
 
     const tileLineContainer = new TileLineContainer(
       settings.tileLineParameters,
-      80,
-      tilingView,
-      selectedTileContainer,
-      app.ticker
+      {
+        directionType: TileLineDirectionType.FromLeftToRight,
+        layoutType: TileLineLayoutType.Bottom,
+        transverseSize: 80,      
+        tilingView,
+        selectedTileContainer,
+        ticker: app.ticker,
+        backgroundFillColor: new Color(0x00AA00)
+      }
     );
     tileLineContainer.createDraggableTileViews(app.renderer, app.ticker);
     const tileLineContainerSize = tileLineContainer.getSizeByDirection();
 
     const carouselContainerOptions: ContainerOptions<ContainerChild> =
-      settings.tileLineParameters.directionType === TileLineDirectionType.FromLeftToRight
+      tileLineContainer.directionType === TileLineDirectionType.FromLeftToRight
       ? {
         x: 25,
         y: app.screen.height - tileLineContainerSize.height - 25,
@@ -220,6 +231,7 @@ async function main(): Promise<void> {
 
     const carouselContainer = new CarouselContainer(
       settings.carouselParameters,
+      CarouselDirectionType.Horizontal,
       app.ticker,
       carouselContainerOptions
     );
@@ -233,32 +245,41 @@ async function main(): Promise<void> {
     carouselContainer.getShouldPreventEvents = (): boolean => {
       return !!draggingTileData.view;
     };
-    
-    window.addEventListener(TileLineContainer.startResizeEventName, () => {
+
+    window.addEventListener(TileLineContainer.tileLineStartResizeEventName, () => {
       carouselContainer.setOnPointerDownActivity(false);
     });
-    window.addEventListener(TileLineContainer.stopResizeEventName, () => {
+    window.addEventListener(TileLineContainer.tileLineStopResizeEventName, () => {
       carouselContainer.setOnPointerDownActivity(true);
     });
-    window.addEventListener(DraggableTileView.draggingTileIsSelectedEventName, () => {
+    window.addEventListener(DraggableTileView.draggingTileWasSelectedEventName, () => {
       carouselContainer.stopInertia();
     });
+
+    // TODO
 
     const hintIconSvgPath = Assets.get<string>("hint-icon-path");
     const hintButton = new HintButton(
       settings.hintButtonParameters,
       app.renderer,
+      25,    
       hintIconSvgPath,
-      tilingView.setHintAlphaForStaticTiles.bind(tilingView),
-      tilingView.setDefaultAlphaForStaticTiles.bind(tilingView),
-      {
-        x: screenCenterX,
-        y: settings.hintButtonParameters.radius
+      new Point(
+        screenCenterX,
+        25
           + (settings.hintButtonParameters.glowFilterOptions.distance ?? 0)
           + 20
-      }
+      )
     );
     app.stage.addChild(hintButton);
+
+    window.addEventListener(HintButton.hintButtonWasActivatedEventName, () => {
+      tilingView.setHintAlphaForStaticTiles();
+    });
+
+    window.addEventListener(HintButton.hintButtonWasDeactivatedEventName, () => {
+      tilingView.setDefaultAlphaForStaticTiles();
+    });
 
     app.stage.addChild(selectedTileContainer);
   } catch (error) {

@@ -18,6 +18,7 @@ import { CarouselInertiaController } from '../controllers/CarouselInertiaControl
  */
 export class CarouselContainer extends ViewportContainer {
     private readonly parameters: CarouselParameters;
+    private readonly direction: CarouselDirectionType;
     private readonly framesPerSecond: number;
     private readonly inertiaController: CarouselInertiaController;
 
@@ -39,12 +40,14 @@ export class CarouselContainer extends ViewportContainer {
     
     constructor(
         parameters: CarouselParameters,
+        direction: CarouselDirectionType,
         ticker: Ticker,
         options?: ContainerOptions<ContainerChild>
     ) {
         super(options);
 
         this.parameters = parameters;
+        this.direction = direction;
         this.framesPerSecond = ticker.FPS;
         this.backgroundContainer = this.createBackground();
         
@@ -223,7 +226,7 @@ export class CarouselContainer extends ViewportContainer {
     }
 
     private getIsHorizontal(): boolean {
-        return this.parameters.direction === CarouselDirectionType.Horizontal;
+        return this.direction === CarouselDirectionType.Horizontal;
     }
 
     public getMaxCoordinate(): number {

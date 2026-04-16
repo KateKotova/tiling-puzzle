@@ -22,12 +22,12 @@ export class TilingView {
     /**
      * Цвет заливки статических элементов замощения по умолчанию
      */
-    public defaultStaticTileFillColor: Color = new Color(0x008F00);
+    public defaultStaticTileFillColor: Color;
     /**
      * Цвет заливки статических элементов, который устанавливается
      * для фигур того же типа геометрии, что и выбранный перетаскиваемый элемент замощения
      */
-    public targetStaticTileFillColor: Color = new Color(0x00AF00);
+    private targetStaticTileFillColor: Color;
     /**
      * Карта, где по строковому представлению позиции
      * можно найти статический элемент замощения, представляющий собой
@@ -55,14 +55,16 @@ export class TilingView {
      */
     private imageInitialShowTimer?: number;
 
-    private boundOnDraggingTileIsSelected: (event: CustomEvent<DraggableTileView>) => void
-        = this.onDraggingTileIsSelected.bind(this);
+    private boundOnDraggingTileWasSelected: (event: CustomEvent<DraggableTileView>) => void
+        = this.onDraggingTileWasSelected.bind(this);
     private boundOnDraggingTileIsDeselected: (event: CustomEvent<DraggableTileView>) => void
         = this.onDraggingTileIsDeselected.bind(this);
 
     constructor(
         parameters: TilingParameters,
-        model: TilingModel
+        model: TilingModel,
+        defaultStaticTileFillColor: Color,
+        targetStaticTileFillColor: Color
     ) {
         if (!model.isInitialized) {
             throw new Error('The tiling model is not initialized');
@@ -70,6 +72,8 @@ export class TilingView {
 
         this.parameters = parameters;
         this.model = model;
+        this.defaultStaticTileFillColor = defaultStaticTileFillColor;
+        this.targetStaticTileFillColor = targetStaticTileFillColor;
         this.tilingContainer = this.createTilingContainer();
 
         this.staticTilesContainer = new Container();
@@ -80,8 +84,8 @@ export class TilingView {
         this.draggableTilesContainer.sortableChildren = true;
         this.tilingContainer.addChild(this.draggableTilesContainer);
 
-        window.addEventListener(DraggableTileView.draggingTileIsSelectedEventName,
-            this.boundOnDraggingTileIsSelected as EventListener);        
+        window.addEventListener(DraggableTileView.draggingTileWasSelectedEventName,
+            this.boundOnDraggingTileWasSelected as EventListener);        
     }
 
     private createTilingContainer(): Container {
@@ -232,7 +236,7 @@ export class TilingView {
         tileViews.forEach(setTileZIndex);
     }
 
-    private onDraggingTileIsSelected(event: CustomEvent<DraggableTileView>): void {
+    private onDraggingTileWasSelected(event: CustomEvent<DraggableTileView>): void {
         if (this.draggingTileTapTimer !== undefined) {
             clearTimeout(this.draggingTileTapTimer);
         }
@@ -244,7 +248,7 @@ export class TilingView {
                     const geometryType = event.detail.model.geometry.geometryType;
                     this.setStaticTileFillColor(geometryType, this.targetStaticTileFillColor);
 
-                    window.addEventListener(DraggableTileView.draggingTileIsDeselectedEventName,
+                    window.addEventListener(DraggableTileView.draggingTileWasDeselectedEventName,
                         this.boundOnDraggingTileIsDeselected as EventListener);
                 }
                 this.draggingTileTapTimer = undefined;
@@ -254,7 +258,7 @@ export class TilingView {
     }
 
     private onDraggingTileIsDeselected(event: CustomEvent<DraggableTileView>): void {
-        window.removeEventListener(DraggableTileView.draggingTileIsDeselectedEventName,
+        window.removeEventListener(DraggableTileView.draggingTileWasDeselectedEventName,
             this.boundOnDraggingTileIsDeselected as EventListener);
 
         const geometryType = event.detail.model.geometry.geometryType;
@@ -272,9 +276,9 @@ export class TilingView {
             this.imageInitialShowTimer = undefined;
         }
 
-        window.removeEventListener(DraggableTileView.draggingTileIsSelectedEventName,
-            this.boundOnDraggingTileIsSelected as EventListener);
-        window.removeEventListener(DraggableTileView.draggingTileIsDeselectedEventName,
+        window.removeEventListener(DraggableTileView.draggingTileWasSelectedEventName,
+            this.boundOnDraggingTileWasSelected as EventListener);
+        window.removeEventListener(DraggableTileView.draggingTileWasDeselectedEventName,
             this.boundOnDraggingTileIsDeselected as EventListener);
 
         this.staticTilesAlphaController?.destroy();

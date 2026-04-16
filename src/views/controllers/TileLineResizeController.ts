@@ -26,7 +26,7 @@ export class TileLineResizeController
     public start(longitudinalSizeDifference: number): void {
         this.removeTickerListener();
         this.target.isResizing = true;
-        this.target.dispatchStartResizeEvent();
+        this.target.dispatchTileLineStartResizeEvent();
         this.prepareToExecute(longitudinalSizeDifference);        
         this.addTickerListener();
     }
@@ -36,7 +36,7 @@ export class TileLineResizeController
         if (this.controller?.getIsCompleted()) {
             this.complete();
             this.removeTickerListener();
-            this.target.dispatchStopResizeEvent();
+            this.target.dispatchTileLineStopResizeEvent();
         }        
     }
 

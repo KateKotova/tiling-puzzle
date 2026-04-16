@@ -21,10 +21,10 @@ export abstract class TilingModel {
 
     protected readonly tileParameters: TileParameters;
     public isInitialized: boolean = false;
-    public textureModel: TilingTextureModel;
+    public readonly textureModel: TilingTextureModel;
     public tilingContainerModel?: TilingContainerModel;
-    protected imageContainerModel: ImageContainerModel;
-    private renderer: Renderer;
+    protected readonly imageContainerModel: ImageContainerModel;
+    private readonly renderer: Renderer;
 
     //#region Texture tile info
 

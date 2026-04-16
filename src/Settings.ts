@@ -5,12 +5,9 @@ import { DraggableTileParameters } from "./views/tile-decorators/DraggableTilePa
 import { TapParameters } from "./views/TapParameters.ts";
 import { TileParameters as TileViewParameters} from "./views/tiles/TileParameters.ts";
 import { TileParameters as TileModelParameters} from "./models/tiles/TileParameters.ts";
-import { TileLineDirectionType } from "./views/components/TileLineDirectionType.ts";
 import { TileLineParameters } from "./views/components/TileLineParameters.ts";
 import { TilingParameters } from "./views/tilings/TilingParameters.ts";
-import { TileLineLayoutType } from "./views/components/TileLineLayoutType.ts";
 import { AnimationParameters } from "./AnimationParameters.ts";
-import { CarouselDirectionType } from "./views/components/CarouselDirectionType.ts";
 import { CarouselParameters } from "./views/components/CarouselParameters.ts";
 import { HintButtonParameters } from "./views/components/HintButtonParameters.ts";
 
@@ -110,18 +107,15 @@ export class Settings {
     };
 
     public readonly tileLineParameters: TileLineParameters = {
-        directionType: TileLineDirectionType.FromLeftToRight,
-        layoutType: TileLineLayoutType.Bottom,
-        longitudinalContentOffset: 12,
-        transverseContentOffset: 12,
-        betweenTilesOffset: 40,
+        longitudinalContentOffsetToTransverseSizeRatio: 0.15,
+        transverseContentOffsetToTransverseSizeRatio: 0.15,
+        betweenTilesOffsetToTransverseSizeRatio: 0.5,
         tileParameters: this.tileViewParameters,
         draggableTileParameters: this.draggableTileParameters,
         animationParameters: this.animationParameters
     }
 
     public readonly carouselParameters: CarouselParameters = {
-        direction: CarouselDirectionType.Horizontal,
         pointerSensitivity: 1,
         velocityParameters: {
             minValue: 0.5,
@@ -147,8 +141,7 @@ export class Settings {
             quality: 0.5,
             knockout: false
         },
-        radius: 25,
-        iconSide: 30,
+        iconSideToDiameterRatio: 0.6,
         defaultFillColor: new Color(0x008800),
         activeFillColor: new Color(0x888800),
         strokeWidth: 2,
