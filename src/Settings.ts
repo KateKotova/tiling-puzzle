@@ -10,6 +10,8 @@ import { TilingParameters } from "./views/tilings/TilingParameters.ts";
 import { AnimationParameters } from "./AnimationParameters.ts";
 import { CarouselParameters } from "./views/components/CarouselParameters.ts";
 import { HintButtonParameters } from "./views/components/HintButtonParameters.ts";
+import { TilingLevelControlParameters }
+    from "./views/components/TilingLevelControlParameters.ts";
 
 /**
  * Singleton-класс настроек представления.
@@ -149,5 +151,12 @@ export class Settings {
         activeStrokeColor: new Color(0x666600),
         defaultIconFillColor: new Color(0xFFFFFF),
         activeIconFillColor: new Color(0x000000)
+    };
+
+    public readonly tilingLevelControlParameters: TilingLevelControlParameters = {
+        hintButtonParameters: this.hintButtonParameters,
+        hintButtonCenterXToControlContainerWidthRatio: 0.5,
+        hintButtonCenterYToControlContainerHeightRatio: 0.5,
+        hintButtonRadiusToControlContainerHeightRatio: 0.5
     };
 }
