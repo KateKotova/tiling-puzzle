@@ -11,42 +11,61 @@ import {
     Ticker
 } from "pixi.js";
 import { TileLineParameters } from "./TileLineParameters.ts";
-import { TilingView } from "../tilings/TilingView.ts";
+import { TilingView } from "../../tilings/TilingView.ts";
 import { TileLineDirectionType } from "./TileLineDirectionType.ts";
-import { TileViewCreationParameters } from "../tiles/TileViewCreationParameters.ts";
-import { TileViewFactory } from "../tiles/TileViewFactory.ts";
-import { DraggableTileView } from "../tile-decorators/DraggableTileView.ts";
-import { draggingTileData } from "../tile-decorators/DraggingTileData.ts";
-import { Size } from "../../math/Size.ts";
+import { TileViewCreationParameters } from "../../tiles/TileViewCreationParameters.ts";
+import { TileViewFactory } from "../../tiles/TileViewFactory.ts";
+import { DraggableTileView } from "../../tile-decorators/DraggableTileView.ts";
+import { draggingTileData } from "../../tile-decorators/DraggingTileData.ts";
+import { Size } from "../../../math/Size.ts";
 import { TileLineLayoutType } from "./TileLineLayoutType.ts";
-import { Algorithm } from "../../math/Algorithm.ts";
-import { TileView } from "../tiles/TileView.ts";
-import { ViewportContainer } from "./ViewportContainer.ts";
-import { TileLineResizeController } from "../controllers/TileLineResizeController.ts";
-import { TileGeometryType } from "../../models/tile-geometries/TileGeometryType.ts";
+import { Algorithm } from "../../../math/Algorithm.ts";
+import { TileView } from "../../tiles/TileView.ts";
+import { ViewportContainer } from "../ViewportContainer.ts";
+import { TileLineResizeController } from "../../controllers/TileLineResizeController.ts";
+import { TileGeometryType } from "../../../models/tile-geometries/TileGeometryType.ts";
+import { TileLineCreationParameters } from "./TileLineCreationParameters.ts";
 
 /**
  * Класс контейнера линии, в которой содержатся элементы мозаики для сборки.
  * Может быть вертикальной (сверху вниз) или горизонтальной (слева направо).
  */
 export class TileLineContainer extends Container {
-    public static readonly startResizeEventName: string = "startResizeEvent";
-    public static readonly stopResizeEventName: string = "stopResizeEvent";
+    public static readonly tileLineStartResizeEventName: string = "tileLineStartResizeEvent";
+    public static readonly tileLineStopResizeEventName: string = "tileLineStopResizeEvent";
 
     public readonly parameters: TileLineParameters;
+    public readonly directionType: TileLineDirectionType;
+    public readonly layoutType: TileLineLayoutType;
     private readonly tilingView: TilingView;    
     /**
      * Продольный размер.
      * Для направления слева направо это ширина.
      * Для направления сверху вниз это высота.
      */
-    public longitudinalSize: number;
+    public longitudinalSize: number = 0;
     /**
      * Поперечный размер.
      * Для направления слева направо это высота.
      * Для направления сверху вниз это ширина.
      */
     private readonly transverseSize: number;
+    /**
+     * Продольный отступ содержимого от края.
+     * Для направления слева направо этот отступ применяется слева и справа.
+     * Для направления сверху вниз этот отступ применяется сверху и снизу.
+     */
+    private readonly longitudinalContentOffset: number;
+    /**
+     * Поперечный отступ содержимого от края.
+     * Для направления слева направо этот отступ применяется сверху и снизу.
+     * Для направления сверху вниз этот отступ применяется слева и справа.
+     */
+    private readonly transverseContentOffset: number;
+    /**
+     * Отступ между элементами мозаики.
+     */
+    private readonly betweenTilesOffset: number;
     /**
      * Карта, где по типу геометрии элемента мозаики
      * можно найти его изначальный масштаб, когда он лежит на ленте,
@@ -69,10 +88,10 @@ export class TileLineContainer extends Container {
     private readonly maxScaledBoundingSize: number;
 
     private viewportContainer?: ViewportContainer;
-    private readonly selectedContainer: Container;
+    private readonly selectedTileContainer: Container;
 
     public readonly backgroundContainer: Container;
-    private backgroundFillColor: Color = new Color(0x00AA00);
+    private readonly backgroundFillColor?: Color;
 
     public tileViews: DraggableTileView[] = [];
 
@@ -83,27 +102,35 @@ export class TileLineContainer extends Container {
 
     constructor(
         parameters: TileLineParameters,
-        transverseSize: number,
-        tilingView: TilingView,
-        selectedContainer: Container,
-        ticker: Ticker,
+        creationParameters: TileLineCreationParameters,
         options?: ContainerOptions<ContainerChild>        
     ) {
         super(options);
         this.parameters = parameters;
-        this.transverseSize = transverseSize;
-        this.tilingView = tilingView;
-        this.selectedContainer = selectedContainer;
 
-        this.resizeController = new TileLineResizeController(this, ticker);
+        this.transverseSize = creationParameters.transverseSize;
+        this.longitudinalContentOffset = this.transverseSize
+            * this.parameters.longitudinalContentOffsetToTransverseSizeRatio;
+        this.transverseContentOffset = this.transverseSize
+            * this.parameters.transverseContentOffsetToTransverseSizeRatio;
+        this.betweenTilesOffset = this.transverseSize
+            * this.parameters.betweenTilesOffsetToTransverseSizeRatio;
+
+        this.backgroundFillColor = creationParameters.backgroundFillColor;
+        this.directionType = creationParameters.directionType;
+        this.layoutType = creationParameters.layoutType;
+        this.tilingView = creationParameters.tilingView;
+        this.selectedTileContainer = creationParameters.selectedTileContainer;
+
+        this.resizeController = new TileLineResizeController(this, creationParameters.ticker);
 
         this.maxScaledBoundingSize = this.transverseSize
-            - 2 * this.parameters.transverseContentOffset;
+            - 2 * this.transverseContentOffset;
 
         const tileCount = this.tilingView.model.shuffledTilePositions.length;
-        this.longitudinalSize = 2 * this.parameters.longitudinalContentOffset
+        this.longitudinalSize = 2 * this.longitudinalContentOffset
             + tileCount * this.maxScaledBoundingSize
-            + (tileCount - 1) * this.parameters.betweenTilesOffset;
+            + (tileCount - 1) * this.betweenTilesOffset;
 
         const size = this.getSizeByDirection();
         this.width = size.width;
@@ -121,13 +148,13 @@ export class TileLineContainer extends Container {
         this.addChild(this.backgroundContainer);
     }
 
-    public dispatchStartResizeEvent(): void {
-        const event = new CustomEvent(TileLineContainer.startResizeEventName);
+    public dispatchTileLineStartResizeEvent(): void {
+        const event = new CustomEvent(TileLineContainer.tileLineStartResizeEventName);
         window.dispatchEvent(event);
     }
 
-    public dispatchStopResizeEvent(): void {
-        const event = new CustomEvent(TileLineContainer.stopResizeEventName);
+    public dispatchTileLineStopResizeEvent(): void {
+        const event = new CustomEvent(TileLineContainer.tileLineStopResizeEventName);
         window.dispatchEvent(event);
     }
 
@@ -168,7 +195,7 @@ export class TileLineContainer extends Container {
         const widthHalf = this.width / 2.0;
         const heightHalf = this.height / 2.0;
 
-        switch (this.parameters.layoutType) {
+        switch (this.layoutType) {
             case TileLineLayoutType.Top:
                 return new Rectangle(
                     globalLeftTop.x,
@@ -203,12 +230,21 @@ export class TileLineContainer extends Container {
     }
 
     private createBackground(): Container {
-        const size = this.getSizeByDirection();
-        const graphics = new Graphics()
-            .rect(0, 0, size.width, size.height)
-            .fill({ color: this.backgroundFillColor });
-        graphics.cacheAsTexture(true);
-        return graphics;
+        const size = this.getSizeByDirection();        
+        if (this.backgroundFillColor !== undefined) {
+            const graphics = new Graphics()
+                .rect(0, 0, size.width, size.height)
+                .fill({ color: this.backgroundFillColor });
+            graphics.cacheAsTexture(true);
+            return graphics;
+        } else {
+            return new Container({
+                x: 0,
+                y: 0,
+                width: size.width,
+                height: size.height
+            });
+        }
     }
 
     public createDraggableTileViews(renderer: Renderer, ticker: Ticker): void {
@@ -268,7 +304,7 @@ export class TileLineContainer extends Container {
                 view,
                 this,
                 this.tilingView.draggableTilesContainer,
-                this.selectedContainer,
+                this.selectedTileContainer,
                 ticker
             );
 
@@ -295,8 +331,7 @@ export class TileLineContainer extends Container {
         );
 
         const offset = this.getTileLongitudinalCoordinateMultiplier();
-        const endIsVisible = this.parameters.directionType
-            === TileLineDirectionType.FromLeftToRight
+        const endIsVisible = this.directionType === TileLineDirectionType.FromLeftToRight
             ? globalRightBottom.x <= viewportRightBottom.x + offset
             : globalRightBottom.y <= viewportRightBottom.y + offset;
 
@@ -308,7 +343,7 @@ export class TileLineContainer extends Container {
     }
 
     public resizeWithoutAnimation(targetLongitudinalSize: number): void {
-        if (this.parameters.directionType === TileLineDirectionType.FromLeftToRight) {
+        if (this.directionType === TileLineDirectionType.FromLeftToRight) {
             this.backgroundContainer.width = targetLongitudinalSize;            
         } else {
             this.backgroundContainer.height = targetLongitudinalSize;
@@ -347,14 +382,14 @@ export class TileLineContainer extends Container {
         const initialTileScale = this.getInitialTileScaleOrThrow(tileView);
         const tilingViewportScale = draggingTileData.viewport.scale.x;
         const scaleDifference = tilingViewportScale - initialTileScale;
-        const coordinateDifference = this.parameters.layoutType === TileLineLayoutType.Top
-            || this.parameters.layoutType === TileLineLayoutType.Bottom
+        const coordinateDifference = this.layoutType === TileLineLayoutType.Top
+            || this.layoutType === TileLineLayoutType.Bottom
             ? this.scaleChangeGlobalRectangle.height
             : this.scaleChangeGlobalRectangle.width;
         const scaleToCoordinateRatio = scaleDifference / coordinateDifference;
 
         let coordinateDistance: number;
-        switch (this.parameters.layoutType) {
+        switch (this.layoutType) {
             case TileLineLayoutType.Top:
                 coordinateDistance = globalPoint.y - this.scaleChangeGlobalRectangle.y;
                 break;
@@ -482,7 +517,7 @@ export class TileLineContainer extends Container {
             this.tileViews.push(tileView);
 
             this.backgroundContainer.visible = true;
-            const newSize = 2 * this.parameters.longitudinalContentOffset
+            const newSize = 2 * this.longitudinalContentOffset
                 + this.maxScaledBoundingSize;
             this.resize(newSize);
             return;            
@@ -490,8 +525,7 @@ export class TileLineContainer extends Container {
 
         const globalPosition = tileView.getGlobalPosition();
         const localPosition = this.toLocal(globalPosition);
-        const isHorizontal = this.parameters.directionType
-            === TileLineDirectionType.FromLeftToRight;
+        const isHorizontal = this.directionType === TileLineDirectionType.FromLeftToRight;
 
         const coordinate = isHorizontal ? localPosition.x : localPosition.y;       
         const coordinates = isHorizontal
@@ -575,7 +609,7 @@ export class TileLineContainer extends Container {
         let viewportLongitudinalCoordinate: number;
         let viewportLongitudinalSize: number;
 
-        if (this.parameters.directionType === TileLineDirectionType.FromLeftToRight) {
+        if (this.directionType === TileLineDirectionType.FromLeftToRight) {
             tileLongitudinalCoordinate = tileGlobalPosition.x;
             viewportLongitudinalCoordinate = viewportContainer.viewportGlobalPosition.x;
             viewportLongitudinalSize = viewportContainer.viewportRectangle.width;
@@ -609,7 +643,7 @@ export class TileLineContainer extends Container {
         const result = currentPositionPoint.clone();
         const offset = this.getTileLongitudinalCoordinateMultiplier()
             * relativeNeighborIndex;
-        if (this.parameters.directionType === TileLineDirectionType.FromLeftToRight) {
+        if (this.directionType === TileLineDirectionType.FromLeftToRight) {
             result.x += offset;
         } else {
             result.y += offset;
@@ -625,27 +659,27 @@ export class TileLineContainer extends Container {
     }
 
     private getTileTransverseCoordinate(): number {
-        return this.parameters.transverseContentOffset
+        return this.transverseContentOffset
            + this.maxScaledBoundingSize / 2.0;
     }
 
     private getTileLongitudinalCoordinateOffset(): number {
-        return this.parameters.longitudinalContentOffset
+        return this.longitudinalContentOffset
             + this.maxScaledBoundingSize / 2.0;
     }
 
     private getTileLongitudinalCoordinateMultiplier(): number {
-        return this.maxScaledBoundingSize + this.parameters.betweenTilesOffset;
+        return this.maxScaledBoundingSize + this.betweenTilesOffset;
     }
 
     private getPoint(longitudinalCoordinate: number, transverseCoordinate: number): Point {
-        return this.parameters.directionType === TileLineDirectionType.FromLeftToRight
+        return this.directionType === TileLineDirectionType.FromLeftToRight
             ? new Point(longitudinalCoordinate, transverseCoordinate)
             : new Point(transverseCoordinate, longitudinalCoordinate);
     }
 
     public getSizeByDirection(): Size {
-        return this.parameters.directionType === TileLineDirectionType.FromLeftToRight
+        return this.directionType === TileLineDirectionType.FromLeftToRight
             ? new Size(this.longitudinalSize, this.transverseSize)
             : new Size(this.transverseSize, this.longitudinalSize);
     }
@@ -667,8 +701,8 @@ export class TileLineContainer extends Container {
         this.tileViews.length = 0;
         
         if (this.backgroundContainer && !this.backgroundContainer.destroyed) {
-            this.removeChild(this.backgroundContainer);            
-            this.backgroundContainer.cacheAsTexture(false);            
+            this.removeChild(this.backgroundContainer);
+            this.backgroundContainer.cacheAsTexture(false);
             this.backgroundContainer.destroy({ children: true });
         }
         

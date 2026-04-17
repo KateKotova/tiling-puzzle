@@ -21,7 +21,7 @@ import { draggingTileData } from "./DraggingTileData.ts";
 import { TileView } from "../tiles/TileView.ts";
 import { Algorithm } from "../../math/Algorithm.ts";
 import { DraggableTileParameters } from "./DraggableTileParameters.ts";
-import { TileLineContainer } from "../components/TileLineContainer.ts";
+import { TileLineContainer } from "../components/tile-line/TileLineContainer.ts";
 import { TileRotationController } from "../controllers/TileRotationController.ts";
 import { TileMoveAfterDragController }
     from "../controllers/TileMoveAfterDragController.ts";
@@ -35,10 +35,10 @@ import { WheelController } from "../controllers/WheelController.ts";
  * Класс декоратора представления подвижного элемента замощения
  */
 export class DraggableTileView implements TileView {
-    public static readonly draggingTileIsSelectedEventName: string
-        = "draggingTileIsSelectedEvent";
-    public static readonly draggingTileIsDeselectedEventName: string
-        = "draggingTileIsDeselectedEvent";
+    public static readonly draggingTileWasSelectedEventName: string
+        = "draggingTileWasSelectedEvent";
+    public static readonly draggingTileWasDeselectedEventName: string
+        = "draggingTileWasDeselectedEvent";
 
     public readonly parameters: DraggableTileParameters;
     /**
@@ -344,9 +344,9 @@ export class DraggableTileView implements TileView {
         this.restoreGlobalPosition();
     }
 
-    public dispatchDraggingTileIsSelectedEvent(): void {
+    public dispatchDraggingTileWasSelectedEvent(): void {
         const event = new CustomEvent<DraggableTileView>(
-            DraggableTileView.draggingTileIsSelectedEventName,
+            DraggableTileView.draggingTileWasSelectedEventName,
             { detail: this }
         );
         window.dispatchEvent(event);
@@ -354,7 +354,7 @@ export class DraggableTileView implements TileView {
 
     public dispatchDraggingTileIsDeselectedEvent(): void {
         const event = new CustomEvent<DraggableTileView>(
-            DraggableTileView.draggingTileIsDeselectedEventName,
+            DraggableTileView.draggingTileWasDeselectedEventName,
             { detail: this }
         );
         window.dispatchEvent(event);
@@ -382,7 +382,7 @@ export class DraggableTileView implements TileView {
         this.isDragging = true;
         draggingTileData.view = this;
         draggingTileData.animatingViews.add(this);
-        this.dispatchDraggingTileIsSelectedEvent();
+        this.dispatchDraggingTileWasSelectedEvent();
 
         this.setOnPointerDownActivity(false);
         this.view.tile.on('globalpointermove', this.onPointerMove, this);

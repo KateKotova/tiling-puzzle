@@ -4,8 +4,8 @@ import {
     DestroyOptions,
     Point
 } from 'pixi.js';
-import { Algorithm } from '../../math/Algorithm.ts';
-import { ViewportContainer } from './ViewportContainer.ts';
+import { Algorithm } from '../../../math/Algorithm.ts';
+import { ViewportContainer } from '../ViewportContainer.ts';
 import { ZoomAndPanParameters } from './ZoomAndPanParameters.ts';
 
 /**

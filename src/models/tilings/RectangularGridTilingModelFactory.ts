@@ -26,8 +26,8 @@ export class RectangularGridTilingModelFactory {
         textureModel: TilingTextureModel,
         imageContainerModel: ImageContainerModel,
         renderer: Renderer
-    ): RectangularGridTilingModel | null {
-        let model: RectangularGridTilingModel | null = null;
+    ): RectangularGridTilingModel | undefined {
+        let model: RectangularGridTilingModel | undefined;
         const textureMinSideTilePairCount = Math.trunc(textureMinSideTileCount / 2);
         switch (tilingType) {
             case TilingType.Triangle:

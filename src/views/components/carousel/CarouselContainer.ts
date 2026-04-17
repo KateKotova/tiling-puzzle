@@ -10,19 +10,20 @@ import {
 } from 'pixi.js';
 import { CarouselDirectionType } from './CarouselDirectionType.ts';
 import { CarouselParameters } from './CarouselParameters.ts';
-import { ViewportContainer } from './ViewportContainer.ts';
-import { CarouselInertiaController } from '../controllers/CarouselInertiaController.ts';
+import { ViewportContainer } from '../ViewportContainer.ts';
+import { CarouselInertiaController } from '../../controllers/CarouselInertiaController.ts';
 
 /**
  * Класс карусели с инерционной прокруткой
  */
 export class CarouselContainer extends ViewportContainer {
     private readonly parameters: CarouselParameters;
+    private readonly direction: CarouselDirectionType;
     private readonly framesPerSecond: number;
     private readonly inertiaController: CarouselInertiaController;
 
-    private backgroundContainer: Container;
-    private backgroundFillColor: Color = new Color(0x007700);
+    private backgroundContainer?: Container;
+    private readonly backgroundFillColor?: Color;
     
     private isDragging: boolean = false;
     public isMoving: boolean = false;
@@ -39,14 +40,20 @@ export class CarouselContainer extends ViewportContainer {
     
     constructor(
         parameters: CarouselParameters,
+        direction: CarouselDirectionType,
         ticker: Ticker,
+        backgroundFillColor?: Color,
         options?: ContainerOptions<ContainerChild>
     ) {
         super(options);
 
         this.parameters = parameters;
+        this.direction = direction;
         this.framesPerSecond = ticker.FPS;
-        this.backgroundContainer = this.createBackground();
+        this.backgroundFillColor = backgroundFillColor;
+        if (this.backgroundFillColor) {
+            this.backgroundContainer = this.createBackground();
+        }
         
         this.inertiaController = new CarouselInertiaController(
             this,
@@ -223,7 +230,7 @@ export class CarouselContainer extends ViewportContainer {
     }
 
     private getIsHorizontal(): boolean {
-        return this.parameters.direction === CarouselDirectionType.Horizontal;
+        return this.direction === CarouselDirectionType.Horizontal;
     }
 
     public getMaxCoordinate(): number {
@@ -264,6 +271,12 @@ export class CarouselContainer extends ViewportContainer {
         this.inertiaController.stop();
         this.removeEventListeners();
         this.inertiaController.clearVelocities();
+
+        if (this.backgroundContainer) {
+            this.backgroundContainer.parent?.removeChild(this.backgroundContainer);
+            this.backgroundContainer.destroy();
+        }
+
         this.onDestroy?.();
         super.destroy(options);
     }
