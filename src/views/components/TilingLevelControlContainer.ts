@@ -8,6 +8,7 @@ import {
 } from "pixi.js";
 import { HintButton } from "./HintButton.ts";
 import { TilingLevelControlParameters } from "./TilingLevelControlParameters.ts";
+import { Size } from "../../math/Size.ts";
 
 /**
  * Класс контейнера панели управления,
@@ -16,6 +17,7 @@ import { TilingLevelControlParameters } from "./TilingLevelControlParameters.ts"
 export class TilingLevelControlContainer extends Container {
     private readonly parameters: TilingLevelControlParameters;
     private readonly renderer: Renderer;
+    private readonly size: Size;
 
     private readonly hintButtonIconSvgPath: string;
     private hintButton?: HintButton;
@@ -23,13 +25,14 @@ export class TilingLevelControlContainer extends Container {
     constructor(
         parameters: TilingLevelControlParameters,
         renderer: Renderer,
-        hintButtonIconSvgPath: string,        
+        hintButtonIconSvgPath: string,
         options?: ContainerOptions<ContainerChild>
     ) {
         super(options);
         this.parameters = parameters;
         this.hintButtonIconSvgPath = hintButtonIconSvgPath;
         this.renderer = renderer;
+        this.size = new Size(options?.width ?? 0, options?.height ?? 0);
         this.initialize();
     }
 
@@ -43,11 +46,11 @@ export class TilingLevelControlContainer extends Container {
 
     private createHintButton(): HintButton | undefined {
         const radius = this.parameters.hintButtonRadiusToControlContainerHeightRatio
-            * this.height;
+            * this.size.height;
         const centerX = this.parameters.hintButtonCenterXToControlContainerWidthRatio
-            * this.width;
+            * this.size.width;
         const centerY = this.parameters.hintButtonCenterYToControlContainerHeightRatio
-            * this.height;
+            * this.size.height;
 
         return new HintButton(
             this.parameters.hintButtonParameters,

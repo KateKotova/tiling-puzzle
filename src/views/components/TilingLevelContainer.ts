@@ -30,8 +30,9 @@ export class TilingLevelContainer extends Container {
      * в пределах родительского элемента
      */
     public readonly boundingRectangle: Rectangle;
-    public readonly controlContainerHeight: number;
-    public readonly carouselContainerHeight: number;
+    public readonly imageContainerBoundingRectangle: Rectangle;
+    public readonly carouselContainerBoundingRectangle: Rectangle;
+    public readonly controlContainerBoundingRectangle: Rectangle;
 
     /**
      * Контейнер, куда временно помещается выбранный пользователем элемент мозаики.
@@ -75,10 +76,12 @@ export class TilingLevelContainer extends Container {
         this.ticker = ticker;
 
         this.boundingRectangle = this.createBoundingRectangle(options);
-        this.controlContainerHeight = this.boundingRectangle.height
-            * this.parameters.controlContainerHeightToHeightRatio;
-        this.carouselContainerHeight = this.boundingRectangle.height
-            * this.parameters.carouselContainerHeightToHeightRatio;
+        this.controlContainerBoundingRectangle
+            = this.createControlContainerBoundingRectangle();
+        this.carouselContainerBoundingRectangle
+            = this.createCarouselContainerBoundingRectangle();
+        this.imageContainerBoundingRectangle
+            = this.createImageContainerBoundingRectangle();
 
         this.initialize();
     }
@@ -123,12 +126,42 @@ export class TilingLevelContainer extends Container {
         );
     }
 
+    private createControlContainerBoundingRectangle(): Rectangle {
+        return new Rectangle(
+            0,
+            0,
+            this.boundingRectangle.width,
+            this.boundingRectangle.height
+                * this.parameters.controlContainerHeightToHeightRatio
+        );
+    }
+
+    private createCarouselContainerBoundingRectangle(): Rectangle {
+        const height = this.boundingRectangle.height
+            * this.parameters.carouselContainerHeightToHeightRatio;
+        return new Rectangle(
+            0,
+            this.boundingRectangle.height - height,
+            this.boundingRectangle.width,
+            height
+        );
+    }
+
+    private createImageContainerBoundingRectangle(): Rectangle {
+        return new Rectangle(
+            0,
+            this.controlContainerBoundingRectangle.height,
+            this.boundingRectangle.width,
+            this.boundingRectangle.height
+                - this.controlContainerBoundingRectangle.height
+                - this.carouselContainerBoundingRectangle.height
+        );
+    }
+
     private createSelectedTileContainer(): Container {
         return new Container({
             x: 0,
             y: 0,
-            width: this.boundingRectangle.width,
-            height: this.boundingRectangle.height,
             zIndex: TilingLevelContainer.selectedContainerZIndex
         });
     }
@@ -138,14 +171,12 @@ export class TilingLevelContainer extends Container {
             this.parameters.imageParameters,
             this.uniqueParameters.imageParameters,
             this.renderer,
-            this.ticker,            
+            this.ticker,
             {
-                x: 0,
-                y: this.controlContainerHeight,
-                width: this.boundingRectangle.width,
-                height: this.boundingRectangle.height
-                    - this.controlContainerHeight
-                    - this.carouselContainerHeight
+                x: this.imageContainerBoundingRectangle.x,
+                y: this.imageContainerBoundingRectangle.y,
+                width: this.imageContainerBoundingRectangle.width,
+                height: this.imageContainerBoundingRectangle.height
             }
         );
     }
@@ -156,10 +187,10 @@ export class TilingLevelContainer extends Container {
             this.renderer,
             this.uniqueParameters.hintButtonIconSvgPath,
             {
-                x: 0,
-                y: 0,
-                width: this.boundingRectangle.width,
-                height: this.controlContainerHeight,
+                x: this.controlContainerBoundingRectangle.x,
+                y: this.controlContainerBoundingRectangle.y,
+                width: this.controlContainerBoundingRectangle.width,
+                height: this.controlContainerBoundingRectangle.height,
                 sortableChildren: true
             }
         );
@@ -181,10 +212,10 @@ export class TilingLevelContainer extends Container {
                 tilingView: this.imageContainer.tilingView
             },
             {
-                x: 0,
-                y: this.boundingRectangle.height - this.carouselContainerHeight,
-                width: this.boundingRectangle.width,
-                height: this.carouselContainerHeight
+                x: this.carouselContainerBoundingRectangle.x,
+                y: this.carouselContainerBoundingRectangle.y,
+                width: this.carouselContainerBoundingRectangle.width,
+                height: this.carouselContainerBoundingRectangle.height
             }
         );
     }

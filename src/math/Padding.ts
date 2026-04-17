@@ -7,7 +7,12 @@ export class Padding {
     public bottom: number;
     public left: number;
 
-    constructor(top: number, right: number, bottom: number, left: number) {
+    constructor(
+        top: number = 0,
+        right: number = 0,
+        bottom: number = 0,
+        left: number = 0
+    ) {
         this.top = top;
         this.right = right;
         this.bottom = bottom;

@@ -9,7 +9,7 @@ import { TilingParameters } from "../tilings/TilingParameters.ts";
  */
 export interface TilingLevelImageParameters {
     tileModelParameters: TileParameters;    
-    imageZoomAndPanParameters: ZoomAndPanParameters;
+    zoomAndPanParameters: ZoomAndPanParameters;
     tilingParameters: TilingParameters;
     /**
      * Отступы для внутреннего контейнера.

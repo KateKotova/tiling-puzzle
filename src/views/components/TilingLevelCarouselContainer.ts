@@ -19,6 +19,7 @@ import { TilingLevelCarouselUniqueParameters }
 import { TilingView } from "../tilings/TilingView.ts";
 import { TilingLevelCarouselCreationParameters }
     from "./TilingLevelCarouselCreationParameters.ts";
+import { Size } from "../../math/Size.ts";
 
 /**
  * Класс вертикального контейнера карусели линии,
@@ -30,6 +31,7 @@ export class TilingLevelCarouselContainer extends Container {
     private readonly uniqueParameters: TilingLevelCarouselUniqueParameters;
     private readonly renderer: Renderer;
     private readonly ticker: Ticker;
+    private readonly size: Size;
     /**
      * Контейнер, куда временно помещается выбранный пользователем элемент мозаики.
      * В этом контейнере происходит вращение и перемещение фигуры.
@@ -69,6 +71,7 @@ export class TilingLevelCarouselContainer extends Container {
         this.ticker = creationParameters.ticker;
         this.selectedTileContainer = creationParameters.selectedTileContainer;
         this.tilingView = creationParameters.tilingView;
+        this.size = new Size(options?.width ?? 0, options?.height ?? 0);
         this.initialize();
     }
 
@@ -99,7 +102,7 @@ export class TilingLevelCarouselContainer extends Container {
     }
 
     private createTileLineContainer(): TileLineContainer {
-        const transverseSize = this.height
+        const transverseSize = this.size.height
             - this.parameters.padding.top
             - this.parameters.padding.bottom;
 
@@ -129,8 +132,8 @@ export class TilingLevelCarouselContainer extends Container {
             {
                 x: padding.left,
                 y: padding.top,
-                width: this.width - padding.left - padding.right,
-                height: this.height - padding.top - padding.bottom
+                width: this.size.width - padding.left - padding.right,
+                height: this.size.height - padding.top - padding.bottom
             }
         );
     }

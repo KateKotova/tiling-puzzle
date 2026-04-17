@@ -4,6 +4,7 @@ import {
     ContainerOptions,
     DestroyOptions,
     Graphics,
+    Rectangle,
     Renderer,
     Ticker
 } from "pixi.js";
@@ -17,6 +18,7 @@ import { ZoomAndPanContainer } from "./ZoomAndPanContainer.ts";
 import { TilingView } from "../tilings/TilingView.ts";
 import { TilingLevelImageParameters } from "./TilingLevelImageParameters.ts";
 import { TilingLevelImageUniqueParameters } from "./TilingLevelImageUniqueParameters.ts";
+import { Size } from "../../math/Size.ts";
 
 /**
  * Класс контейнера изображения для сборки мозаики,
@@ -26,7 +28,10 @@ export class TilingLevelImageContainer extends Container {
     private readonly parameters: TilingLevelImageParameters;
     private readonly uniqueParameters: TilingLevelImageUniqueParameters;
     private readonly renderer: Renderer;
-    private readonly ticker: Ticker;    
+    private readonly ticker: Ticker;
+
+    private readonly size: Size;
+    private readonly innerContainerBoundingRectangle: Rectangle;
 
     /**
      * Внутренний контейнер, который отстоит от данного контейнера
@@ -75,6 +80,10 @@ export class TilingLevelImageContainer extends Container {
         this.uniqueParameters = uniqueParameters;
         this.renderer = renderer;
         this.ticker = ticker;
+
+        this.size = new Size(options?.width ?? 0, options?.height ?? 0);
+        this.innerContainerBoundingRectangle = this.createInnerContainerBoundingRectangle();
+
         this.initialize();
     }
 
@@ -93,8 +102,11 @@ export class TilingLevelImageContainer extends Container {
 
         this.tilingTextureModel = new TilingTextureModel(
             this.uniqueParameters.tilingTexture);
-        this.imageContainerModel = new ImageContainerModel(this.tilingTextureModel,
-            this.innerContainer.width, this.innerContainer.height);
+        this.imageContainerModel = new ImageContainerModel(
+            this.tilingTextureModel,
+            this.innerContainerBoundingRectangle.width,
+            this.innerContainerBoundingRectangle.height
+        );
 
         this.zoomAndPanContainer = this.createZoomAndPanContainer();
         if (!this.zoomAndPanContainer) {
@@ -144,13 +156,20 @@ export class TilingLevelImageContainer extends Container {
         };
     }
 
-    private createInnerContainer(): Container | undefined {
+    private createInnerContainerBoundingRectangle(): Rectangle {
         const padding = this.parameters.padding;
+        return new Rectangle(
+            padding.left,
+            padding.top,
+            this.size.width - padding.left - padding.right,
+            this.size.height - padding.top - padding.bottom
+        );
+    }
+
+    private createInnerContainer(): Container | undefined {
         return new Container({
-            x: padding.left,
-            y: padding.top,
-            width: this.width - padding.left - padding.right,
-            height: this.height - padding.top - padding.bottom
+            x: this.innerContainerBoundingRectangle.x,
+            y: this.innerContainerBoundingRectangle.y
         });
     }
 
@@ -175,10 +194,12 @@ export class TilingLevelImageContainer extends Container {
         }
 
         return new ZoomAndPanContainer(      
-            this.parameters.imageZoomAndPanParameters,
+            this.parameters.zoomAndPanParameters,
             {
-                x: (this.innerContainer.width - this.imageContainerModel.width) / 2.0,
-                y: (this.innerContainer.height - this.imageContainerModel.height) / 2.0,
+                x: (this.innerContainerBoundingRectangle.width
+                    - this.imageContainerModel.width) / 2.0,
+                y: (this.innerContainerBoundingRectangle.height
+                    - this.imageContainerModel.height) / 2.0,
                 width: this.imageContainerModel.width,
                 height: this.imageContainerModel.height,
             }
@@ -222,7 +243,12 @@ export class TilingLevelImageContainer extends Container {
         }
 
         const graphics = new Graphics()
-            .rect(0, 0, this.innerContainer.width, this.innerContainer.height)
+            .rect(
+                0,
+                0,
+                this.innerContainerBoundingRectangle.width,
+                this.innerContainerBoundingRectangle.height
+            )
             .fill({ color: "green" });
         graphics.eventMode = 'none';
         graphics.interactiveChildren = false;

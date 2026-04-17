@@ -3,15 +3,15 @@ import { ZoomAndPanParameters } from "./views/components/ZoomAndPanParameters.ts
 import { StaticTileParameters } from "./views/tile-decorators/StaticTileParameters.ts";
 import { DraggableTileParameters } from "./views/tile-decorators/DraggableTileParameters.ts";
 import { TapParameters } from "./views/TapParameters.ts";
-import { TileParameters as TileViewParameters} from "./views/tiles/TileParameters.ts";
-import { TileParameters as TileModelParameters} from "./models/tiles/TileParameters.ts";
+import { TileParameters as TileViewParameters } from "./views/tiles/TileParameters.ts";
+import { TileParameters as TileModelParameters } from "./models/tiles/TileParameters.ts";
 import { TileLineParameters } from "./views/components/TileLineParameters.ts";
 import { TilingParameters } from "./views/tilings/TilingParameters.ts";
 import { AnimationParameters } from "./AnimationParameters.ts";
 import { CarouselParameters } from "./views/components/CarouselParameters.ts";
 import { HintButtonParameters } from "./views/components/HintButtonParameters.ts";
-import { TilingLevelControlParameters }
-    from "./views/components/TilingLevelControlParameters.ts";
+import { TilingLevelParameters } from "./views/components/TilingLevelParameters.ts";
+import { Padding } from "./math/Padding.ts";
 
 /**
  * Singleton-класс настроек представления.
@@ -109,8 +109,8 @@ export class Settings {
     };
 
     public readonly tileLineParameters: TileLineParameters = {
-        longitudinalContentOffsetToTransverseSizeRatio: 0.15,
-        transverseContentOffsetToTransverseSizeRatio: 0.15,
+        longitudinalContentOffsetToTransverseSizeRatio: 0.1,
+        transverseContentOffsetToTransverseSizeRatio: 0.1,
         betweenTilesOffsetToTransverseSizeRatio: 0.5,
         tileParameters: this.tileViewParameters,
         draggableTileParameters: this.draggableTileParameters,
@@ -153,10 +153,25 @@ export class Settings {
         activeIconFillColor: new Color(0x000000)
     };
 
-    public readonly tilingLevelControlParameters: TilingLevelControlParameters = {
-        hintButtonParameters: this.hintButtonParameters,
-        hintButtonCenterXToControlContainerWidthRatio: 0.5,
-        hintButtonCenterYToControlContainerHeightRatio: 0.5,
-        hintButtonRadiusToControlContainerHeightRatio: 0.5
+    public readonly tilingLevelParameters: TilingLevelParameters = {
+        imageParameters: {
+            tileModelParameters: this.tileModelParameters,  
+            zoomAndPanParameters: this.zoomAndPanParameters,
+            tilingParameters: this.tilingParameters,
+            padding: new Padding()
+        },
+        carouselParameters: {
+            tileLineParameters: this.tileLineParameters,
+            carouselParameters: this.carouselParameters,
+            padding: new Padding()
+        },
+        controlParameters: {
+            hintButtonParameters: this.hintButtonParameters,
+            hintButtonCenterXToControlContainerWidthRatio: 0.5,
+            hintButtonCenterYToControlContainerHeightRatio: 0.5,
+            hintButtonRadiusToControlContainerHeightRatio: 0.35
+        },
+        controlContainerHeightToHeightRatio: 0.1,
+        carouselContainerHeightToHeightRatio: 0.125
     };
 }
