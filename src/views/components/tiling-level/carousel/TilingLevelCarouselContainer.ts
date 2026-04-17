@@ -6,20 +6,20 @@ import {
     Renderer,
     Ticker
 } from "pixi.js";
-import { draggingTileData } from "../tile-decorators/DraggingTileData.ts";
-import { TileLineContainer } from "./TileLineContainer.ts";
-import { TileLineDirectionType } from "./TileLineDirectionType.ts";
-import { TileLineLayoutType } from "./TileLineLayoutType.ts";
-import { CarouselContainer } from "./CarouselContainer.ts";
-import { CarouselDirectionType } from "./CarouselDirectionType.ts";
-import { DraggableTileView } from "../tile-decorators/DraggableTileView.ts";
+import { draggingTileData } from "../../../tile-decorators/DraggingTileData.ts";
+import { TileLineContainer } from "../../tile-line/TileLineContainer.ts";
+import { TileLineDirectionType } from "../../tile-line/TileLineDirectionType.ts";
+import { TileLineLayoutType } from "../../tile-line/TileLineLayoutType.ts";
+import { CarouselContainer } from "../../carousel/CarouselContainer.ts";
+import { CarouselDirectionType } from "../../carousel/CarouselDirectionType.ts";
+import { DraggableTileView } from "../../../tile-decorators/DraggableTileView.ts";
 import { TilingLevelCarouselParameters } from "./TilingLevelCarouselParameters.ts";
 import { TilingLevelCarouselUniqueParameters }
     from "./TilingLevelCarouselUniqueParameters.ts";
-import { TilingView } from "../tilings/TilingView.ts";
+import { TilingView } from "../../../tilings/TilingView.ts";
 import { TilingLevelCarouselCreationParameters }
     from "./TilingLevelCarouselCreationParameters.ts";
-import { Size } from "../../math/Size.ts";
+import { Size } from "../../../../math/Size.ts";
 
 /**
  * Класс вертикального контейнера карусели линии,

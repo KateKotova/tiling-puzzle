@@ -1,6 +1,6 @@
-import { TilingLevelControlParameters } from "./TilingLevelControlParameters.ts";
-import { TilingLevelImageParameters } from "./TilingLevelImageParameters.ts";
-import { TilingLevelCarouselParameters } from "./TilingLevelCarouselParameters.ts";
+import { TilingLevelControlParameters } from "../controls/TilingLevelControlParameters.ts";
+import { TilingLevelImageParameters } from "../image/TilingLevelImageParameters.ts";
+import { TilingLevelCarouselParameters } from "../carousel/TilingLevelCarouselParameters.ts";
 
 /**
  * Интерфейс параметров вертикального контейнера уровня мозаичного замощения

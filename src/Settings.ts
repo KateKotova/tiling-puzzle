@@ -1,16 +1,16 @@
 import { Color } from "pixi.js";
-import { ZoomAndPanParameters } from "./views/components/ZoomAndPanParameters.ts";
+import { ZoomAndPanParameters } from "./views/components/zoom-and-pan/ZoomAndPanParameters.ts";
 import { StaticTileParameters } from "./views/tile-decorators/StaticTileParameters.ts";
 import { DraggableTileParameters } from "./views/tile-decorators/DraggableTileParameters.ts";
 import { TapParameters } from "./views/TapParameters.ts";
 import { TileParameters as TileViewParameters } from "./views/tiles/TileParameters.ts";
 import { TileParameters as TileModelParameters } from "./models/tiles/TileParameters.ts";
-import { TileLineParameters } from "./views/components/TileLineParameters.ts";
+import { TileLineParameters } from "./views/components/tile-line/TileLineParameters.ts";
 import { TilingParameters } from "./views/tilings/TilingParameters.ts";
 import { AnimationParameters } from "./AnimationParameters.ts";
-import { CarouselParameters } from "./views/components/CarouselParameters.ts";
-import { HintButtonParameters } from "./views/components/HintButtonParameters.ts";
-import { TilingLevelParameters } from "./views/components/TilingLevelParameters.ts";
+import { CarouselParameters } from "./views/components/carousel/CarouselParameters.ts";
+import { HintButtonParameters } from "./views/components/hint-button/HintButtonParameters.ts";
+import { TilingLevelParameters } from "./views/components/tiling-level/container/TilingLevelParameters.ts";
 import { Padding } from "./math/Padding.ts";
 
 /**

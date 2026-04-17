@@ -1,6 +1,6 @@
 import { Color, Texture } from "pixi.js";
-import { TilingType } from "../../models/tilings/TilingType.ts";
-import { TilingLayoutStrategyType } from "../../models/tilings/TilingLayoutStrategyType.ts";
+import { TilingType } from "../../../../models/tilings/TilingType.ts";
+import { TilingLayoutStrategyType } from "../../../../models/tilings/TilingLayoutStrategyType.ts";
 
 /**
  * Интерфейс уникальных для данного уровня параметров

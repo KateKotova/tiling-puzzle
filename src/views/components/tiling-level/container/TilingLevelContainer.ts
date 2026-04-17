@@ -8,11 +8,11 @@ import {
     Ticker
 } from "pixi.js";
 import { TilingLevelParameters } from "./TilingLevelParameters.ts";
-import { draggingTileData } from "../tile-decorators/DraggingTileData.ts";
-import { HintButton } from "./HintButton.ts";
-import { TilingLevelControlContainer } from "./TilingLevelControlContainer.ts";
-import { TilingLevelImageContainer } from "./TilingLevelImageContainer.ts";
-import { TilingLevelCarouselContainer } from "./TilingLevelCarouselContainer.ts";
+import { draggingTileData } from "../../../tile-decorators/DraggingTileData.ts";
+import { HintButton } from "../../hint-button/HintButton.ts";
+import { TilingLevelControlContainer } from "../controls/TilingLevelControlContainer.ts";
+import { TilingLevelImageContainer } from "../image/TilingLevelImageContainer.ts";
+import { TilingLevelCarouselContainer } from "../carousel/TilingLevelCarouselContainer.ts";
 import { TilingLevelUniqueParameters } from "./TilingLevelUniqueParameters.ts";
 
 /**

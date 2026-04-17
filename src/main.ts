@@ -7,8 +7,8 @@ import {
 import { TilingType } from "./models/tilings/TilingType.ts";
 import { Settings } from "./Settings.ts";
 import { TilingLayoutStrategyType } from "./models/tilings/TilingLayoutStrategyType.ts";
-import { TilingLevelUniqueParameters } from "./views/components/TilingLevelUniqueParameters.ts";
-import { TilingLevelContainer } from "./views/components/TilingLevelContainer.ts";
+import { TilingLevelUniqueParameters } from "./views/components/tiling-level/container/TilingLevelUniqueParameters.ts";
+import { TilingLevelContainer } from "./views/components/tiling-level/container/TilingLevelContainer.ts";
 
 async function main(): Promise<void> {
   try {

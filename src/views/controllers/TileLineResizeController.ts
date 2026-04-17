@@ -1,4 +1,4 @@
-import { TileLineContainer } from "../components/TileLineContainer.ts";
+import { TileLineContainer } from "../components/tile-line/TileLineContainer.ts";
 import { SmoothNumberStepController }
     from "../../math/controllers/SmoothNumberStepController.ts";
 import { EntityController } from "./EntityController.ts";

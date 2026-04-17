@@ -1,5 +1,5 @@
 import { Container, Renderer, Ticker } from "pixi.js";
-import { TilingView } from "../tilings/TilingView.ts";
+import { TilingView } from "../../../tilings/TilingView.ts";
 
 /**
  * Интерфейс параметров создания контейнера карусели линии,

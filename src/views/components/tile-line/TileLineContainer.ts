@@ -11,19 +11,19 @@ import {
     Ticker
 } from "pixi.js";
 import { TileLineParameters } from "./TileLineParameters.ts";
-import { TilingView } from "../tilings/TilingView.ts";
+import { TilingView } from "../../tilings/TilingView.ts";
 import { TileLineDirectionType } from "./TileLineDirectionType.ts";
-import { TileViewCreationParameters } from "../tiles/TileViewCreationParameters.ts";
-import { TileViewFactory } from "../tiles/TileViewFactory.ts";
-import { DraggableTileView } from "../tile-decorators/DraggableTileView.ts";
-import { draggingTileData } from "../tile-decorators/DraggingTileData.ts";
-import { Size } from "../../math/Size.ts";
+import { TileViewCreationParameters } from "../../tiles/TileViewCreationParameters.ts";
+import { TileViewFactory } from "../../tiles/TileViewFactory.ts";
+import { DraggableTileView } from "../../tile-decorators/DraggableTileView.ts";
+import { draggingTileData } from "../../tile-decorators/DraggingTileData.ts";
+import { Size } from "../../../math/Size.ts";
 import { TileLineLayoutType } from "./TileLineLayoutType.ts";
-import { Algorithm } from "../../math/Algorithm.ts";
-import { TileView } from "../tiles/TileView.ts";
-import { ViewportContainer } from "./ViewportContainer.ts";
-import { TileLineResizeController } from "../controllers/TileLineResizeController.ts";
-import { TileGeometryType } from "../../models/tile-geometries/TileGeometryType.ts";
+import { Algorithm } from "../../../math/Algorithm.ts";
+import { TileView } from "../../tiles/TileView.ts";
+import { ViewportContainer } from "../ViewportContainer.ts";
+import { TileLineResizeController } from "../../controllers/TileLineResizeController.ts";
+import { TileGeometryType } from "../../../models/tile-geometries/TileGeometryType.ts";
 import { TileLineCreationParameters } from "./TileLineCreationParameters.ts";
 
 /**

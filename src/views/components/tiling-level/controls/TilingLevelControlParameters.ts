@@ -1,4 +1,4 @@
-import { HintButtonParameters } from "./HintButtonParameters.ts";
+import { HintButtonParameters } from "../../hint-button/HintButtonParameters.ts";
 
 /**
  * Интерфейс параметров контейнера панели управления,

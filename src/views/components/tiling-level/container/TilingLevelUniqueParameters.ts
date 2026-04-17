@@ -1,5 +1,5 @@
-import { TilingLevelImageUniqueParameters } from "./TilingLevelImageUniqueParameters.ts";
-import { TilingLevelCarouselUniqueParameters } from "./TilingLevelCarouselUniqueParameters.ts";
+import { TilingLevelImageUniqueParameters } from "../image/TilingLevelImageUniqueParameters.ts";
+import { TilingLevelCarouselUniqueParameters } from "../carousel/TilingLevelCarouselUniqueParameters.ts";
 
 /**
  * Интерфейс уникальных для данного уровня

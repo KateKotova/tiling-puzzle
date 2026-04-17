@@ -1,5 +1,5 @@
 import { Color, Container, Ticker } from "pixi.js";
-import { TilingView } from "../tilings/TilingView.ts";
+import { TilingView } from "../../tilings/TilingView.ts";
 import { TileLineDirectionType } from "./TileLineDirectionType.ts";
 import { TileLineLayoutType } from "./TileLineLayoutType.ts";
 

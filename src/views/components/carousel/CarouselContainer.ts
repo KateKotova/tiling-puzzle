@@ -10,8 +10,8 @@ import {
 } from 'pixi.js';
 import { CarouselDirectionType } from './CarouselDirectionType.ts';
 import { CarouselParameters } from './CarouselParameters.ts';
-import { ViewportContainer } from './ViewportContainer.ts';
-import { CarouselInertiaController } from '../controllers/CarouselInertiaController.ts';
+import { ViewportContainer } from '../ViewportContainer.ts';
+import { CarouselInertiaController } from '../../controllers/CarouselInertiaController.ts';
 
 /**
  * Класс карусели с инерционной прокруткой

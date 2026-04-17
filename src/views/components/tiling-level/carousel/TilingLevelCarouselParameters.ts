@@ -1,6 +1,6 @@
-import { Padding } from "../../math/Padding.ts";
-import { TileLineParameters } from "./TileLineParameters.ts";
-import { CarouselParameters } from "./CarouselParameters.ts";
+import { Padding } from "../../../../math/Padding.ts";
+import { TileLineParameters } from "../../tile-line/TileLineParameters.ts";
+import { CarouselParameters } from "../../carousel/CarouselParameters.ts";
 
 /**
  * Интерфейс параметров контейнера карусели линии,

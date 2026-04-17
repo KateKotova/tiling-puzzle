@@ -1,6 +1,6 @@
-import { AnimationParameters } from "../../AnimationParameters.ts";
-import { DraggableTileParameters } from "../tile-decorators/DraggableTileParameters.ts";
-import { TileParameters } from "../tiles/TileParameters.ts";
+import { AnimationParameters } from "../../../AnimationParameters.ts";
+import { DraggableTileParameters } from "../../tile-decorators/DraggableTileParameters.ts";
+import { TileParameters } from "../../tiles/TileParameters.ts";
 
 /**
  * Интерфейс параметров линии, в которой содержатся элементы мозаики для сборки

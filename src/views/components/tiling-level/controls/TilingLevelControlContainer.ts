@@ -6,9 +6,9 @@ import {
     Point,
     Renderer
 } from "pixi.js";
-import { HintButton } from "./HintButton.ts";
+import { HintButton } from "../../hint-button/HintButton.ts";
 import { TilingLevelControlParameters } from "./TilingLevelControlParameters.ts";
-import { Size } from "../../math/Size.ts";
+import { Size } from "../../../../math/Size.ts";
 
 /**
  * Класс контейнера панели управления,

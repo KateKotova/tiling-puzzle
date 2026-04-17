@@ -8,17 +8,17 @@ import {
     Renderer,
     Ticker
 } from "pixi.js";
-import { TilingTextureModel } from "../../models/TilingTextureModel.ts";
-import { ImageContainerModel } from "../../models/ImageContainerModel.ts";
-import { TilingModel } from "../../models/tilings/TilingModel.ts";
+import { TilingTextureModel } from "../../../../models/TilingTextureModel.ts";
+import { ImageContainerModel } from "../../../../models/ImageContainerModel.ts";
+import { TilingModel } from "../../../../models/tilings/TilingModel.ts";
 import { RectangularGridTilingModelFactory }
-    from "../../models/tilings/RectangularGridTilingModelFactory.ts";
-import { draggingTileData } from "../tile-decorators/DraggingTileData.ts";
-import { ZoomAndPanContainer } from "./ZoomAndPanContainer.ts";
-import { TilingView } from "../tilings/TilingView.ts";
+    from "../../../../models/tilings/RectangularGridTilingModelFactory.ts";
+import { draggingTileData } from "../../../tile-decorators/DraggingTileData.ts";
+import { ZoomAndPanContainer } from "../../zoom-and-pan/ZoomAndPanContainer.ts";
+import { TilingView } from "../../../tilings/TilingView.ts";
 import { TilingLevelImageParameters } from "./TilingLevelImageParameters.ts";
 import { TilingLevelImageUniqueParameters } from "./TilingLevelImageUniqueParameters.ts";
-import { Size } from "../../math/Size.ts";
+import { Size } from "../../../../math/Size.ts";
 
 /**
  * Класс контейнера изображения для сборки мозаики,
