@@ -23,9 +23,10 @@ export class HintButton extends Container {
     private readonly radius: number;
     private readonly iconSide: number;
     private readonly invisibleRectangle: Graphics;
-    private readonly circle: Graphics;
+    private readonly circle: Graphics;    
     private readonly iconSvgPath: string;
     private readonly iconGraphicsPath: GraphicsPath;
+    private iconScale?: number;
     private readonly defaultIconTexture: Texture;
     private activeIconTexture?: Texture;
     private readonly icon: Sprite;
@@ -100,14 +101,6 @@ export class HintButton extends Container {
     }
 
     private createIconTexture(fillColor: Color): Texture {
-        const originalGraphics = new Graphics()
-             .path(this.iconGraphicsPath)
-             .fill({ color: fillColor });
-        const originalBounds = originalGraphics.getBounds();
-        originalGraphics.destroy();
-
-        const scale = this.iconSide / Math.max(originalBounds.width, originalBounds.height);
-        
         const canvas = document.createElement('canvas');
         canvas.width = this.iconSide;
         canvas.height = this.iconSide;
@@ -117,18 +110,27 @@ export class HintButton extends Container {
             throw new Error('Cannot get 2d context');
         }
         
-        const xOffset = (this.iconSide - originalBounds.width * scale) / 2
-            - originalBounds.x * scale;
-        const yOffset = (this.iconSide - originalBounds.height * scale) / 2
-            - originalBounds.y * scale;
-
-        canvasContext.translate(xOffset, yOffset);
+        const scale = this.getIconScale();
         canvasContext.scale(scale, scale);
         
         canvasContext.fillStyle = fillColor.toRgbaString();
         canvasContext.fill(new Path2D(this.iconSvgPath));
         
         return Texture.from(canvas);
+    }
+
+    private getIconScale(): number {
+        if (this.iconScale === undefined) {
+            const originalGraphics = new Graphics()
+                .path(this.iconGraphicsPath)
+                .fill({ color: 0x000000 });
+            const iconOriginalBounds = originalGraphics.getBounds();
+            originalGraphics.destroy();
+            
+            this.iconScale = this.iconSide
+                / Math.max(iconOriginalBounds.width, iconOriginalBounds.height);
+        }
+        return this.iconScale;
     }
 
     private createIcon(left: number, top: number): Sprite {
@@ -229,7 +231,7 @@ export class HintButton extends Container {
         this.removeEventListeners();
         
         this.filters = null;
-        
+
         if (this.icon) {
             this.removeChild(this.icon);
             this.icon.destroy();
