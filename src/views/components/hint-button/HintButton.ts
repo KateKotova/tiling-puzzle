@@ -6,9 +6,7 @@ import {
     DestroyOptions,
     Graphics,
     GraphicsPath,
-    Matrix,
     Point,
-    Renderer,
     Sprite,
     Texture
 } from "pixi.js";
@@ -26,6 +24,7 @@ export class HintButton extends Container {
     private readonly iconSide: number;
     private readonly invisibleRectangle: Graphics;
     private readonly circle: Graphics;
+    private readonly iconSvgPath: string;
     private readonly iconGraphicsPath: GraphicsPath;
     private readonly defaultIconTexture: Texture;
     private activeIconTexture?: Texture;
@@ -34,11 +33,8 @@ export class HintButton extends Container {
     private pivotPointCoordinate: number;
     private glowFilter?: GlowFilter;
 
-    private readonly renderer: Renderer;
-
     constructor (
         parameters: HintButtonParameters,
-        renderer: Renderer,
         radius: number,
         iconSvgPath: string,
         centerPoint: Point,
@@ -48,7 +44,7 @@ export class HintButton extends Container {
         this.parameters = parameters;
         this.radius = radius;
         this.iconSide = 2 * this.radius * this.parameters.iconSideToDiameterRatio;
-        this.renderer = renderer;
+        this.iconSvgPath = iconSvgPath;
         this.iconGraphicsPath = new GraphicsPath(iconSvgPath);
 
         const glowDistance = this.parameters.glowFilterOptions.distance ?? 0;
@@ -105,39 +101,34 @@ export class HintButton extends Container {
 
     private createIconTexture(fillColor: Color): Texture {
         const originalGraphics = new Graphics()
-            .path(this.iconGraphicsPath)
-            .fill({ color: fillColor });
-
-        const bounds = originalGraphics.getBounds();
-        const scale = this.iconSide / Math.max(bounds.width, bounds.height);
-        const matrix = new Matrix().scale(scale, scale);
-
-        const originalTexture = this.renderer.generateTexture({
-            target: originalGraphics,
-            resolution: 1
-        });
-
+             .path(this.iconGraphicsPath)
+             .fill({ color: fillColor });
+        const originalBounds = originalGraphics.getBounds();
         originalGraphics.destroy();
 
-        const graphics = new Graphics()
-            .rect(0, 0, bounds.width * scale, bounds.height * scale)
-            .fill({
-                texture: originalTexture,
-                textureSpace: "global",
-                matrix
-            });
+        const scale = this.iconSide / Math.max(originalBounds.width, originalBounds.height);
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = this.iconSide;
+        canvas.height = this.iconSide;
+        
+        const canvasContext = canvas.getContext('2d');
+        if (!canvasContext) {
+            throw new Error('Cannot get 2d context');
+        }
+        
+        const xOffset = (this.iconSide - originalBounds.width * scale) / 2
+            - originalBounds.x * scale;
+        const yOffset = (this.iconSide - originalBounds.height * scale) / 2
+            - originalBounds.y * scale;
 
-        const result = this.renderer.generateTexture({
-            target: graphics,
-            resolution: this.parameters.generateTextureResolution,
-            textureSourceOptions: {
-                scaleMode: "linear"
-            }
-        });
-
-        graphics.destroy();
-
-        return result;
+        canvasContext.translate(xOffset, yOffset);
+        canvasContext.scale(scale, scale);
+        
+        canvasContext.fillStyle = fillColor.toRgbaString();
+        canvasContext.fill(new Path2D(this.iconSvgPath));
+        
+        return Texture.from(canvas);
     }
 
     private createIcon(left: number, top: number): Sprite {

@@ -171,9 +171,10 @@ export class Settings {
             hintButtonCenterYToControlContainerHeightRatio: 0.5,
             hintButtonRadiusToControlContainerMinSideRatio: 0.35
         },
-        controlContainerHeightToMinSideRatio: 0.15,
+        controlContainerHeightToMinSideRatio: 0.2,
+        carouselContainerMaxHeightToMinSideRatio: 0.25,
         // Рассчитывается так, чтобы поместилось 3 фигуры с отступами
-        tileLineHeightToTileLineWidthRatio: 1 / (
+        tileLineMaxHeightToTileLineWidthRatio: 1 / (
             2 * this.tileLineParameters.longitudinalContentOffsetToTransverseSizeRatio
             + 2 * this.tileLineParameters.betweenTilesOffsetToTransverseSizeRatio
             + 3 * (1 - 2 * this.tileLineParameters.transverseContentOffsetToTransverseSizeRatio))

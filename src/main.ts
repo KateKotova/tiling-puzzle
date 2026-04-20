@@ -36,8 +36,8 @@ async function main(): Promise<void> {
           name: 'every-level-screen',
           assets: [
             {
-              alias: "hint-icon-path",
-              src: "assets/hint-icon-path.txt",
+              alias: "eye-hint-icon-path",
+              src: "assets/eye-hint-icon-path.txt",
               data: {
                   parseAsGraphicsContext: true
               }
@@ -90,7 +90,7 @@ async function main(): Promise<void> {
         tileLineBackgroundFillColor: new Color(0x008F00),
         carouselBackgroundFillColor: new Color(0x00AF00)
       },
-      hintButtonIconSvgPath: Assets.get<string>("hint-icon-path")
+      hintButtonIconSvgPath: Assets.get<string>("eye-hint-icon-path")
     };
 
     const tilingLevelContainer = new TilingLevelContainer(

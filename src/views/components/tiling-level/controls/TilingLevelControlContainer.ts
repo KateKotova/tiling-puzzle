@@ -3,8 +3,7 @@ import {
     ContainerChild,
     ContainerOptions,
     DestroyOptions,
-    Point,
-    Renderer
+    Point
 } from "pixi.js";
 import { HintButton } from "../../hint-button/HintButton.ts";
 import { TilingLevelControlParameters } from "./TilingLevelControlParameters.ts";
@@ -16,7 +15,6 @@ import { Size } from "../../../../math/Size.ts";
  */
 export class TilingLevelControlContainer extends Container {
     private readonly parameters: TilingLevelControlParameters;
-    private readonly renderer: Renderer;
     private readonly size: Size;
 
     private readonly hintButtonIconSvgPath: string;
@@ -24,14 +22,12 @@ export class TilingLevelControlContainer extends Container {
 
     constructor(
         parameters: TilingLevelControlParameters,
-        renderer: Renderer,
         hintButtonIconSvgPath: string,
         options?: ContainerOptions<ContainerChild>
     ) {
         super(options);
         this.parameters = parameters;
         this.hintButtonIconSvgPath = hintButtonIconSvgPath;
-        this.renderer = renderer;
         this.size = new Size(options?.width ?? 0, options?.height ?? 0);
         this.initialize();
     }
@@ -54,7 +50,6 @@ export class TilingLevelControlContainer extends Container {
 
         return new HintButton(
             this.parameters.hintButtonParameters,
-            this.renderer,
             radius,    
             this.hintButtonIconSvgPath,
             new Point(centerX, centerY)
