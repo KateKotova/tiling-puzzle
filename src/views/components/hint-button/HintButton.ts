@@ -6,9 +6,7 @@ import {
     DestroyOptions,
     Graphics,
     GraphicsPath,
-    Matrix,
     Point,
-    Renderer,
     Sprite,
     Texture
 } from "pixi.js";
@@ -25,8 +23,10 @@ export class HintButton extends Container {
     private readonly radius: number;
     private readonly iconSide: number;
     private readonly invisibleRectangle: Graphics;
-    private readonly circle: Graphics;
+    private readonly circle: Graphics;    
+    private readonly iconSvgPath: string;
     private readonly iconGraphicsPath: GraphicsPath;
+    private iconScale?: number;
     private readonly defaultIconTexture: Texture;
     private activeIconTexture?: Texture;
     private readonly icon: Sprite;
@@ -34,11 +34,8 @@ export class HintButton extends Container {
     private pivotPointCoordinate: number;
     private glowFilter?: GlowFilter;
 
-    private readonly renderer: Renderer;
-
     constructor (
         parameters: HintButtonParameters,
-        renderer: Renderer,
         radius: number,
         iconSvgPath: string,
         centerPoint: Point,
@@ -48,7 +45,7 @@ export class HintButton extends Container {
         this.parameters = parameters;
         this.radius = radius;
         this.iconSide = 2 * this.radius * this.parameters.iconSideToDiameterRatio;
-        this.renderer = renderer;
+        this.iconSvgPath = iconSvgPath;
         this.iconGraphicsPath = new GraphicsPath(iconSvgPath);
 
         const glowDistance = this.parameters.glowFilterOptions.distance ?? 0;
@@ -104,40 +101,36 @@ export class HintButton extends Container {
     }
 
     private createIconTexture(fillColor: Color): Texture {
-        const originalGraphics = new Graphics()
-            .path(this.iconGraphicsPath)
-            .fill({ color: fillColor });
+        const canvas = document.createElement('canvas');
+        canvas.width = this.iconSide;
+        canvas.height = this.iconSide;
+        
+        const canvasContext = canvas.getContext('2d');
+        if (!canvasContext) {
+            throw new Error('Cannot get 2d context');
+        }
+        
+        const scale = this.getIconScale();
+        canvasContext.scale(scale, scale);
+        
+        canvasContext.fillStyle = fillColor.toRgbaString();
+        canvasContext.fill(new Path2D(this.iconSvgPath));
+        
+        return Texture.from(canvas);
+    }
 
-        const bounds = originalGraphics.getBounds();
-        const scale = this.iconSide / Math.max(bounds.width, bounds.height);
-        const matrix = new Matrix().scale(scale, scale);
-
-        const originalTexture = this.renderer.generateTexture({
-            target: originalGraphics,
-            resolution: 1
-        });
-
-        originalGraphics.destroy();
-
-        const graphics = new Graphics()
-            .rect(0, 0, bounds.width * scale, bounds.height * scale)
-            .fill({
-                texture: originalTexture,
-                textureSpace: "global",
-                matrix
-            });
-
-        const result = this.renderer.generateTexture({
-            target: graphics,
-            resolution: this.parameters.generateTextureResolution,
-            textureSourceOptions: {
-                scaleMode: "linear"
-            }
-        });
-
-        graphics.destroy();
-
-        return result;
+    private getIconScale(): number {
+        if (this.iconScale === undefined) {
+            const originalGraphics = new Graphics()
+                .path(this.iconGraphicsPath)
+                .fill({ color: 0x000000 });
+            const iconOriginalBounds = originalGraphics.getBounds();
+            originalGraphics.destroy();
+            
+            this.iconScale = this.iconSide
+                / Math.max(iconOriginalBounds.width, iconOriginalBounds.height);
+        }
+        return this.iconScale;
     }
 
     private createIcon(left: number, top: number): Sprite {
@@ -171,25 +164,37 @@ export class HintButton extends Container {
     }
 
     private onPointerDown(): void {
+        if (this.isActive) {
+            return;
+        }
         this.filters = [this.getGlowFilter()];
     }
 
     private onPointerUp(): void {
-        this.isActive = !this.isActive;
-        this.showActivityOnPointerUp();
-        
         if (this.isActive) {
-            this.dispatchHintButtonWasActivatedEvent();
-        } else {
-            this.dispatchHintButtonWasDeactivatedEvent();
+            return;
         }
+
+        this.isActive = true;
+        this.showActivity();
+        this.dispatchHintButtonWasActivatedEvent();
     }
 
     private onPointerCancel(): void {
-        this.showActivityOnPointerUp();
+        this.showActivity();
     }
 
-    private showActivityOnPointerUp(): void {
+    public deactivate(): void {
+        if (!this.isActive) {
+            return;
+        }
+
+        this.isActive = false;
+        this.showActivity();
+        this.dispatchHintButtonWasDeactivatedEvent();
+    }
+
+    private showActivity(): void {
         this.update();
         this.filters = null;
     }
@@ -219,12 +224,12 @@ export class HintButton extends Container {
             : this.defaultIconTexture;
     }
 
-    public dispatchHintButtonWasActivatedEvent(): void {
+    private dispatchHintButtonWasActivatedEvent(): void {
         const event = new Event(HintButton.hintButtonWasActivatedEventName);
         window.dispatchEvent(event);
     }
 
-    public dispatchHintButtonWasDeactivatedEvent(): void {
+    private dispatchHintButtonWasDeactivatedEvent(): void {
         const event = new Event(HintButton.hintButtonWasDeactivatedEventName);
         window.dispatchEvent(event);
     }
@@ -238,7 +243,7 @@ export class HintButton extends Container {
         this.removeEventListeners();
         
         this.filters = null;
-        
+
         if (this.icon) {
             this.removeChild(this.icon);
             this.icon.destroy();
@@ -259,6 +264,8 @@ export class HintButton extends Container {
             this.glowFilter.destroy();
             this.glowFilter = undefined;
         }
+
+        this.iconScale = undefined;
         
         if (this.defaultIconTexture && !this.defaultIconTexture.destroyed) {
             this.defaultIconTexture.destroy(true);

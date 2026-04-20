@@ -131,14 +131,19 @@ export class TilingLevelContainer extends Container {
             0,
             0,
             this.boundingRectangle.width,
-            this.boundingRectangle.height
-                * this.parameters.controlContainerHeightToHeightRatio
+            Math.min(this.boundingRectangle.width, this.boundingRectangle.height)
+                * this.parameters.controlContainerHeightToMinSideRatio
         );
     }
 
     private createCarouselContainerBoundingRectangle(): Rectangle {
-        const height = this.boundingRectangle.height
-            * this.parameters.carouselContainerHeightToHeightRatio;
+        const padding = this.parameters.carouselParameters.padding;
+        const tileLineWidth = this.boundingRectangle.width - padding.left - padding.right;
+        const tileLineHeight = tileLineWidth
+            * this.parameters.tileLineMaxHeightToTileLineWidthRatio;    
+        const maxHeight = Math.min(this.boundingRectangle.width, this.boundingRectangle.height)
+            * this.parameters.carouselContainerMaxHeightToMinSideRatio;
+        const height = Math.min(tileLineHeight + padding.top + padding.bottom, maxHeight);
         return new Rectangle(
             0,
             this.boundingRectangle.height - height,
@@ -184,7 +189,6 @@ export class TilingLevelContainer extends Container {
     private createControlContainer(): TilingLevelControlContainer {
         return new TilingLevelControlContainer(
             this.parameters.controlParameters,
-            this.renderer,
             this.uniqueParameters.hintButtonIconSvgPath,
             {
                 x: this.controlContainerBoundingRectangle.x,
