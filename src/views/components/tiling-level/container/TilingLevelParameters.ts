@@ -10,14 +10,14 @@ export interface TilingLevelParameters {
     carouselParameters: TilingLevelCarouselParameters;
     controlParameters: TilingLevelControlParameters;
     /**
-     * Коэффициент отношения высоты контейнера панели управления к высоте данного контейнера.
+     * Коэффициент отношения высоты контейнера панели управления
+     * к минимальной стороне данного контейнера.
      */
-    controlContainerHeightToHeightRatio: number;
+    controlContainerHeightToMinSideRatio: number;
     /**
-     * Коэффициент отношения высоты контейнера,
-     * который содержит контейнер карусели с линией,
+     * Коэффициент отношения высоты линии,
      * в которой содержатся элементы мозаики для сборки,
-     * к высоте данного контейнера.
+     * к ширине этой линии.
      */
-    carouselContainerHeightToHeightRatio: number;
+    tileLineHeightToTileLineWidthRatio: number;
 }

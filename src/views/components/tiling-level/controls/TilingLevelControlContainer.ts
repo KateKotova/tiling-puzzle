@@ -45,8 +45,8 @@ export class TilingLevelControlContainer extends Container {
     }
 
     private createHintButton(): HintButton | undefined {
-        const radius = this.parameters.hintButtonRadiusToControlContainerHeightRatio
-            * this.size.height;
+        const radius = this.parameters.hintButtonRadiusToControlContainerMinSideRatio
+            * Math.min(this.size.width, this.size.height);
         const centerX = this.parameters.hintButtonCenterXToControlContainerWidthRatio
             * this.size.width;
         const centerY = this.parameters.hintButtonCenterYToControlContainerHeightRatio

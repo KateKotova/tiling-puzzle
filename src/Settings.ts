@@ -169,9 +169,13 @@ export class Settings {
             hintButtonParameters: this.hintButtonParameters,
             hintButtonCenterXToControlContainerWidthRatio: 0.5,
             hintButtonCenterYToControlContainerHeightRatio: 0.5,
-            hintButtonRadiusToControlContainerHeightRatio: 0.35
+            hintButtonRadiusToControlContainerMinSideRatio: 0.35
         },
-        controlContainerHeightToHeightRatio: 0.1,
-        carouselContainerHeightToHeightRatio: 0.125
+        controlContainerHeightToMinSideRatio: 0.15,
+        // Рассчитывается так, чтобы поместилось 3 фигуры с отступами
+        tileLineHeightToTileLineWidthRatio: 1 / (
+            2 * this.tileLineParameters.longitudinalContentOffsetToTransverseSizeRatio
+            + 2 * this.tileLineParameters.betweenTilesOffsetToTransverseSizeRatio
+            + 3 * (1 - 2 * this.tileLineParameters.transverseContentOffsetToTransverseSizeRatio))
     };
 }

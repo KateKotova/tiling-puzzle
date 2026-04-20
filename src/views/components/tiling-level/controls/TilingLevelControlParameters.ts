@@ -18,7 +18,7 @@ export interface TilingLevelControlParameters {
     hintButtonCenterYToControlContainerHeightRatio: number;
     /**
      * Коэффициент отношения радиуса кнопки подсказки
-     * к высоте контейнера панели управления.
+     * к минимальной стороне контейнера панели управления.
      */
-    hintButtonRadiusToControlContainerHeightRatio: number;
+    hintButtonRadiusToControlContainerMinSideRatio: number;
 }

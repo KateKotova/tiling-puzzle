@@ -131,14 +131,17 @@ export class TilingLevelContainer extends Container {
             0,
             0,
             this.boundingRectangle.width,
-            this.boundingRectangle.height
-                * this.parameters.controlContainerHeightToHeightRatio
+            Math.min(this.boundingRectangle.width, this.boundingRectangle.height)
+                * this.parameters.controlContainerHeightToMinSideRatio
         );
     }
 
     private createCarouselContainerBoundingRectangle(): Rectangle {
-        const height = this.boundingRectangle.height
-            * this.parameters.carouselContainerHeightToHeightRatio;
+        const padding = this.parameters.carouselParameters.padding;
+        const tileLineWidth = this.boundingRectangle.width - padding.left - padding.right;
+        const tileLineHeight = tileLineWidth
+            * this.parameters.tileLineHeightToTileLineWidthRatio;        
+        const height = tileLineHeight + padding.top + padding.bottom;
         return new Rectangle(
             0,
             this.boundingRectangle.height - height,
