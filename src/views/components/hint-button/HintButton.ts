@@ -164,25 +164,37 @@ export class HintButton extends Container {
     }
 
     private onPointerDown(): void {
+        if (this.isActive) {
+            return;
+        }
         this.filters = [this.getGlowFilter()];
     }
 
     private onPointerUp(): void {
-        this.isActive = !this.isActive;
-        this.showActivityOnPointerUp();
-        
         if (this.isActive) {
-            this.dispatchHintButtonWasActivatedEvent();
-        } else {
-            this.dispatchHintButtonWasDeactivatedEvent();
+            return;
         }
+
+        this.isActive = true;
+        this.showActivity();
+        this.dispatchHintButtonWasActivatedEvent();
     }
 
     private onPointerCancel(): void {
-        this.showActivityOnPointerUp();
+        this.showActivity();
     }
 
-    private showActivityOnPointerUp(): void {
+    public deactivate(): void {
+        if (!this.isActive) {
+            return;
+        }
+
+        this.isActive = false;
+        this.showActivity();
+        this.dispatchHintButtonWasDeactivatedEvent();
+    }
+
+    private showActivity(): void {
         this.update();
         this.filters = null;
     }
@@ -212,12 +224,12 @@ export class HintButton extends Container {
             : this.defaultIconTexture;
     }
 
-    public dispatchHintButtonWasActivatedEvent(): void {
+    private dispatchHintButtonWasActivatedEvent(): void {
         const event = new Event(HintButton.hintButtonWasActivatedEventName);
         window.dispatchEvent(event);
     }
 
-    public dispatchHintButtonWasDeactivatedEvent(): void {
+    private dispatchHintButtonWasDeactivatedEvent(): void {
         const event = new Event(HintButton.hintButtonWasDeactivatedEventName);
         window.dispatchEvent(event);
     }
@@ -252,6 +264,8 @@ export class HintButton extends Container {
             this.glowFilter.destroy();
             this.glowFilter = undefined;
         }
+
+        this.iconScale = undefined;
         
         if (this.defaultIconTexture && !this.defaultIconTexture.destroyed) {
             this.defaultIconTexture.destroy(true);

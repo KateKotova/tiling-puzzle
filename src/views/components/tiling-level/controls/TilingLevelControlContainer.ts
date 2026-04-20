@@ -8,6 +8,7 @@ import {
 import { HintButton } from "../../hint-button/HintButton.ts";
 import { TilingLevelControlParameters } from "./TilingLevelControlParameters.ts";
 import { Size } from "../../../../math/Size.ts";
+import { DraggableTileView } from "../../../tile-decorators/DraggableTileView.ts";
 
 /**
  * Класс контейнера панели управления,
@@ -19,6 +20,9 @@ export class TilingLevelControlContainer extends Container {
 
     private readonly hintButtonIconSvgPath: string;
     private hintButton?: HintButton;
+
+    private boundOnDraggingTileWasDeselected: () => void
+        = this.onDraggingTileWasDeselected.bind(this);
 
     constructor(
         parameters: TilingLevelControlParameters,
@@ -38,6 +42,17 @@ export class TilingLevelControlContainer extends Container {
             return;
         }
         this.addChild(this.hintButton);
+        this.addEventListeners();
+    }
+
+    private addEventListeners(): void {
+        window.addEventListener(DraggableTileView.draggingTileWasDeselectedEventName,
+            this.boundOnDraggingTileWasDeselected);
+    }
+
+    private removeEventListeners(): void {
+        window.removeEventListener(DraggableTileView.draggingTileWasDeselectedEventName,
+            this.boundOnDraggingTileWasDeselected);
     }
 
     private createHintButton(): HintButton | undefined {
@@ -56,10 +71,16 @@ export class TilingLevelControlContainer extends Container {
         );
     }
 
+    private onDraggingTileWasDeselected(): void {
+        this.hintButton?.deactivate();
+    }
+
     public destroy(options?: DestroyOptions): void {
         if (this.destroyed) {
             return;
         }
+
+        this.removeEventListeners();
 
         if (this.hintButton) {
             this.removeChild(this.hintButton);  
