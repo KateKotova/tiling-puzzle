@@ -286,6 +286,14 @@ export class DraggableTileView implements TileView {
         this.view.clearFilters();
     }
 
+    public addHintGlowFilter(): void {
+        this.view.addHintGlowFilter();
+    }
+
+    public removeHintGlowFilter(): void {
+        this.view.removeHintGlowFilter();
+    }
+
     public createContent(shouldAddBevelFilter: boolean): Container {
         return this.view.createContent(shouldAddBevelFilter);
     }

@@ -24,6 +24,9 @@ export interface TileView {
     removeFilter: (filter: Filter) => void;
     clearFilters: () => void;
 
+    addHintGlowFilter: () => void;
+    removeHintGlowFilter: () => void;
+
     createContent: (shouldAddBevelFilter: boolean) => Container;
     replaceContent: (newContent: Container) => void;
 

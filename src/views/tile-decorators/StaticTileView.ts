@@ -75,6 +75,14 @@ export class StaticTileView implements TileView {
         this.view.clearFilters();
     }
 
+    public addHintGlowFilter(): void {
+        this.view.addHintGlowFilter();
+    }
+
+    public removeHintGlowFilter(): void {
+        this.view.removeHintGlowFilter();
+    }
+
     public createContent(shouldAddBevelFilter: boolean): Container {
         return this.view.createContent(shouldAddBevelFilter);
     }
@@ -146,8 +154,8 @@ export class StaticTileView implements TileView {
     }
 
     public removeTargetGlowFilter(): void {
-        const targetGlowFilter = this.getTargetGlowFilter();
-        this.view.removeFilter(targetGlowFilter);
+        const filter = this.getTargetGlowFilter();
+        this.view.removeFilter(filter);
     }
 
     public stopBeingDragTarget(): void {

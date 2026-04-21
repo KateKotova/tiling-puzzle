@@ -9,8 +9,6 @@ import { TilesAlphaController } from "../controllers/TilesAlphaController.ts";
 import { TileGeometryType } from "../../models/tile-geometries/TileGeometryType.ts";
 import { draggingTileData } from "../tile-decorators/DraggingTileData.ts";
 import { TileView } from "../tiles/TileView.ts";
-// TODO
-//import { TilePosition } from "../../models/tiles/TilePosition.ts";
 
 /**
  * Класс представления замощения
@@ -45,6 +43,16 @@ export class TilingView {
         = new Map<string, DraggableTileView>();
 
     public staticTilesAlphaController?: TilesAlphaController;
+
+    /**
+     * Целевая ячейка для текущей перетаскиваемой фигуры
+     */
+    private currentTargetStaticTileView?: StaticTileView;
+    /**
+     * Перемещаемая фигура, которая в данный момент занимает целевую ячейку
+     * для текущей перетаскиваемой фигуры
+     */
+    private currentTargetDraggableTileView?: DraggableTileView;
 
     /**
      * Таймер, который обеспечивает небольшую паузу на время тапа по перетаскиваемой фигуре,
@@ -267,15 +275,44 @@ export class TilingView {
         this.setStaticTileFillColor(geometryType, this.defaultStaticTileFillColor);
     }
 
-    // TODO: подсветить жёлтым эти найденные позиции
-    // public getTileViewsByTilePosition(draggableTileView: DraggableTileView): void {
-    //     const tilePositionString = draggableTileView.model.targetTilePosition.toString();
-    //     const targetStaticTileView = this.staticTileViewsByTilePositionStrings
-    //         .get(tilePositionString);
-    //     const targetDraggableTileView = [...this.draggableTileViewsByTilePositionStrings.values()]
-    //         .find(currentDraggableTileView =>
-    //             currentDraggableTileView.getSourceTilePosition()?.toString() === tilePositionString);
-    // }
+    /**
+     * Установка целевой позиции для текущей перетаскиваемой фигуры
+     * @param draggableTileView Текущая перетаскиваемая фигура
+     */
+    private setCurrentTargetTileViews(draggableTileView: DraggableTileView): void {
+        const tilePositionString = draggableTileView.model.targetTilePosition.toString();
+        this.currentTargetStaticTileView = this.staticTileViewsByTilePositionStrings
+            .get(tilePositionString);
+        this.currentTargetDraggableTileView
+            = [...this.draggableTileViewsByTilePositionStrings.values()]
+            .find(currentDraggableTileView =>
+                currentDraggableTileView.getSourceTilePosition()?.toString() === tilePositionString);
+    }
+
+    private clearCurrentTargetTileViews(): void {
+        this.currentTargetStaticTileView = undefined;
+        this.currentTargetDraggableTileView = undefined;
+    }
+
+    public addHintGlowFilterToCurrentTargetTileViews(draggableTileView: DraggableTileView): void {
+        this.setCurrentTargetTileViews(draggableTileView);
+        if (this.currentTargetStaticTileView) {
+            this.currentTargetStaticTileView.addHintGlowFilter();
+        }
+        if (this.currentTargetDraggableTileView) {
+            this.currentTargetDraggableTileView.addHintGlowFilter();
+        }
+    }
+
+    public removeHintGlowFilterFromCurrentTargetTileViews(): void {
+        if (this.currentTargetStaticTileView) {
+            this.currentTargetStaticTileView.removeHintGlowFilter();
+        }
+        if (this.currentTargetDraggableTileView) {
+            this.currentTargetDraggableTileView.removeHintGlowFilter();
+        }
+        this.clearCurrentTargetTileViews();
+    } 
 
     public destroy(): void {
         if (this.draggingTileTapTimer !== undefined) {
@@ -292,6 +329,8 @@ export class TilingView {
             this.boundOnDraggingTileWasSelected as EventListener);
         window.removeEventListener(DraggableTileView.draggingTileWasDeselectedEventName,
             this.boundOnDraggingTileIsDeselected as EventListener);
+
+        this.clearCurrentTargetTileViews();
 
         this.staticTilesAlphaController?.destroy();
 

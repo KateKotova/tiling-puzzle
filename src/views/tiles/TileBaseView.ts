@@ -113,7 +113,17 @@ export abstract class TileBaseView implements TileView {
         this.tile.updateCacheTexture();
     }
 
-    public getHintGlowFilter(): GlowFilter {
+    public addHintGlowFilter(): void {
+        const filter = this.getHintGlowFilter();
+        this.addFilter(filter);
+    }
+
+    public removeHintGlowFilter(): void {
+        const filter = this.getHintGlowFilter();
+        this.removeFilter(filter);
+    }
+
+    private getHintGlowFilter(): GlowFilter {
         if (!this.hintGlowFilter) {
             this.hintGlowFilter = new GlowFilter(this.parameters.hintGlowFilterOptions);
         }
