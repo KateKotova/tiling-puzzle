@@ -45,6 +45,16 @@ export class TilingView {
     public staticTilesAlphaController?: TilesAlphaController;
 
     /**
+     * Целевая ячейка для текущей перетаскиваемой фигуры
+     */
+    private currentTargetStaticTileView?: StaticTileView;
+    /**
+     * Перемещаемая фигура, которая в данный момент занимает целевую ячейку
+     * для текущей перетаскиваемой фигуры
+     */
+    private currentTargetDraggableTileView?: DraggableTileView;
+
+    /**
      * Таймер, который обеспечивает небольшую паузу на время тапа по перетаскиваемой фигуре,
      * чтобы не было моргания при тапе на фигуре,
      * потому что тап предполагает только поворот, а не длительное перетаскивание
@@ -265,6 +275,45 @@ export class TilingView {
         this.setStaticTileFillColor(geometryType, this.defaultStaticTileFillColor);
     }
 
+    /**
+     * Установка целевой позиции для текущей перетаскиваемой фигуры
+     * @param draggableTileView Текущая перетаскиваемая фигура
+     */
+    private setCurrentTargetTileViews(draggableTileView: DraggableTileView): void {
+        const tilePositionString = draggableTileView.model.targetTilePosition.toString();
+        this.currentTargetStaticTileView = this.staticTileViewsByTilePositionStrings
+            .get(tilePositionString);
+        this.currentTargetDraggableTileView
+            = [...this.draggableTileViewsByTilePositionStrings.values()]
+            .find(currentDraggableTileView =>
+                currentDraggableTileView.getSourceTilePosition()?.toString() === tilePositionString);
+    }
+
+    private clearCurrentTargetTileViews(): void {
+        this.currentTargetStaticTileView = undefined;
+        this.currentTargetDraggableTileView = undefined;
+    }
+
+    public addHintGlowFilterToCurrentTargetTileViews(draggableTileView: DraggableTileView): void {
+        this.setCurrentTargetTileViews(draggableTileView);
+        if (this.currentTargetStaticTileView) {
+            this.currentTargetStaticTileView.addHintGlowFilter();
+        }
+        if (this.currentTargetDraggableTileView) {
+            this.currentTargetDraggableTileView.addHintGlowFilter();
+        }
+    }
+
+    public removeHintGlowFilterFromCurrentTargetTileViews(): void {
+        if (this.currentTargetStaticTileView) {
+            this.currentTargetStaticTileView.removeHintGlowFilter();
+        }
+        if (this.currentTargetDraggableTileView) {
+            this.currentTargetDraggableTileView.removeHintGlowFilter();
+        }
+        this.clearCurrentTargetTileViews();
+    } 
+
     public destroy(): void {
         if (this.draggingTileTapTimer !== undefined) {
             clearTimeout(this.draggingTileTapTimer);
@@ -280,6 +329,8 @@ export class TilingView {
             this.boundOnDraggingTileWasSelected as EventListener);
         window.removeEventListener(DraggableTileView.draggingTileWasDeselectedEventName,
             this.boundOnDraggingTileIsDeselected as EventListener);
+
+        this.clearCurrentTargetTileViews();
 
         this.staticTilesAlphaController?.destroy();
 

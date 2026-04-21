@@ -49,7 +49,15 @@ export class Settings {
             lightAlpha: 0.8,
             shadowColor: 0x000000,
             shadowAlpha: 0.6
-        }
+        },
+        hintGlowFilterOptions: {
+            distance: 12,
+            outerStrength: 0,
+            innerStrength: 7,
+            color: new Color(0xFFFF00),
+            quality: 0.5,
+            knockout: false
+        },
     };
 
     public readonly tapParameters: TapParameters = {
@@ -134,7 +142,6 @@ export class Settings {
     };
 
     public readonly hintButtonParameters: HintButtonParameters = {
-        generateTextureResolution: 2,
         glowFilterOptions: {
             distance: 7,
             outerStrength: 3,
@@ -167,7 +174,8 @@ export class Settings {
         },
         controlParameters: {
             hintButtonParameters: this.hintButtonParameters,
-            hintButtonCenterXToControlContainerWidthRatio: 0.5,
+            eyeHintButtonCenterXToControlContainerWidthRatio: 1 / 3.0,
+            lampHintButtonCenterXToControlContainerWidthRatio: 2 / 3.0,
             hintButtonCenterYToControlContainerHeightRatio: 0.5,
             hintButtonRadiusToControlContainerMinSideRatio: 0.35
         },

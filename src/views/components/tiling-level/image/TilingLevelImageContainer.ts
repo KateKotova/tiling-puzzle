@@ -19,6 +19,9 @@ import { TilingView } from "../../../tilings/TilingView.ts";
 import { TilingLevelImageParameters } from "./TilingLevelImageParameters.ts";
 import { TilingLevelImageUniqueParameters } from "./TilingLevelImageUniqueParameters.ts";
 import { Size } from "../../../../math/Size.ts";
+import { EyeHintButton } from "../../hint-button/EyeHintButton.ts";
+import { LampHintButton } from "../../hint-button/LampHintButton.ts";
+import { DraggableTileView } from "../../../tile-decorators/DraggableTileView.ts";
 
 /**
  * Класс контейнера изображения для сборки мозаики,
@@ -67,6 +70,19 @@ export class TilingLevelImageContainer extends Container {
     private tilingTextureModel?: TilingTextureModel;
     private imageContainerModel?: ImageContainerModel;
     private tilingModel?: TilingModel;
+
+    private boundOnEyeHintButtonWasActivated: () => void
+        = this.onEyeHintButtonWasActivated.bind(this);
+    private boundOnEyeHintButtonWasDeactivated: () => void
+        = this.onEyeHintButtonWasDeactivated.bind(this);
+
+    private boundOnLampHintButtonWasActivated: () => void
+        = this.onLampHintButtonWasActivated.bind(this);
+    private boundOnLampHintButtonWasDeactivated: () => void
+        = this.onLampHintButtonWasDeactivated.bind(this);
+
+    private boundOnDraggingTileWasSelected: (event: CustomEvent<DraggableTileView>) => void
+        = this.onDraggingTileWasSelected.bind(this);
 
     constructor(
         parameters: TilingLevelImageParameters,
@@ -154,6 +170,8 @@ export class TilingLevelImageContainer extends Container {
         this.zoomAndPanContainer.getShouldPreventEvents = (): boolean => {
             return !!draggingTileData?.animatingViews.size;
         };
+
+        this.addEventListeners(); 
     }
 
     private createInnerContainerBoundingRectangle(): Rectangle {
@@ -235,6 +253,61 @@ export class TilingLevelImageContainer extends Container {
         return graphics;
     }
 
+    private addEventListeners(): void {
+        window.addEventListener(EyeHintButton.wasActivatedEventName,
+            this.boundOnEyeHintButtonWasActivated);
+        window.addEventListener(EyeHintButton.wasDeactivatedEventName, 
+            this.boundOnEyeHintButtonWasDeactivated);
+
+        window.addEventListener(LampHintButton.wasActivatedEventName,
+            this.boundOnLampHintButtonWasActivated);
+        window.addEventListener(LampHintButton.wasDeactivatedEventName, 
+            this.boundOnLampHintButtonWasDeactivated);
+    }
+
+    private removeEventListeners(): void {
+        window.removeEventListener(EyeHintButton.wasActivatedEventName,
+            this.boundOnEyeHintButtonWasActivated);
+        window.removeEventListener(EyeHintButton.wasDeactivatedEventName, 
+            this.boundOnEyeHintButtonWasDeactivated);
+            
+        window.removeEventListener(LampHintButton.wasActivatedEventName,
+            this.boundOnLampHintButtonWasActivated);
+        window.removeEventListener(LampHintButton.wasDeactivatedEventName, 
+            this.boundOnLampHintButtonWasDeactivated);
+    }
+
+    private currentTargetTileViewsAddEventListeners(): void {
+        window.addEventListener(DraggableTileView.draggingTileWasSelectedEventName,
+            this.boundOnDraggingTileWasSelected as EventListener);
+    }
+
+    private currentTargetTileViewsRemoveEventListeners(): void {
+        window.removeEventListener(DraggableTileView.draggingTileWasSelectedEventName,
+            this.boundOnDraggingTileWasSelected as EventListener);
+    }
+
+    private onEyeHintButtonWasActivated(): void {
+        this.tilingView?.setHintAlphaForStaticTiles();
+    }
+
+    private onEyeHintButtonWasDeactivated(): void {
+        this.tilingView?.setDefaultAlphaForStaticTiles();
+    }
+
+    private onLampHintButtonWasActivated(): void {
+        this.currentTargetTileViewsAddEventListeners();
+    }
+
+    private onLampHintButtonWasDeactivated(): void {
+        this.currentTargetTileViewsRemoveEventListeners();
+        this.tilingView?.removeHintGlowFilterFromCurrentTargetTileViews();
+    }
+
+    private onDraggingTileWasSelected(event: CustomEvent<DraggableTileView>): void {
+        this.tilingView?.addHintGlowFilterToCurrentTargetTileViews(event.detail);
+    }
+
     //#region Тестовые данные
 
     private createBackground(): Graphics | undefined {
@@ -262,6 +335,9 @@ export class TilingLevelImageContainer extends Container {
         if (this.destroyed) {
             return;
         }
+
+        this.currentTargetTileViewsRemoveEventListeners();
+        this.removeEventListeners();
 
         if (this.tilingView) {
             this.imageContainer?.removeChild(this.tilingView.tilingContainer);  

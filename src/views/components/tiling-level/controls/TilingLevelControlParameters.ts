@@ -7,10 +7,15 @@ import { HintButtonParameters } from "../../hint-button/HintButtonParameters.ts"
 export interface TilingLevelControlParameters {
     hintButtonParameters: HintButtonParameters;
     /**
-     * Коэффициент отношения абсциссы центра кнопки подсказки
+     * Коэффициент отношения абсциссы центра кнопки подсказки-глазика
      * к ширине контейнера панели управления.
      */
-    hintButtonCenterXToControlContainerWidthRatio: number;
+    eyeHintButtonCenterXToControlContainerWidthRatio: number;
+    /**
+     * Коэффициент отношения абсциссы центра кнопки подсказки-лампочки
+     * к ширине контейнера панели управления.
+     */
+    lampHintButtonCenterXToControlContainerWidthRatio: number;
     /**
      * Коэффициент отношения ординаты центра кнопки подсказки
      * к высоте контейнера панели управления.

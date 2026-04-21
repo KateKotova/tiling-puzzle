@@ -1,4 +1,5 @@
 import {
+    Bounds,
     Color,
     Container,
     ContainerChild,
@@ -13,12 +14,7 @@ import {
 import { GlowFilter } from "pixi-filters";
 import { HintButtonParameters } from "./HintButtonParameters.ts";
 
-export class HintButton extends Container {
-    public static readonly hintButtonWasActivatedEventName: string
-        = "hintButtonWasActivatedEvent";
-    public static readonly hintButtonWasDeactivatedEventName: string
-        = "hintButtonWasDeactivatedEvent";
-
+export abstract class HintButton extends Container {
     private readonly parameters: HintButtonParameters;
     private readonly radius: number;
     private readonly iconSide: number;
@@ -26,7 +22,9 @@ export class HintButton extends Container {
     private readonly circle: Graphics;    
     private readonly iconSvgPath: string;
     private readonly iconGraphicsPath: GraphicsPath;
+    private iconOriginalBounds?: Bounds;
     private iconScale?: number;
+    private iconOffset?: Point;
     private readonly defaultIconTexture: Texture;
     private activeIconTexture?: Texture;
     private readonly icon: Sprite;
@@ -70,6 +68,10 @@ export class HintButton extends Container {
         this.addEventListeners();
     }
 
+    public abstract get wasActivatedEventName(): string;
+
+    public abstract get wasDeactivatedEventName(): string;
+
     private createInvisibleRectangle(side: number): Graphics {
         const result = new Graphics()
             .rect(0, 0, side, side)
@@ -111,6 +113,9 @@ export class HintButton extends Container {
         }
         
         const scale = this.getIconScale();
+        const offset = this.getIconOffset();
+
+        canvasContext.translate(offset.x, offset.y);
         canvasContext.scale(scale, scale);
         
         canvasContext.fillStyle = fillColor.toRgbaString();
@@ -119,18 +124,36 @@ export class HintButton extends Container {
         return Texture.from(canvas);
     }
 
-    private getIconScale(): number {
-        if (this.iconScale === undefined) {
+    private getIconOriginalBounds(): Bounds {
+        if (!this.iconOriginalBounds) {
             const originalGraphics = new Graphics()
                 .path(this.iconGraphicsPath)
                 .fill({ color: 0x000000 });
-            const iconOriginalBounds = originalGraphics.getBounds();
+            this.iconOriginalBounds = originalGraphics.getBounds();
             originalGraphics.destroy();
-            
+        }
+        return this.iconOriginalBounds;
+    }
+
+    private getIconScale(): number {
+        if (this.iconScale === undefined) {
+            const originalBounds = this.getIconOriginalBounds();
             this.iconScale = this.iconSide
-                / Math.max(iconOriginalBounds.width, iconOriginalBounds.height);
+                / Math.max(originalBounds.width, originalBounds.height);
         }
         return this.iconScale;
+    }
+
+    private getIconOffset(): Point {
+        if (!this.iconOffset) {
+            const originalBounds = this.getIconOriginalBounds();
+            const scale = this.getIconScale();
+            this.iconOffset = new Point(
+                (this.iconSide - originalBounds.width * scale) / 2 - originalBounds.x * scale,
+                (this.iconSide - originalBounds.height * scale) / 2 - originalBounds.y * scale
+            );
+        }
+        return this.iconOffset;
     }
 
     private createIcon(left: number, top: number): Sprite {
@@ -177,7 +200,7 @@ export class HintButton extends Container {
 
         this.isActive = true;
         this.showActivity();
-        this.dispatchHintButtonWasActivatedEvent();
+        this.dispatchWasActivatedEvent();
     }
 
     private onPointerCancel(): void {
@@ -191,7 +214,7 @@ export class HintButton extends Container {
 
         this.isActive = false;
         this.showActivity();
-        this.dispatchHintButtonWasDeactivatedEvent();
+        this.dispatchWasDeactivatedEvent();
     }
 
     private showActivity(): void {
@@ -224,13 +247,13 @@ export class HintButton extends Container {
             : this.defaultIconTexture;
     }
 
-    private dispatchHintButtonWasActivatedEvent(): void {
-        const event = new Event(HintButton.hintButtonWasActivatedEventName);
+    private dispatchWasActivatedEvent(): void {
+        const event = new Event(this.wasActivatedEventName);
         window.dispatchEvent(event);
     }
 
-    private dispatchHintButtonWasDeactivatedEvent(): void {
-        const event = new Event(HintButton.hintButtonWasDeactivatedEventName);
+    private dispatchWasDeactivatedEvent(): void {
+        const event = new Event(this.wasDeactivatedEventName);
         window.dispatchEvent(event);
     }
 

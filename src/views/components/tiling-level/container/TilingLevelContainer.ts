@@ -9,7 +9,6 @@ import {
 } from "pixi.js";
 import { TilingLevelParameters } from "./TilingLevelParameters.ts";
 import { draggingTileData } from "../../../tile-decorators/DraggingTileData.ts";
-import { HintButton } from "../../hint-button/HintButton.ts";
 import { TilingLevelControlContainer } from "../controls/TilingLevelControlContainer.ts";
 import { TilingLevelImageContainer } from "../image/TilingLevelImageContainer.ts";
 import { TilingLevelCarouselContainer } from "../carousel/TilingLevelCarouselContainer.ts";
@@ -57,11 +56,6 @@ export class TilingLevelContainer extends Container {
      */
     private controlContainer?: TilingLevelControlContainer;
 
-    private boundOnHintButtonWasActivated: () => void
-        = this.onHintButtonWasActivated.bind(this);
-    private boundOnHintButtonWasDeactivated: () => void
-        = this.onHintButtonWasDeactivated.bind(this);
-
     constructor(
         parameters: TilingLevelParameters,
         uniqueParameters: TilingLevelUniqueParameters,
@@ -107,8 +101,6 @@ export class TilingLevelContainer extends Container {
             return;
         }
         this.addChild(this.controlContainer);
-
-        this.imageContainerAddEventListeners(); 
 
         this.carouselContainer = this.createCarouselContainer();
         if (!this.carouselContainer) {
@@ -189,7 +181,8 @@ export class TilingLevelContainer extends Container {
     private createControlContainer(): TilingLevelControlContainer {
         return new TilingLevelControlContainer(
             this.parameters.controlParameters,
-            this.uniqueParameters.hintButtonIconSvgPath,
+            this.uniqueParameters.eyeHintButtonIconSvgPath,
+            this.uniqueParameters.lampHintButtonIconSvgPath,
             {
                 x: this.controlContainerBoundingRectangle.x,
                 y: this.controlContainerBoundingRectangle.y,
@@ -224,28 +217,6 @@ export class TilingLevelContainer extends Container {
         );
     }
 
-    private imageContainerAddEventListeners(): void {
-        window.addEventListener(HintButton.hintButtonWasActivatedEventName,
-            this.boundOnHintButtonWasActivated);
-        window.addEventListener(HintButton.hintButtonWasDeactivatedEventName, 
-            this.boundOnHintButtonWasDeactivated);
-    }
-
-    private imageContainerRemoveEventListeners(): void {
-        window.removeEventListener(HintButton.hintButtonWasActivatedEventName,
-            this.boundOnHintButtonWasActivated);
-        window.removeEventListener(HintButton.hintButtonWasDeactivatedEventName, 
-            this.boundOnHintButtonWasDeactivated);
-    }
-
-    private onHintButtonWasActivated(): void {
-        this.imageContainer?.tilingView?.setHintAlphaForStaticTiles();
-    }
-
-    private onHintButtonWasDeactivated(): void {
-        this.imageContainer?.tilingView?.setDefaultAlphaForStaticTiles();
-    }
-
     private clearDraggingTileData(): void {
         draggingTileData.view = undefined;
         draggingTileData.viewport = undefined;
@@ -270,7 +241,6 @@ export class TilingLevelContainer extends Container {
         }
 
         if (this.imageContainer) {
-            this.imageContainerRemoveEventListeners();
             this.removeChild(this.imageContainer);  
             this.imageContainer.destroy();
         }
