@@ -1,4 +1,5 @@
 import {
+    Bounds,
     Color,
     Container,
     ContainerChild,
@@ -21,7 +22,9 @@ export abstract class HintButton extends Container {
     private readonly circle: Graphics;    
     private readonly iconSvgPath: string;
     private readonly iconGraphicsPath: GraphicsPath;
+    private iconOriginalBounds?: Bounds;
     private iconScale?: number;
+    private iconOffset?: Point;
     private readonly defaultIconTexture: Texture;
     private activeIconTexture?: Texture;
     private readonly icon: Sprite;
@@ -110,6 +113,9 @@ export abstract class HintButton extends Container {
         }
         
         const scale = this.getIconScale();
+        const offset = this.getIconOffset();
+
+        canvasContext.translate(offset.x, offset.y);
         canvasContext.scale(scale, scale);
         
         canvasContext.fillStyle = fillColor.toRgbaString();
@@ -118,18 +124,36 @@ export abstract class HintButton extends Container {
         return Texture.from(canvas);
     }
 
-    private getIconScale(): number {
-        if (this.iconScale === undefined) {
+    private getIconOriginalBounds(): Bounds {
+        if (!this.iconOriginalBounds) {
             const originalGraphics = new Graphics()
                 .path(this.iconGraphicsPath)
                 .fill({ color: 0x000000 });
-            const iconOriginalBounds = originalGraphics.getBounds();
+            this.iconOriginalBounds = originalGraphics.getBounds();
             originalGraphics.destroy();
-            
+        }
+        return this.iconOriginalBounds;
+    }
+
+    private getIconScale(): number {
+        if (this.iconScale === undefined) {
+            const originalBounds = this.getIconOriginalBounds();
             this.iconScale = this.iconSide
-                / Math.max(iconOriginalBounds.width, iconOriginalBounds.height);
+                / Math.max(originalBounds.width, originalBounds.height);
         }
         return this.iconScale;
+    }
+
+    private getIconOffset(): Point {
+        if (!this.iconOffset) {
+            const originalBounds = this.getIconOriginalBounds();
+            const scale = this.getIconScale();
+            this.iconOffset = new Point(
+                (this.iconSide - originalBounds.width * scale) / 2 - originalBounds.x * scale,
+                (this.iconSide - originalBounds.height * scale) / 2 - originalBounds.y * scale
+            );
+        }
+        return this.iconOffset;
     }
 
     private createIcon(left: number, top: number): Sprite {

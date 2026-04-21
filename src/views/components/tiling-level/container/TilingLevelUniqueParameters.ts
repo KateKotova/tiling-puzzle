@@ -8,5 +8,6 @@ import { TilingLevelCarouselUniqueParameters } from "../carousel/TilingLevelCaro
 export interface TilingLevelUniqueParameters {
     imageParameters: TilingLevelImageUniqueParameters;
     carouselParameters: TilingLevelCarouselUniqueParameters;
-    hintButtonIconSvgPath: string;
+    eyeHintButtonIconSvgPath: string;
+    lampHintButtonIconSvgPath: string;
 }

@@ -41,6 +41,13 @@ async function main(): Promise<void> {
               data: {
                   parseAsGraphicsContext: true
               }
+            },
+            {
+              alias: "lamp-hint-icon-path",
+              src: "assets/lamp-hint-icon-path.txt",
+              data: {
+                  parseAsGraphicsContext: true
+              }
             }
           ]
         },
@@ -90,7 +97,8 @@ async function main(): Promise<void> {
         tileLineBackgroundFillColor: new Color(0x008F00),
         carouselBackgroundFillColor: new Color(0x00AF00)
       },
-      hintButtonIconSvgPath: Assets.get<string>("eye-hint-icon-path")
+      eyeHintButtonIconSvgPath: Assets.get<string>("eye-hint-icon-path"),
+      lampHintButtonIconSvgPath: Assets.get<string>("lamp-hint-icon-path"),
     };
 
     const tilingLevelContainer = new TilingLevelContainer(

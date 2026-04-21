@@ -166,7 +166,8 @@ export class Settings {
         },
         controlParameters: {
             hintButtonParameters: this.hintButtonParameters,
-            hintButtonCenterXToControlContainerWidthRatio: 0.5,
+            eyeHintButtonCenterXToControlContainerWidthRatio: 1 / 3.0,
+            lampHintButtonCenterXToControlContainerWidthRatio: 2 / 3.0,
             hintButtonCenterYToControlContainerHeightRatio: 0.5,
             hintButtonRadiusToControlContainerMinSideRatio: 0.35
         },

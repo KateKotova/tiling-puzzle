@@ -189,7 +189,8 @@ export class TilingLevelContainer extends Container {
     private createControlContainer(): TilingLevelControlContainer {
         return new TilingLevelControlContainer(
             this.parameters.controlParameters,
-            this.uniqueParameters.hintButtonIconSvgPath,
+            this.uniqueParameters.eyeHintButtonIconSvgPath,
+            this.uniqueParameters.lampHintButtonIconSvgPath,
             {
                 x: this.controlContainerBoundingRectangle.x,
                 y: this.controlContainerBoundingRectangle.y,
