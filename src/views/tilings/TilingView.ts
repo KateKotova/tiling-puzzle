@@ -9,6 +9,8 @@ import { TilesAlphaController } from "../controllers/TilesAlphaController.ts";
 import { TileGeometryType } from "../../models/tile-geometries/TileGeometryType.ts";
 import { draggingTileData } from "../tile-decorators/DraggingTileData.ts";
 import { TileView } from "../tiles/TileView.ts";
+// TODO
+//import { TilePosition } from "../../models/tiles/TilePosition.ts";
 
 /**
  * Класс представления замощения
@@ -264,6 +266,16 @@ export class TilingView {
         const geometryType = event.detail.model.geometry.geometryType;
         this.setStaticTileFillColor(geometryType, this.defaultStaticTileFillColor);
     }
+
+    // TODO: подсветить жёлтым эти найденные позиции
+    // public getTileViewsByTilePosition(draggableTileView: DraggableTileView): void {
+    //     const tilePositionString = draggableTileView.model.targetTilePosition.toString();
+    //     const targetStaticTileView = this.staticTileViewsByTilePositionStrings
+    //         .get(tilePositionString);
+    //     const targetDraggableTileView = [...this.draggableTileViewsByTilePositionStrings.values()]
+    //         .find(currentDraggableTileView =>
+    //             currentDraggableTileView.getSourceTilePosition()?.toString() === tilePositionString);
+    // }
 
     public destroy(): void {
         if (this.draggingTileTapTimer !== undefined) {

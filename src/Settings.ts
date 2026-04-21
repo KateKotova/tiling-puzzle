@@ -49,7 +49,15 @@ export class Settings {
             lightAlpha: 0.8,
             shadowColor: 0x000000,
             shadowAlpha: 0.6
-        }
+        },
+        hintGlowFilterOptions: {
+            distance: 12,
+            outerStrength: 0,
+            innerStrength: 7,
+            color: new Color(0xFFFF00),
+            quality: 0.5,
+            knockout: false
+        },
     };
 
     public readonly tapParameters: TapParameters = {

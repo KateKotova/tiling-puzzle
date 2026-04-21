@@ -1,5 +1,5 @@
 import { Texture, Container, Renderer, Color, Filter, Sprite, ContainerChild } from "pixi.js";
-import { BevelFilter } from "pixi-filters";
+import { BevelFilter, GlowFilter } from "pixi-filters";
 import { TileModel } from "../../models/tiles/TileModel.ts";
 import { TileView } from "./TileView.ts";
 import { TileViewCreationParameters } from "./TileViewCreationParameters.ts";
@@ -19,6 +19,7 @@ export abstract class TileBaseView implements TileView {
      * Цвет заливки, применяемый в отсутствии текстуры
      */
     public replacingTextureFillColor: Color;
+    private hintGlowFilter?: GlowFilter;
 
     constructor (
         parameters: TileParameters,
@@ -76,14 +77,47 @@ export abstract class TileBaseView implements TileView {
         });
     }
 
-    public setFilter(filter: Filter): void {
-        this.tile.filters = [filter];
+    public addFilter(filter: Filter): void {
+        if (!this.tile.filters?.length) {
+            this.tile.filters = [filter];
+            this.tile.updateCacheTexture();
+            return;
+        }
+
+        const filterIndex = this.tile.filters.indexOf(filter);
+        if (filterIndex !== -1) {
+            return;
+        }
+
+        const filters = [...this.tile.filters];
+        filters.push(filter);
+        this.tile.filters = filters;
         this.tile.updateCacheTexture();
     }
 
-    public removeFilters(): void {
+    public removeFilter(filter: Filter): void {
+        if (!this.tile.filters?.length) {
+            return;
+        }
+        const filters = [...this.tile.filters];
+        const filterIndex = filters.indexOf(filter);
+        if (filterIndex !== -1) {
+            filters.splice(filterIndex, 1);
+        }
+        this.tile.filters = filters;
+        this.tile.updateCacheTexture();
+    }
+
+    public clearFilters(): void {
         this.tile.filters = null;
         this.tile.updateCacheTexture();
+    }
+
+    public getHintGlowFilter(): GlowFilter {
+        if (!this.hintGlowFilter) {
+            this.hintGlowFilter = new GlowFilter(this.parameters.hintGlowFilterOptions);
+        }
+        return this.hintGlowFilter;
     }
 
     private static prepareContainerChildForDestroy(containerChild: ContainerChild): void {
@@ -136,6 +170,12 @@ export abstract class TileBaseView implements TileView {
     }
 
     public destroy(): void {
+        this.clearFilters();
+        if (this.hintGlowFilter) {
+            this.hintGlowFilter.destroy();
+            this.hintGlowFilter = undefined;
+        }
+
         TileBaseView.prepareContainerChildForDestroy(this.content);
         this.content.children.forEach(child => TileBaseView.prepareContainerChildForDestroy(child));
 

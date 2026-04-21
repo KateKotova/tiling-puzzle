@@ -30,6 +30,7 @@ import { TileMoveInsideInitialContainerController }
 import { TileMoveToInitialContainerController }
     from "../controllers/TileMoveToInitialContainerController.ts";
 import { WheelController } from "../controllers/WheelController.ts";
+import { TilePosition } from "../../models/tiles/TilePosition.ts";
 
 /**
  * Класс декоратора представления подвижного элемента замощения
@@ -273,12 +274,16 @@ export class DraggableTileView implements TileView {
             : undefined;
     }
 
-    public setFilter(filter: Filter): void {
-        this.view.setFilter(filter);
+    public addFilter(filter: Filter): void {
+        this.view.addFilter(filter);
     }
-    
-    public removeFilters(): void {
-        this.view.removeFilters();
+
+    public removeFilter(filter: Filter): void {
+        this.view.removeFilter(filter);
+    }
+
+    public clearFilters(): void {
+        this.view.clearFilters();
     }
 
     public createContent(shouldAddBevelFilter: boolean): Container {
@@ -360,6 +365,16 @@ export class DraggableTileView implements TileView {
         window.dispatchEvent(event);
     }
 
+    public addSelectedGlowFilter(): void {
+        const filter = this.getSelectedGlowFilter();
+        this.view.addFilter(filter);
+    }    
+
+    public removeSelectedGlowFilter(): void {
+        const filter = this.getSelectedGlowFilter();
+        this.view.removeFilter(filter);
+    }
+
     private onPointerDown(event: FederatedPointerEvent): void {
         if (event.propagationStopped
             || (event.nativeEvent instanceof PointerEvent
@@ -425,7 +440,7 @@ export class DraggableTileView implements TileView {
         this.view.tile.position.copyFrom(this.view.model.currentPositionPoint);
         
         const filter = this.getSelectedGlowFilter();
-        this.view.setFilter(filter);
+        this.view.addFilter(filter);
 
         // Убираем зону попадания, чтобы события указателя были видны
         // статическим элементам замощения уровнем ниже
@@ -721,14 +736,14 @@ export class DraggableTileView implements TileView {
 
         this.addTileToSelectedContainer();
         const filter = this.getCorrectLocatedGlowFilter();
-        this.view.setFilter(filter);
+        this.view.addFilter(filter);
 
         if (this.fixAsLocatedCorrectlyTimer !== undefined) {
             clearTimeout(this.fixAsLocatedCorrectlyTimer);
         }
 
         this.fixAsLocatedCorrectlyTimer = setTimeout(() => {
-                this.removeFilters();
+                this.clearFilters();
                 this.addTileToTargetContainerOnFixAsLocatedCorrectly();
                 const contentWithoutBevelFilter = this.view.createContent(false);
                 this.view.replaceContent(contentWithoutBevelFilter);
@@ -751,6 +766,10 @@ export class DraggableTileView implements TileView {
                 = new GlowFilter(this.parameters.correctLocatedGlowFilterOptions);
         }
         return this.correctLocatedGlowFilter;
+    }
+
+    public getSourceTilePosition(): TilePosition | undefined {
+        return this.dragSource?.model.targetTilePosition;
     }
 
     private removeInteractivity(): void {
@@ -776,7 +795,7 @@ export class DraggableTileView implements TileView {
         this.moveInsideInitialContainerController.destroy();
         this.moveToInitialContainerController.destroy();
 
-        this.view.removeFilters();
+        this.view.clearFilters();
         if (this.selectedGlowFilter) {
             this.selectedGlowFilter.destroy();
             this.selectedGlowFilter = undefined;

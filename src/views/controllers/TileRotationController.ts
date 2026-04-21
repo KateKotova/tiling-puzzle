@@ -65,8 +65,7 @@ export class TileRotationController extends EntityController<DraggableTileView, 
         this.target.addTileToSelectedContainer();
         
         if (!this.target.isDragging) {
-            const filter = this.target.getSelectedGlowFilter();
-            this.target.view.setFilter(filter);
+            this.target.addSelectedGlowFilter();
         }
     }
 
@@ -78,7 +77,7 @@ export class TileRotationController extends EntityController<DraggableTileView, 
     protected complete(): void {
         const view = this.target.view;
         if (!this.target.isDragging) {
-            view.removeFilters();
+            this.target.removeSelectedGlowFilter();
         }
         
         this.controller.complete();

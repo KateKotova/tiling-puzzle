@@ -70,8 +70,7 @@ export class TileMoveToInitialContainerController
             this.target.addTileToSelectedContainer();
         }
 
-        const filter = this.target.getSelectedGlowFilter();
-        this.target.view.setFilter(filter);
+        this.target.addSelectedGlowFilter();
     }
 
     protected execute(deltaTime: number): void {
@@ -84,7 +83,7 @@ export class TileMoveToInitialContainerController
 
     protected complete(): void {
         const view = this.target.view;
-        view.removeFilters();
+        this.target.removeSelectedGlowFilter();
         
         this.controller.complete();
         view.tile.position.copyFrom(view.model.currentPositionPoint);
