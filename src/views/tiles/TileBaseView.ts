@@ -20,6 +20,7 @@ export abstract class TileBaseView implements TileView {
      */
     public replacingTextureFillColor: Color;
     private hintGlowFilter?: GlowFilter;
+    private updateFiltersTimer?: number;
 
     constructor (
         parameters: TileParameters,
@@ -37,19 +38,37 @@ export abstract class TileBaseView implements TileView {
     public abstract createContent(shouldAddBevelFilter: boolean): Container;
 
     public replaceContent(newContent: Container): void {
+        const shouldUpdateFilters = !!this.tile.filters?.length;
+        let filters: Filter[] | null = null;        
+        if (shouldUpdateFilters) {
+            filters = [...this.tile.filters];
+            this.clearFilters();
+        }
+
         const oldContent = this.content;
         TileBaseView.prepareContainerChildForDestroy(oldContent);
         oldContent.children.forEach(child => TileBaseView.prepareContainerChildForDestroy(child));
         
         this.content = newContent;
-        this.tile.addChild(this.content);        
-        
+        this.tile.addChild(this.content);
+
         if (oldContent) {
-            this.tile.removeChild(oldContent);                       
+            this.tile.removeChild(oldContent);
             requestAnimationFrame(() => oldContent.destroy({ children: true }));
         }
 
         this.tile.updateCacheTexture();
+
+        if (shouldUpdateFilters) {
+            if (this.updateFiltersTimer !== undefined) {
+                clearTimeout(this.updateFiltersTimer);
+            }
+
+            this.updateFiltersTimer = setTimeout(() => {
+                this.tile.filters = filters;
+                this.tile.updateCacheTexture();
+            }, 5);
+        }
     }
 
     protected createTile(): Container {
@@ -180,6 +199,11 @@ export abstract class TileBaseView implements TileView {
     }
 
     public destroy(): void {
+        if (this.updateFiltersTimer !== undefined) {
+            clearTimeout(this.updateFiltersTimer);
+            this.updateFiltersTimer = undefined;
+        }
+
         this.clearFilters();
         if (this.hintGlowFilter) {
             this.hintGlowFilter.destroy();

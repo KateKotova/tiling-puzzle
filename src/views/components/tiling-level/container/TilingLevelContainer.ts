@@ -13,7 +13,6 @@ import { TilingLevelControlContainer } from "../controls/TilingLevelControlConta
 import { TilingLevelImageContainer } from "../image/TilingLevelImageContainer.ts";
 import { TilingLevelCarouselContainer } from "../carousel/TilingLevelCarouselContainer.ts";
 import { TilingLevelUniqueParameters } from "./TilingLevelUniqueParameters.ts";
-import { EyeHintButton } from "../../hint-button/EyeHintButton.ts";
 
 /**
  * Класс вертикального контейнера уровня мозаичного замощения
@@ -56,11 +55,6 @@ export class TilingLevelContainer extends Container {
      * Располагается вверху
      */
     private controlContainer?: TilingLevelControlContainer;
-
-    private boundOnEyeHintButtonWasActivated: () => void
-        = this.onEyeHintButtonWasActivated.bind(this);
-    private boundOnEyeHintButtonWasDeactivated: () => void
-        = this.onEyeHintButtonWasDeactivated.bind(this);
 
     constructor(
         parameters: TilingLevelParameters,
@@ -107,8 +101,6 @@ export class TilingLevelContainer extends Container {
             return;
         }
         this.addChild(this.controlContainer);
-
-        this.imageContainerAddEventListeners(); 
 
         this.carouselContainer = this.createCarouselContainer();
         if (!this.carouselContainer) {
@@ -225,28 +217,6 @@ export class TilingLevelContainer extends Container {
         );
     }
 
-    private imageContainerAddEventListeners(): void {
-        window.addEventListener(EyeHintButton.wasActivatedEventName,
-            this.boundOnEyeHintButtonWasActivated);
-        window.addEventListener(EyeHintButton.wasDeactivatedEventName, 
-            this.boundOnEyeHintButtonWasDeactivated);
-    }
-
-    private imageContainerRemoveEventListeners(): void {
-        window.removeEventListener(EyeHintButton.wasActivatedEventName,
-            this.boundOnEyeHintButtonWasActivated);
-        window.removeEventListener(EyeHintButton.wasDeactivatedEventName, 
-            this.boundOnEyeHintButtonWasDeactivated);
-    }
-
-    private onEyeHintButtonWasActivated(): void {
-        this.imageContainer?.tilingView?.setHintAlphaForStaticTiles();
-    }
-
-    private onEyeHintButtonWasDeactivated(): void {
-        this.imageContainer?.tilingView?.setDefaultAlphaForStaticTiles();
-    }
-
     private clearDraggingTileData(): void {
         draggingTileData.view = undefined;
         draggingTileData.viewport = undefined;
@@ -271,7 +241,6 @@ export class TilingLevelContainer extends Container {
         }
 
         if (this.imageContainer) {
-            this.imageContainerRemoveEventListeners();
             this.removeChild(this.imageContainer);  
             this.imageContainer.destroy();
         }
