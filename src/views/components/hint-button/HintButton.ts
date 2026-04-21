@@ -13,12 +13,7 @@ import {
 import { GlowFilter } from "pixi-filters";
 import { HintButtonParameters } from "./HintButtonParameters.ts";
 
-export class HintButton extends Container {
-    public static readonly hintButtonWasActivatedEventName: string
-        = "hintButtonWasActivatedEvent";
-    public static readonly hintButtonWasDeactivatedEventName: string
-        = "hintButtonWasDeactivatedEvent";
-
+export abstract class HintButton extends Container {
     private readonly parameters: HintButtonParameters;
     private readonly radius: number;
     private readonly iconSide: number;
@@ -69,6 +64,10 @@ export class HintButton extends Container {
         this.eventMode = 'static';
         this.addEventListeners();
     }
+
+    public abstract get wasActivatedEventName(): string;
+
+    public abstract get wasDeactivatedEventName(): string;
 
     private createInvisibleRectangle(side: number): Graphics {
         const result = new Graphics()
@@ -177,7 +176,7 @@ export class HintButton extends Container {
 
         this.isActive = true;
         this.showActivity();
-        this.dispatchHintButtonWasActivatedEvent();
+        this.dispatchWasActivatedEvent();
     }
 
     private onPointerCancel(): void {
@@ -191,7 +190,7 @@ export class HintButton extends Container {
 
         this.isActive = false;
         this.showActivity();
-        this.dispatchHintButtonWasDeactivatedEvent();
+        this.dispatchWasDeactivatedEvent();
     }
 
     private showActivity(): void {
@@ -224,13 +223,13 @@ export class HintButton extends Container {
             : this.defaultIconTexture;
     }
 
-    private dispatchHintButtonWasActivatedEvent(): void {
-        const event = new Event(HintButton.hintButtonWasActivatedEventName);
+    private dispatchWasActivatedEvent(): void {
+        const event = new Event(this.wasActivatedEventName);
         window.dispatchEvent(event);
     }
 
-    private dispatchHintButtonWasDeactivatedEvent(): void {
-        const event = new Event(HintButton.hintButtonWasDeactivatedEventName);
+    private dispatchWasDeactivatedEvent(): void {
+        const event = new Event(this.wasDeactivatedEventName);
         window.dispatchEvent(event);
     }
 

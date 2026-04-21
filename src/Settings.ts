@@ -134,7 +134,6 @@ export class Settings {
     };
 
     public readonly hintButtonParameters: HintButtonParameters = {
-        generateTextureResolution: 2,
         glowFilterOptions: {
             distance: 7,
             outerStrength: 3,

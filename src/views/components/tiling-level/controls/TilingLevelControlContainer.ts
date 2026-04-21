@@ -9,6 +9,7 @@ import { HintButton } from "../../hint-button/HintButton.ts";
 import { TilingLevelControlParameters } from "./TilingLevelControlParameters.ts";
 import { Size } from "../../../../math/Size.ts";
 import { DraggableTileView } from "../../../tile-decorators/DraggableTileView.ts";
+import { EyeHintButton } from "../../hint-button/EyeHintButton.ts";
 
 /**
  * Класс контейнера панели управления,
@@ -63,7 +64,7 @@ export class TilingLevelControlContainer extends Container {
         const centerY = this.parameters.hintButtonCenterYToControlContainerHeightRatio
             * this.size.height;
 
-        return new HintButton(
+        return new EyeHintButton(
             this.parameters.hintButtonParameters,
             radius,    
             this.hintButtonIconSvgPath,

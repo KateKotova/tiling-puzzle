@@ -9,11 +9,11 @@ import {
 } from "pixi.js";
 import { TilingLevelParameters } from "./TilingLevelParameters.ts";
 import { draggingTileData } from "../../../tile-decorators/DraggingTileData.ts";
-import { HintButton } from "../../hint-button/HintButton.ts";
 import { TilingLevelControlContainer } from "../controls/TilingLevelControlContainer.ts";
 import { TilingLevelImageContainer } from "../image/TilingLevelImageContainer.ts";
 import { TilingLevelCarouselContainer } from "../carousel/TilingLevelCarouselContainer.ts";
 import { TilingLevelUniqueParameters } from "./TilingLevelUniqueParameters.ts";
+import { EyeHintButton } from "../../hint-button/EyeHintButton.ts";
 
 /**
  * Класс вертикального контейнера уровня мозаичного замощения
@@ -57,10 +57,10 @@ export class TilingLevelContainer extends Container {
      */
     private controlContainer?: TilingLevelControlContainer;
 
-    private boundOnHintButtonWasActivated: () => void
-        = this.onHintButtonWasActivated.bind(this);
-    private boundOnHintButtonWasDeactivated: () => void
-        = this.onHintButtonWasDeactivated.bind(this);
+    private boundOnEyeHintButtonWasActivated: () => void
+        = this.onEyeHintButtonWasActivated.bind(this);
+    private boundOnEyeHintButtonWasDeactivated: () => void
+        = this.onEyeHintButtonWasDeactivated.bind(this);
 
     constructor(
         parameters: TilingLevelParameters,
@@ -225,24 +225,24 @@ export class TilingLevelContainer extends Container {
     }
 
     private imageContainerAddEventListeners(): void {
-        window.addEventListener(HintButton.hintButtonWasActivatedEventName,
-            this.boundOnHintButtonWasActivated);
-        window.addEventListener(HintButton.hintButtonWasDeactivatedEventName, 
-            this.boundOnHintButtonWasDeactivated);
+        window.addEventListener(EyeHintButton.wasActivatedEventName,
+            this.boundOnEyeHintButtonWasActivated);
+        window.addEventListener(EyeHintButton.wasDeactivatedEventName, 
+            this.boundOnEyeHintButtonWasDeactivated);
     }
 
     private imageContainerRemoveEventListeners(): void {
-        window.removeEventListener(HintButton.hintButtonWasActivatedEventName,
-            this.boundOnHintButtonWasActivated);
-        window.removeEventListener(HintButton.hintButtonWasDeactivatedEventName, 
-            this.boundOnHintButtonWasDeactivated);
+        window.removeEventListener(EyeHintButton.wasActivatedEventName,
+            this.boundOnEyeHintButtonWasActivated);
+        window.removeEventListener(EyeHintButton.wasDeactivatedEventName, 
+            this.boundOnEyeHintButtonWasDeactivated);
     }
 
-    private onHintButtonWasActivated(): void {
+    private onEyeHintButtonWasActivated(): void {
         this.imageContainer?.tilingView?.setHintAlphaForStaticTiles();
     }
 
-    private onHintButtonWasDeactivated(): void {
+    private onEyeHintButtonWasDeactivated(): void {
         this.imageContainer?.tilingView?.setDefaultAlphaForStaticTiles();
     }
 
