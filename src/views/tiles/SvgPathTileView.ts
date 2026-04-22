@@ -62,7 +62,7 @@ export class SvgPathTileView extends TileBaseView {
         graphicsTexture: Texture,
         spriteWidth: number,
         spriteHeight: number
-    ): Sprite {
+    ): Container {
         const maskGraphics = new Graphics()
             .path(graphicsPath)
             .fill({
@@ -91,26 +91,30 @@ export class SvgPathTileView extends TileBaseView {
             }
         });
         maskGraphics.destroy();
+
+        const result = new Container();
         
-        const result = new Sprite(graphicsTexture);
-        result.roundPixels = false;
+        const blurredSprite = new Sprite(graphicsTexture);
+        blurredSprite.roundPixels = false;
 
         const blurFilter = new BlurFilter({ 
             strength: 8.0,
             quality: 5,
             kernelSize: 5
         });
-        result.filters = [blurFilter];
+        blurredSprite.filters = [blurFilter];
+
+        blurredSprite.width = spriteWidth;
+        blurredSprite.height = spriteHeight;
 
         const maskSprite = new Sprite(maskTexture);
         maskSprite.roundPixels = false;
-        result.addChild(maskSprite);
-        maskSprite.position.set((result.width - maskSprite.width) / 2.0,
-            (result.height - maskSprite.height) / 2.0);
-        result.mask = maskSprite;
+        maskSprite.position.set((blurredSprite.width - maskSprite.width) / 2.0,
+            (blurredSprite.height - maskSprite.height) / 2.0);
+        blurredSprite.mask = maskSprite;
 
-        result.width = spriteWidth;
-        result.height = spriteHeight;
+        result.addChild(blurredSprite);
+        result.addChild(maskSprite);
 
         return result;
     }
