@@ -50,6 +50,9 @@ https://katekotova.github.io/tiling-puzzle/
 ## Доска с backlog проекта
 https://katekotova.kaiten.ru/p/3f91ca19-a342-498e-8940-1321992bd9b8
 
+## Патент на промышленный образец пазла
+https://www.fips.ru/cdfi/fips.dll?ty=29&docid=00151484&ki=S
+
 ## Установка и настройка
 Скачайте репозиторий.
 Перейдите в папку с кодом.
