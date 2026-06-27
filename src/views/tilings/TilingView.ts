@@ -22,12 +22,12 @@ export class TilingView {
     /**
      * Цвет заливки статических элементов замощения по умолчанию
      */
-    public defaultStaticTileFillColor: Color = new Color(0x008F00);
+    public defaultStaticTileFillColor: Color;
     /**
      * Цвет заливки статических элементов, который устанавливается
      * для фигур того же типа геометрии, что и выбранный перетаскиваемый элемент замощения
      */
-    public targetStaticTileFillColor: Color = new Color(0x00AF00);
+    private targetStaticTileFillColor: Color;
     /**
      * Карта, где по строковому представлению позиции
      * можно найти статический элемент замощения, представляющий собой
@@ -44,14 +44,47 @@ export class TilingView {
 
     public staticTilesAlphaController?: TilesAlphaController;
 
-    private boundOnDraggingTileIsSelected: (event: CustomEvent<DraggableTileView>) => void
-        = this.onDraggingTileIsSelected.bind(this);
+    /**
+     * Потенциальная перетаскиваемая фигура, выбранная для подсказки
+     */
+    private potentialDraggableTileView?: DraggableTileView;
+    /**
+     * Целевая ячейка для потенциальной перетаскиваемой фигуры
+     */
+    private potentialTargetStaticTileView?: StaticTileView;
+    /**
+     * Перемещаемая фигура, которая в данный момент занимает целевую ячейку
+     * для потенциальной перетаскиваемой фигуры
+     */
+    private potentialTargetDraggableTileView?: DraggableTileView;
+
+    /**
+     * Таймер, который обеспечивает небольшую паузу на время тапа по перетаскиваемой фигуре,
+     * чтобы не было моргания при тапе на фигуре,
+     * потому что тап предполагает только поворот, а не длительное перетаскивание
+     */
+    private draggingTileTapTimer?: number;
+    /**
+     * Таймер, который обеспечивает показ картинки пользователю перед началом сборки
+     */
+    private imageInitialShowTimer?: number;
+    /**
+     * Таймер, который обеспечивает небольшую паузу между показом фильтра подсказки
+     * потенциальной перетаскиваемой фигуры и показом фильтра подсказки
+     * целевой ячейки и фигуры, которая, возможно, находится на этой ячейке в данный момент.
+     */
+    private showPotentialTargetHintGlowFilterTimer?: number;
+
+    private boundOnDraggingTileWasSelected: (event: CustomEvent<DraggableTileView>) => void
+        = this.onDraggingTileWasSelected.bind(this);
     private boundOnDraggingTileIsDeselected: (event: CustomEvent<DraggableTileView>) => void
         = this.onDraggingTileIsDeselected.bind(this);
 
     constructor(
         parameters: TilingParameters,
-        model: TilingModel
+        model: TilingModel,
+        defaultStaticTileFillColor: Color,
+        targetStaticTileFillColor: Color
     ) {
         if (!model.isInitialized) {
             throw new Error('The tiling model is not initialized');
@@ -59,6 +92,8 @@ export class TilingView {
 
         this.parameters = parameters;
         this.model = model;
+        this.defaultStaticTileFillColor = defaultStaticTileFillColor;
+        this.targetStaticTileFillColor = targetStaticTileFillColor;
         this.tilingContainer = this.createTilingContainer();
 
         this.staticTilesContainer = new Container();
@@ -69,8 +104,8 @@ export class TilingView {
         this.draggableTilesContainer.sortableChildren = true;
         this.tilingContainer.addChild(this.draggableTilesContainer);
 
-        window.addEventListener(DraggableTileView.draggingTileIsSelectedEventName,
-            this.boundOnDraggingTileIsSelected as EventListener);        
+        window.addEventListener(DraggableTileView.draggingTileWasSelectedEventName,
+            this.boundOnDraggingTileWasSelected as EventListener);        
     }
 
     private createTilingContainer(): Container {
@@ -118,7 +153,9 @@ export class TilingView {
                     this.parameters.tileParameters,
                     tileViewCreationParameters
                 );
-                tileView.content.alpha = this.parameters.staticTileParameters.defaultAlpha;
+                // Изначально ячейки прозрачные,
+                // чтобы пользователь увидел картинку на короткое время
+                tileView.tile.alpha = this.parameters.staticTileParameters.transparentAlpha;
 
                 this.staticTilesContainer.addChild(tileView.tile);
 
@@ -140,18 +177,45 @@ export class TilingView {
             [...this.staticTileViewsByTilePositionStrings.values()],
             ticker
         );
+
+        this.hideInitialShownImage();
+    }
+
+    private hideInitialShownImage(): void {
+        if (this.imageInitialShowTimer !== undefined) {
+            clearTimeout(this.imageInitialShowTimer);
+        }
+
+        this.imageInitialShowTimer = setTimeout(() => {
+                if (this.getStaticTilesAlpha()
+                    === this.parameters.staticTileParameters.transparentAlpha) {
+                    this.staticTilesAlphaController?.restart(
+                        this.parameters.staticTileParameters.transparentAlpha,
+                        this.parameters.staticTileParameters.defaultAlpha
+                    );
+                }
+                this.imageInitialShowTimer = undefined;
+            },
+            this.parameters.imageInitialShowTime
+        );
+    }
+
+    private getStaticTilesAlpha(): number | undefined {
+        return this.staticTileViewsByTilePositionStrings.size
+            ? this.staticTileViewsByTilePositionStrings.values().next().value?.tile.alpha
+            : undefined;
     }
 
     public setHintAlphaForStaticTiles(): void {
         this.staticTilesAlphaController?.restart(
-            this.parameters.staticTileParameters.defaultAlpha,
+            this.getStaticTilesAlpha() ?? this.parameters.staticTileParameters.defaultAlpha,
             this.parameters.staticTileParameters.hintAlpha
         );
     }
 
     public setDefaultAlphaForStaticTiles(): void {
         this.staticTilesAlphaController?.restart(
-            this.parameters.staticTileParameters.hintAlpha,
+            this.getStaticTilesAlpha() ?? this.parameters.staticTileParameters.hintAlpha,
             this.parameters.staticTileParameters.defaultAlpha
         );
     }
@@ -192,35 +256,152 @@ export class TilingView {
         tileViews.forEach(setTileZIndex);
     }
 
-    private onDraggingTileIsSelected(event: CustomEvent<DraggableTileView>): void {
+    private onDraggingTileWasSelected(event: CustomEvent<DraggableTileView>): void {
+        if (this.draggingTileTapTimer !== undefined) {
+            clearTimeout(this.draggingTileTapTimer);
+        }
+
         // Делаем небольшую паузу на тап, чтобы не было моргания при тапе на фигуре,
-        // потому что тап предполагает только поворот, а не длительное перетаскивание
-        setTimeout(() => {
+        // потому что тап предполагает только поворот, а не длительное перетаскивание        
+        this.draggingTileTapTimer = setTimeout(() => {
                 if (draggingTileData.view) {
                     const geometryType = event.detail.model.geometry.geometryType;
                     this.setStaticTileFillColor(geometryType, this.targetStaticTileFillColor);
 
-                    window.addEventListener(DraggableTileView.draggingTileIsDeselectedEventName,
+                    window.addEventListener(DraggableTileView.draggingTileWasDeselectedEventName,
                         this.boundOnDraggingTileIsDeselected as EventListener);
                 }
+                this.draggingTileTapTimer = undefined;
             }, 
             this.parameters.tapParameters.maxDuration
         );
     }
 
     private onDraggingTileIsDeselected(event: CustomEvent<DraggableTileView>): void {
-        window.removeEventListener(DraggableTileView.draggingTileIsDeselectedEventName,
+        window.removeEventListener(DraggableTileView.draggingTileWasDeselectedEventName,
             this.boundOnDraggingTileIsDeselected as EventListener);
 
         const geometryType = event.detail.model.geometry.geometryType;
         this.setStaticTileFillColor(geometryType, this.defaultStaticTileFillColor);
     }
 
+    /**
+     * Установка потенциальной перетаскиваемой фигуры и её целевой позиции
+     * @param draggableTileView Потенциальная перетаскиваемая фигура
+     */
+    private setPotentialTileViews(draggableTileView: DraggableTileView): void {
+        this.potentialDraggableTileView = draggableTileView;
+
+        const tilePositionString = draggableTileView.model.targetTilePosition.toString();
+        this.potentialTargetStaticTileView = this.staticTileViewsByTilePositionStrings
+            .get(tilePositionString);
+        this.potentialTargetDraggableTileView
+            = [...this.draggableTileViewsByTilePositionStrings.values()]
+            .find(currentDraggableTileView =>
+                currentDraggableTileView.getSourceTilePosition()?.toString() === tilePositionString);
+    }
+
+    private clearPotentialTileViews(): void {
+        this.potentialDraggableTileView = undefined;
+        this.potentialTargetStaticTileView = undefined;
+        this.potentialTargetDraggableTileView = undefined;
+    }
+
+    /**
+     * Подсветка выбранного для подсказки элемента мозаики и его целевой ячейки.
+     * Если целевая ячейка занята, то также подсвечивается фигура, которая занимает эту ячейку.
+     * @param draggableTileView Перетаскиваемый элемент мозаики, выбранный для подсказки
+     */
+    public addHintGlowFilterToPotentialTileViews(draggableTileView: DraggableTileView): void {
+        this.setPotentialTileViews(draggableTileView);
+
+        if (this.potentialDraggableTileView) {
+            this.potentialDraggableTileView.addHintGlowFilter();
+        }
+
+        const shouldShowPotentialTargetDraggableTileViewHintGlowFilter
+            = this.potentialTargetDraggableTileView
+            && this.potentialTargetDraggableTileView !== this.potentialDraggableTileView;
+
+        if (
+            this.potentialTargetStaticTileView
+            || shouldShowPotentialTargetDraggableTileViewHintGlowFilter
+        ) {
+            if (this.showPotentialTargetHintGlowFilterTimer !== undefined) {
+                clearTimeout(this.showPotentialTargetHintGlowFilterTimer);
+            }
+
+            this.showPotentialTargetHintGlowFilterTimer = setTimeout(() => {
+                    if (this.potentialTargetStaticTileView) {
+                        this.potentialTargetStaticTileView.addHintGlowFilter();
+                    }
+                    if (shouldShowPotentialTargetDraggableTileViewHintGlowFilter) {
+                        this.potentialTargetDraggableTileView?.addHintGlowFilter();
+                    }
+                },
+                this.parameters.potentialTargetHintGlowFilterShowDelay
+            );
+        }
+    }
+
+    /**
+     * Удаление подсветки-подсказки со всех элементов, которые были затронуты:
+     * с элемента мозаики для перемещения,
+     * с целевой ячейки и с фигуры, которая занимает целевую ячейку, если она есть.
+     */
+    public removeHintGlowFilterFromPotentialTileViews(): void {
+        if (this.potentialDraggableTileView) {
+            this.potentialDraggableTileView.removeHintGlowFilter();
+        }
+        if (this.potentialTargetStaticTileView) {
+            this.potentialTargetStaticTileView.removeHintGlowFilter();
+        }
+        if (
+            this.potentialTargetDraggableTileView
+            && this.potentialTargetDraggableTileView !== this.potentialDraggableTileView
+        ) {
+            this.potentialTargetDraggableTileView.removeHintGlowFilter();
+        }
+        this.clearPotentialTileViews();
+    }
+
+    /**
+     * Получение первого элемента мозаики, размещённого на игровом поле,
+     * который точно размещён уже на игровом поле, а не на полосе прокрутки,
+     * и который размещён при этом не правильно.
+     * Этот метод необходим для получения подсказки: сначала для подсказки
+     * пытаемся выбрать первый видимый элемент мозаики.
+     * Если таких нет, то выбирается фигура, уже размещённая на игровом поле,
+     * при этом размещённая неправильно.
+     * @returns Первая неправильно размещённая фигура на игровом поле.
+     */
+    public getFirstTileInTilingContainerLocatedIncorrectly(): TileView | undefined {
+        return [...this.draggableTileViewsByTilePositionStrings.values()].find(tileView =>
+            tileView.dragSource && !tileView.isLocatedCorrectly);
+    }
+
     public destroy(): void {
-        window.removeEventListener(DraggableTileView.draggingTileIsSelectedEventName,
-            this.boundOnDraggingTileIsSelected as EventListener);
-        window.removeEventListener(DraggableTileView.draggingTileIsDeselectedEventName,
+        if (this.draggingTileTapTimer !== undefined) {
+            clearTimeout(this.draggingTileTapTimer);
+            this.draggingTileTapTimer = undefined;
+        }
+
+        if (this.imageInitialShowTimer !== undefined) {
+            clearTimeout(this.imageInitialShowTimer);
+            this.imageInitialShowTimer = undefined;
+        }
+
+        if (this.showPotentialTargetHintGlowFilterTimer !== undefined) {
+            clearTimeout(this.showPotentialTargetHintGlowFilterTimer);
+            this.showPotentialTargetHintGlowFilterTimer = undefined;
+        }
+
+        window.removeEventListener(DraggableTileView.draggingTileWasSelectedEventName,
+            this.boundOnDraggingTileWasSelected as EventListener);
+        window.removeEventListener(DraggableTileView.draggingTileWasDeselectedEventName,
             this.boundOnDraggingTileIsDeselected as EventListener);
+
+        this.clearPotentialTileViews();
 
         this.staticTilesAlphaController?.destroy();
 

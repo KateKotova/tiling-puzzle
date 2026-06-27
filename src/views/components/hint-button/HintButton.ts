@@ -1,4 +1,5 @@
 import {
+    Bounds,
     Color,
     Container,
     ContainerChild,
@@ -6,19 +7,24 @@ import {
     DestroyOptions,
     Graphics,
     GraphicsPath,
-    Matrix,
-    Renderer,
+    Point,
     Sprite,
     Texture
 } from "pixi.js";
 import { GlowFilter } from "pixi-filters";
 import { HintButtonParameters } from "./HintButtonParameters.ts";
 
-export class HintButton extends Container {
+export abstract class HintButton extends Container {
     private readonly parameters: HintButtonParameters;
+    private readonly radius: number;
+    private readonly iconSide: number;
     private readonly invisibleRectangle: Graphics;
-    private readonly circle: Graphics;
+    private readonly circle: Graphics;    
+    private readonly iconSvgPath: string;
     private readonly iconGraphicsPath: GraphicsPath;
+    private iconOriginalBounds?: Bounds;
+    private iconScale?: number;
+    private iconOffset?: Point;
     private readonly defaultIconTexture: Texture;
     private activeIconTexture?: Texture;
     private readonly icon: Sprite;
@@ -26,47 +32,45 @@ export class HintButton extends Container {
     private pivotPointCoordinate: number;
     private glowFilter?: GlowFilter;
 
-    private readonly renderer: Renderer;
-
-    private onActivate?: () => void;
-    private onDeactivate?: () => void;
-
     constructor (
         parameters: HintButtonParameters,
-        renderer: Renderer,
+        radius: number,
         iconSvgPath: string,
-        onActivate?: () => void,
-        onDeactivate?: () => void,
+        centerPoint: Point,
         options?: ContainerOptions<ContainerChild>
     ) {     
         super(options);       
         this.parameters = parameters;
-        this.renderer = renderer;
+        this.radius = radius;
+        this.iconSide = 2 * this.radius * this.parameters.iconSideToDiameterRatio;
+        this.iconSvgPath = iconSvgPath;
         this.iconGraphicsPath = new GraphicsPath(iconSvgPath);
-        this.onActivate = onActivate;
-        this.onDeactivate = onDeactivate;
 
         const glowDistance = this.parameters.glowFilterOptions.distance ?? 0;
-        this.pivotPointCoordinate = this.parameters.radius + glowDistance;
+        this.pivotPointCoordinate = this.radius + glowDistance;
 
         this.invisibleRectangle = this.createInvisibleRectangle(this.pivotPointCoordinate * 2);
         this.addChild(this.invisibleRectangle);
 
-        const circleCoordinate = this.pivotPointCoordinate - this.parameters.radius;
+        const circleCoordinate = this.pivotPointCoordinate - this.radius;
         this.circle = this.createCircle(circleCoordinate, circleCoordinate);
         this.addChild(this.circle);
 
-        const iconCoordinate = this.pivotPointCoordinate - this.parameters.iconSide / 2.0;
+        const iconCoordinate = this.pivotPointCoordinate - this.iconSide / 2.0;
         this.defaultIconTexture = this.createIconTexture(this.parameters.defaultIconFillColor);
         this.icon = this.createIcon(iconCoordinate, iconCoordinate);
         this.addChild(this.icon);
 
         this.pivot.set(this.pivotPointCoordinate, this.pivotPointCoordinate);        
-        this.position.set(options?.x ?? 0, options?.y ?? 0);
+        this.position.set(centerPoint.x, centerPoint.y);
 
         this.eventMode = 'static';
         this.addEventListeners();
     }
+
+    public abstract get wasActivatedEventName(): string;
+
+    public abstract get wasDeactivatedEventName(): string;
 
     private createInvisibleRectangle(side: number): Graphics {
         const result = new Graphics()
@@ -80,7 +84,7 @@ export class HintButton extends Container {
 
     private createCircle(left: number, top: number): Graphics {
         const result = new Graphics()
-            .circle(this.parameters.radius, this.parameters.radius, this.parameters.radius)
+            .circle(this.radius, this.radius, this.radius)
             .fill({ color: this.parameters.defaultFillColor })
             .stroke({
                 width: this.parameters.strokeWidth,
@@ -99,47 +103,64 @@ export class HintButton extends Container {
     }
 
     private createIconTexture(fillColor: Color): Texture {
-        const originalGraphics = new Graphics()
-            .path(this.iconGraphicsPath)
-            .fill({ color: fillColor });
+        const canvas = document.createElement('canvas');
+        canvas.width = this.iconSide;
+        canvas.height = this.iconSide;
+        
+        const canvasContext = canvas.getContext('2d');
+        if (!canvasContext) {
+            throw new Error('Cannot get 2d context');
+        }
+        
+        const scale = this.getIconScale();
+        const offset = this.getIconOffset();
 
-        const bounds = originalGraphics.getBounds();
-        const scale = this.parameters.iconSide / Math.max(bounds.width, bounds.height);
-        const matrix = new Matrix().scale(scale, scale);
+        canvasContext.translate(offset.x, offset.y);
+        canvasContext.scale(scale, scale);
+        
+        canvasContext.fillStyle = fillColor.toRgbaString();
+        canvasContext.fill(new Path2D(this.iconSvgPath));
+        
+        return Texture.from(canvas);
+    }
 
-        const originalTexture = this.renderer.generateTexture({
-            target: originalGraphics,
-            resolution: 1
-        });
+    private getIconOriginalBounds(): Bounds {
+        if (!this.iconOriginalBounds) {
+            const originalGraphics = new Graphics()
+                .path(this.iconGraphicsPath)
+                .fill({ color: 0x000000 });
+            this.iconOriginalBounds = originalGraphics.getBounds();
+            originalGraphics.destroy();
+        }
+        return this.iconOriginalBounds;
+    }
 
-        originalGraphics.destroy();
+    private getIconScale(): number {
+        if (this.iconScale === undefined) {
+            const originalBounds = this.getIconOriginalBounds();
+            this.iconScale = this.iconSide
+                / Math.max(originalBounds.width, originalBounds.height);
+        }
+        return this.iconScale;
+    }
 
-        const graphics = new Graphics()
-            .rect(0, 0, bounds.width * scale, bounds.height * scale)
-            .fill({
-                texture: originalTexture,
-                textureSpace: "global",
-                matrix
-            });
-
-        const result = this.renderer.generateTexture({
-            target: graphics,
-            resolution: this.parameters.generateTextureResolution,
-            textureSourceOptions: {
-                scaleMode: "linear"
-            }
-        });
-
-        graphics.destroy();
-
-        return result;
+    private getIconOffset(): Point {
+        if (!this.iconOffset) {
+            const originalBounds = this.getIconOriginalBounds();
+            const scale = this.getIconScale();
+            this.iconOffset = new Point(
+                (this.iconSide - originalBounds.width * scale) / 2 - originalBounds.x * scale,
+                (this.iconSide - originalBounds.height * scale) / 2 - originalBounds.y * scale
+            );
+        }
+        return this.iconOffset;
     }
 
     private createIcon(left: number, top: number): Sprite {
         const result = new Sprite(this.defaultIconTexture);
         result.position.set(
-            left + (this.parameters.iconSide - this.defaultIconTexture.width) / 2.0,
-            top + (this.parameters.iconSide - this.defaultIconTexture.height) / 2.0
+            left + (this.iconSide - this.defaultIconTexture.width) / 2.0,
+            top + (this.iconSide - this.defaultIconTexture.height) / 2.0
         );
         return result;
     }
@@ -166,25 +187,37 @@ export class HintButton extends Container {
     }
 
     private onPointerDown(): void {
+        if (this.isActive) {
+            return;
+        }
         this.filters = [this.getGlowFilter()];
     }
 
     private onPointerUp(): void {
-        this.isActive = !this.isActive;
-        this.showActivityOnPointerUp();
-        
-        if (this.isActive && this.onActivate) {
-            this.onActivate();
-        } else if (!this.isActive && this.onDeactivate) {
-            this.onDeactivate();
+        if (this.isActive) {
+            return;
         }
+
+        this.isActive = true;
+        this.showActivity();
+        this.dispatchWasActivatedEvent();
     }
 
     private onPointerCancel(): void {
-        this.showActivityOnPointerUp();
+        this.showActivity();
     }
 
-    private showActivityOnPointerUp(): void {
+    public deactivate(): void {
+        if (!this.isActive) {
+            return;
+        }
+
+        this.isActive = false;
+        this.showActivity();
+        this.dispatchWasDeactivatedEvent();
+    }
+
+    private showActivity(): void {
         this.update();
         this.filters = null;
     }
@@ -194,7 +227,7 @@ export class HintButton extends Container {
         this.circle.cacheAsTexture(false);
         this.circle
             .clear()
-            .circle(this.parameters.radius, this.parameters.radius, this.parameters.radius)
+            .circle(this.radius, this.radius, this.radius)
             .fill({
                 color: this.isActive
                     ? this.parameters.activeFillColor
@@ -214,6 +247,16 @@ export class HintButton extends Container {
             : this.defaultIconTexture;
     }
 
+    private dispatchWasActivatedEvent(): void {
+        const event = new Event(this.wasActivatedEventName);
+        window.dispatchEvent(event);
+    }
+
+    private dispatchWasDeactivatedEvent(): void {
+        const event = new Event(this.wasDeactivatedEventName);
+        window.dispatchEvent(event);
+    }
+
     public destroy(options?: DestroyOptions): void {
         if (this.destroyed) {
             return;
@@ -222,11 +265,8 @@ export class HintButton extends Container {
         this.eventMode = 'none';
         this.removeEventListeners();
         
-        this.onActivate = undefined;
-        this.onDeactivate = undefined;
-        
         this.filters = null;
-        
+
         if (this.icon) {
             this.removeChild(this.icon);
             this.icon.destroy();
@@ -247,6 +287,8 @@ export class HintButton extends Container {
             this.glowFilter.destroy();
             this.glowFilter = undefined;
         }
+
+        this.iconScale = undefined;
         
         if (this.defaultIconTexture && !this.defaultIconTexture.destroyed) {
             this.defaultIconTexture.destroy(true);

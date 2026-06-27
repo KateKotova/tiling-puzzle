@@ -63,12 +63,24 @@ export class StaticTileView implements TileView {
         this.view.replacingTextureFillColor = color;
     }
 
-    public setFilter(filter: Filter): void {
-        this.view.setFilter(filter);
+    public addFilter(filter: Filter): void {
+        this.view.addFilter(filter);
     }
 
-    public removeFilters(): void {
-        this.view.removeFilters();
+    public removeFilter(filter: Filter): void {
+        this.view.removeFilter(filter);
+    }
+
+    public clearFilters(): void {
+        this.view.clearFilters();
+    }
+
+    public addHintGlowFilter(): void {
+        this.view.addHintGlowFilter();
+    }
+
+    public removeHintGlowFilter(): void {
+        this.view.removeHintGlowFilter();
     }
 
     public createContent(shouldAddBevelFilter: boolean): Container {
@@ -92,7 +104,7 @@ export class StaticTileView implements TileView {
 
         if (draggingTileData.view) {
             if (draggingTileData.view.dragTarget) {
-                draggingTileData.view.dragTarget.view.removeFilters();
+                draggingTileData.view.dragTarget.removeTargetGlowFilter();
                 draggingTileData.view.dragTarget.isDragTarget = false;
             }
             
@@ -102,7 +114,7 @@ export class StaticTileView implements TileView {
         this.isDragTarget = true;
         
         const filter = this.getTargetGlowFilter();      
-        this.view.setFilter(filter);
+        this.view.addFilter(filter);
 
         draggingTileData.view?.rotateToDragTarget(this.view.model);     
     }
@@ -113,7 +125,7 @@ export class StaticTileView implements TileView {
         }
 
         this.isDragTarget = false;
-        this.view.removeFilters();
+        this.removeTargetGlowFilter();
         if (draggingTileData.view) {
             draggingTileData.view.dragTarget = draggingTileData.view.dragSource;
         }
@@ -127,8 +139,10 @@ export class StaticTileView implements TileView {
         }
 
         if (draggingTileData.view) {
-            this.stopBeingDragTarget();            
-            draggingTileData.view.onGlobalPointerUp(event);
+            this.stopBeingDragTarget();
+            if (event.nativeEvent instanceof PointerEvent) {         
+                draggingTileData.view.onGlobalPointerUp(event.nativeEvent);
+            }
         }
     }
 
@@ -139,10 +153,15 @@ export class StaticTileView implements TileView {
         return this.targetGlowFilter;
     }
 
+    public removeTargetGlowFilter(): void {
+        const filter = this.getTargetGlowFilter();
+        this.view.removeFilter(filter);
+    }
+
     public stopBeingDragTarget(): void {
         if (this.isDragTarget) {
             this.isDragTarget = false;
-            this.view.removeFilters();
+            this.removeTargetGlowFilter();
         }
     }
 
@@ -160,7 +179,7 @@ export class StaticTileView implements TileView {
     public destroy(): void {
         this.removeEventListeners();
         
-        this.view.removeFilters();
+        this.view.clearFilters();
         if (this.targetGlowFilter) {
             this.targetGlowFilter.destroy();
             this.targetGlowFilter = undefined;

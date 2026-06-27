@@ -1,5 +1,5 @@
 import { Ticker } from "pixi.js";
-import { CarouselContainer } from "../components/CarouselContainer.ts";
+import { CarouselContainer } from "../components/carousel/CarouselContainer.ts";
 import { AverageValueController } from "../../math/controllers/AverageValueController.ts";
 import { DeceleratedMotionController } from "../../math/controllers/DeceleratedMotionController.ts";
 import { InertiaController } from "../../math/controllers/InertiaController.ts";

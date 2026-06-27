@@ -5,10 +5,8 @@ import { Color } from "pixi.js";
  * Интерфейс параметров для кнопки показа подсказки
  */
 export interface HintButtonParameters {
-    generateTextureResolution: number,
     glowFilterOptions: GlowFilterOptions;
-    radius: number;
-    iconSide: number;
+    iconSideToDiameterRatio: number;
     defaultFillColor: Color;
     activeFillColor: Color;
     strokeWidth: number;

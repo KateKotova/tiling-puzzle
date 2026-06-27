@@ -19,17 +19,13 @@ export interface TileView {
      * Цвет заливки, применяемый в отсутствии текстуры
      */
     replacingTextureFillColor: Color;
-    /**
-     * Установка единственного фильтра
-     * @param filter Фильтр
-     * @returns 
-     */
-    setFilter: (filter: Filter) => void;
-    /**
-     * Удаление всех фильтров, подразумевается удаление единственного установленного фильтра
-     * @returns 
-     */
-    removeFilters: () => void;
+
+    addFilter: (filter: Filter) => void;
+    removeFilter: (filter: Filter) => void;
+    clearFilters: () => void;
+
+    addHintGlowFilter: () => void;
+    removeHintGlowFilter: () => void;
 
     createContent: (shouldAddBevelFilter: boolean) => Container;
     replaceContent: (newContent: Container) => void;

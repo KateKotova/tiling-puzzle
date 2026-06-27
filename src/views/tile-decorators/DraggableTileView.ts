@@ -21,7 +21,7 @@ import { draggingTileData } from "./DraggingTileData.ts";
 import { TileView } from "../tiles/TileView.ts";
 import { Algorithm } from "../../math/Algorithm.ts";
 import { DraggableTileParameters } from "./DraggableTileParameters.ts";
-import { TileLineContainer } from "../components/TileLineContainer.ts";
+import { TileLineContainer } from "../components/tile-line/TileLineContainer.ts";
 import { TileRotationController } from "../controllers/TileRotationController.ts";
 import { TileMoveAfterDragController }
     from "../controllers/TileMoveAfterDragController.ts";
@@ -30,15 +30,16 @@ import { TileMoveInsideInitialContainerController }
 import { TileMoveToInitialContainerController }
     from "../controllers/TileMoveToInitialContainerController.ts";
 import { WheelController } from "../controllers/WheelController.ts";
+import { TilePosition } from "../../models/tiles/TilePosition.ts";
 
 /**
  * Класс декоратора представления подвижного элемента замощения
  */
 export class DraggableTileView implements TileView {
-    public static readonly draggingTileIsSelectedEventName: string
-        = "draggingTileIsSelectedEvent";
-    public static readonly draggingTileIsDeselectedEventName: string
-        = "draggingTileIsDeselectedEvent";
+    public static readonly draggingTileWasSelectedEventName: string
+        = "draggingTileWasSelectedEvent";
+    public static readonly draggingTileWasDeselectedEventName: string
+        = "draggingTileWasDeselectedEvent";
 
     public readonly parameters: DraggableTileParameters;
     /**
@@ -104,7 +105,7 @@ export class DraggableTileView implements TileView {
      * Признака того, что фигура находится в правильной позиции
      * и с правильным углом вращения, чтобы мозаика была собрана
      */
-    private isLocatedCorrectly: boolean = false;
+    public isLocatedCorrectly: boolean = false;
     private fixAsLocatedCorrectlyTimer?: number;
 
     private selectedGlowFilter?: GlowFilter;
@@ -273,12 +274,24 @@ export class DraggableTileView implements TileView {
             : undefined;
     }
 
-    public setFilter(filter: Filter): void {
-        this.view.setFilter(filter);
+    public addFilter(filter: Filter): void {
+        this.view.addFilter(filter);
     }
-    
-    public removeFilters(): void {
-        this.view.removeFilters();
+
+    public removeFilter(filter: Filter): void {
+        this.view.removeFilter(filter);
+    }
+
+    public clearFilters(): void {
+        this.view.clearFilters();
+    }
+
+    public addHintGlowFilter(): void {
+        this.view.addHintGlowFilter();
+    }
+
+    public removeHintGlowFilter(): void {
+        this.view.removeHintGlowFilter();
     }
 
     public createContent(shouldAddBevelFilter: boolean): Container {
@@ -344,9 +357,9 @@ export class DraggableTileView implements TileView {
         this.restoreGlobalPosition();
     }
 
-    public dispatchDraggingTileIsSelectedEvent(): void {
+    public dispatchDraggingTileWasSelectedEvent(): void {
         const event = new CustomEvent<DraggableTileView>(
-            DraggableTileView.draggingTileIsSelectedEventName,
+            DraggableTileView.draggingTileWasSelectedEventName,
             { detail: this }
         );
         window.dispatchEvent(event);
@@ -354,14 +367,26 @@ export class DraggableTileView implements TileView {
 
     public dispatchDraggingTileIsDeselectedEvent(): void {
         const event = new CustomEvent<DraggableTileView>(
-            DraggableTileView.draggingTileIsDeselectedEventName,
+            DraggableTileView.draggingTileWasDeselectedEventName,
             { detail: this }
         );
         window.dispatchEvent(event);
     }
 
+    public addSelectedGlowFilter(): void {
+        const filter = this.getSelectedGlowFilter();
+        this.view.addFilter(filter);
+    }    
+
+    public removeSelectedGlowFilter(): void {
+        const filter = this.getSelectedGlowFilter();
+        this.view.removeFilter(filter);
+    }
+
     private onPointerDown(event: FederatedPointerEvent): void {
-        if (event.propagationStopped || this.getPointerIsMouseAndButtonIsNotLeft(event)) {
+        if (event.propagationStopped
+            || (event.nativeEvent instanceof PointerEvent
+            && this.getPointerIsMouseAndButtonIsNotLeft(event.nativeEvent))) {
             return;
         }
 
@@ -380,7 +405,7 @@ export class DraggableTileView implements TileView {
         this.isDragging = true;
         draggingTileData.view = this;
         draggingTileData.animatingViews.add(this);
-        this.dispatchDraggingTileIsSelectedEvent();
+        this.dispatchDraggingTileWasSelectedEvent();
 
         this.setOnPointerDownActivity(false);
         this.view.tile.on('globalpointermove', this.onPointerMove, this);
@@ -423,7 +448,7 @@ export class DraggableTileView implements TileView {
         this.view.tile.position.copyFrom(this.view.model.currentPositionPoint);
         
         const filter = this.getSelectedGlowFilter();
-        this.view.setFilter(filter);
+        this.view.addFilter(filter);
 
         // Убираем зону попадания, чтобы события указателя были видны
         // статическим элементам замощения уровнем ниже
@@ -719,14 +744,14 @@ export class DraggableTileView implements TileView {
 
         this.addTileToSelectedContainer();
         const filter = this.getCorrectLocatedGlowFilter();
-        this.view.setFilter(filter);
+        this.view.addFilter(filter);
 
-        if (this.fixAsLocatedCorrectlyTimer !== null) {
+        if (this.fixAsLocatedCorrectlyTimer !== undefined) {
             clearTimeout(this.fixAsLocatedCorrectlyTimer);
         }
 
         this.fixAsLocatedCorrectlyTimer = setTimeout(() => {
-                this.removeFilters();
+                this.clearFilters();
                 this.addTileToTargetContainerOnFixAsLocatedCorrectly();
                 const contentWithoutBevelFilter = this.view.createContent(false);
                 this.view.replaceContent(contentWithoutBevelFilter);
@@ -751,13 +776,17 @@ export class DraggableTileView implements TileView {
         return this.correctLocatedGlowFilter;
     }
 
+    public getSourceTilePosition(): TilePosition | undefined {
+        return this.dragSource?.model.targetTilePosition;
+    }
+
     private removeInteractivity(): void {
         this.view.tile.eventMode = "none";
         this.removeEventListeners();
     }
 
     public destroy(): void {
-        if (this.fixAsLocatedCorrectlyTimer) {
+        if (this.fixAsLocatedCorrectlyTimer !== undefined) {
             clearTimeout(this.fixAsLocatedCorrectlyTimer);
             this.fixAsLocatedCorrectlyTimer = undefined;
         }
@@ -774,7 +803,7 @@ export class DraggableTileView implements TileView {
         this.moveInsideInitialContainerController.destroy();
         this.moveToInitialContainerController.destroy();
 
-        this.view.removeFilters();
+        this.view.clearFilters();
         if (this.selectedGlowFilter) {
             this.selectedGlowFilter.destroy();
             this.selectedGlowFilter = undefined;

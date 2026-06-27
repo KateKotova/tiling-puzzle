@@ -1,5 +1,5 @@
 import { DraggableTileView } from "./DraggableTileView";
-import { ZoomAndPanContainer } from "../components/ZoomAndPanContainer.ts";
+import { ZoomAndPanContainer } from "../components/zoom-and-pan/ZoomAndPanContainer.ts";
 import { TileView } from "../tiles/TileView.ts";
 
 /**
