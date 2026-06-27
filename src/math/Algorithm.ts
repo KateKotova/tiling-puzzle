@@ -222,12 +222,13 @@ export class Algorithm {
             return false;
         }
 
-        // Пускаем луч из точки и считаем, сколько раз он пересекает границы многоугольника.
+        // Пускаем луч из точки вправо (по направлению оси абсцисс) и считаем,
+        // сколько раз он пересекает границы многоугольника.
         // Если число пересечений нечётное, то точка внутри, если чётное, то снаружи.
         
-        const x = point.x;
-        const y = point.y;
-        let result = false;
+        const pointX = point.x;
+        const pointY = point.y;
+        let isInside = false;
 
         // Вершины многоугольника пронумерованы по кругу,
         // где индекс первой вершины - 0, второй - 1 и так далее.
@@ -237,45 +238,67 @@ export class Algorithm {
         // потому что вершины идут по кругу.
         for (
             let currentVertexIndex = 0,
-            previousVertexIndex = points.length - 1;
+            // points.length - 2, потому что points хранит пары (x; y)
+            previousVertexIndex = points.length - 2;
             currentVertexIndex < points.length;
-            previousVertexIndex = currentVertexIndex++
+            previousVertexIndex = currentVertexIndex, currentVertexIndex += 2
         ) {
-            const currentVertexX = points[currentVertexIndex * 2];
-            const currentVertexY = points[currentVertexIndex * 2 + 1];
-            const previousVertexX = points[previousVertexIndex * 2];
-            const previousVertexY = points[previousVertexIndex * 2 + 1];
+            const currentVertexX = points[currentVertexIndex];
+            const currentVertexY = points[currentVertexIndex + 1];
+            const previousVertexX = points[previousVertexIndex];
+            const previousVertexY = points[previousVertexIndex + 1];
             
-            // Операция XOR.
-            // Признак того, что ордината точки находится между вершинами ребра.
-            // Одна вершина должна быть выше точки, другая - ниже или наоборот.
+            // Проверяем, пересекает ли луч ребро (от previousVertex к currentVertex).
+            // Условие пересечения: ордината точки находится между ординатами вершин ребра.
+            // Используем XOR: одна вершина должна быть выше точки, другая - ниже
+            // или наоборот.
             // Если обе точки выше или обе ниже, то луч не пересекает ребро.
-            const yIsBetweenVertices = (currentVertexY > y) !== (previousVertexY > y);
-
-            const xEdgeProjection = previousVertexX - currentVertexX;
-            const yEdgeProjection = previousVertexY - currentVertexY;
-            const pointToCurrentVertexYDistance = y - currentVertexY;
-
-            const intersectionX = currentVertexX + xEdgeProjection
-                * pointToCurrentVertexYDistance / yEdgeProjection;
-            // Признак того, что точка находится слева от ребра.
-            // Здесь луч идёт вправо.
-            const xIsAtTheLeftFromEdge = x < intersectionX;
-
-            const intersects = yIsBetweenVertices && xIsAtTheLeftFromEdge;
-            // Каждое пересечение меняет четность.
+            const isPointYBetweenVertices = (currentVertexY > pointY)
+                !== (previousVertexY > pointY);
+            
+            // Если ордината точки не между вершинами, ребро не пересекает луч, пропускаем
+            if (!isPointYBetweenVertices) {
+                continue;
+            }
+            
+            // Вычисляем абсциссу пересечения луча с ребром.
+            // Используем линейную интерполяцию: x = x1 + (x2 - x1) * (y - y1) / (y2 - y1)
+            const edgeDeltaX = previousVertexX - currentVertexX;
+            const edgeDeltaY = previousVertexY - currentVertexY;
+            
+            // Защита от деления на ноль,
+            // хотя при isPointYBetweenVertices === true, edgeDeltaY не должен быть 0
+            if (Math.abs(edgeDeltaY) < 0.000001) {
+                continue;
+            }
+            
+            const pointYToCurrentVertexYDistance = pointY - currentVertexY;
+            
+            // Абсцисса точки пересечения луча на бесконечной линии ребра
+            const intersectionX = currentVertexX + edgeDeltaX 
+                * pointYToCurrentVertexYDistance / edgeDeltaY;
+            
+            // Проверяем, находится ли точка слева от ребра.
+            // Так как луч идёт вправо, пересечение засчитывается только если
+            // абсцисса точки меньше абсциссы пересечения,
+            // то есть пересечение справа от точки
+            const isPointXLessThanIntersectionX = pointX < intersectionX;
+            
+            // Каждое пересечение меняет чётность.
             // Мы идём по лучу из бесконечности к точке.
             // Стартуем снаружи (чётное число пересечений - 0),
-            // встречаем границу, пересекаем, теперь мы внутри (нечётное число пересечений - 1),
-            // встречаем еще границу, пересекаем, теперь мы снаружи (нечётное число пересечений - 2)
+            // встречаем границу, пересекаем, теперь мы внутри
+            // (нечётное число пересечений - 1),
+            // встречаем еще границу, пересекаем, теперь мы снаружи
+            // (нечётное число пересечений - 2)
             // и так далее.
-            // Когда достигнута проверяемая точка, то граница пересечена оказывается
-            // нечётное количество раз, то есть точка внутри.
-            if (intersects) {
-                result = !result;
+            // Когда достигнута проверяемая точка, то если граница пересечена
+            // нечётное количество раз, точка находится внутри многоугольника.
+            if (isPointXLessThanIntersectionX) {
+                isInside = !isInside;
             }
         }
         
-        return result;
+        return isInside;
     }
 }

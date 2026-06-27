@@ -67,7 +67,7 @@ export abstract class TileBaseView implements TileView {
             this.updateFiltersTimer = setTimeout(() => {
                 this.tile.filters = filters;
                 this.tile.updateCacheTexture();
-            }, 5);
+            }, 15);
         }
     }
 

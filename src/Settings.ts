@@ -113,7 +113,8 @@ export class Settings {
         staticTileParameters: this.staticTileParameters,
         animationParameters: this.animationParameters,
         tapParameters: this.tapParameters,
-        imageInitialShowTime: 2000
+        imageInitialShowTime: 2000,
+        potentialTargetHintGlowFilterShowDelay: 1000
     };
 
     public readonly tileLineParameters: TileLineParameters = {

@@ -45,7 +45,7 @@ export class TilingLevelCarouselContainer extends Container {
     /**
      * Контейнер линии, в которой содержатся элементы мозаики для сборки
      */
-    private tileLineContainer?: TileLineContainer;
+    public tileLineContainer?: TileLineContainer;
     /**
      * Карусель с инерционной прокруткой, содержащая контейнер линии с фигурами
      */

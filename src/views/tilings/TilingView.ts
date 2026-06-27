@@ -45,14 +45,18 @@ export class TilingView {
     public staticTilesAlphaController?: TilesAlphaController;
 
     /**
-     * Целевая ячейка для текущей перетаскиваемой фигуры
+     * Потенциальная перетаскиваемая фигура, выбранная для подсказки
      */
-    private currentTargetStaticTileView?: StaticTileView;
+    private potentialDraggableTileView?: DraggableTileView;
+    /**
+     * Целевая ячейка для потенциальной перетаскиваемой фигуры
+     */
+    private potentialTargetStaticTileView?: StaticTileView;
     /**
      * Перемещаемая фигура, которая в данный момент занимает целевую ячейку
-     * для текущей перетаскиваемой фигуры
+     * для потенциальной перетаскиваемой фигуры
      */
-    private currentTargetDraggableTileView?: DraggableTileView;
+    private potentialTargetDraggableTileView?: DraggableTileView;
 
     /**
      * Таймер, который обеспечивает небольшую паузу на время тапа по перетаскиваемой фигуре,
@@ -64,6 +68,12 @@ export class TilingView {
      * Таймер, который обеспечивает показ картинки пользователю перед началом сборки
      */
     private imageInitialShowTimer?: number;
+    /**
+     * Таймер, который обеспечивает небольшую паузу между показом фильтра подсказки
+     * потенциальной перетаскиваемой фигуры и показом фильтра подсказки
+     * целевой ячейки и фигуры, которая, возможно, находится на этой ячейке в данный момент.
+     */
+    private showPotentialTargetHintGlowFilterTimer?: number;
 
     private boundOnDraggingTileWasSelected: (event: CustomEvent<DraggableTileView>) => void
         = this.onDraggingTileWasSelected.bind(this);
@@ -276,43 +286,99 @@ export class TilingView {
     }
 
     /**
-     * Установка целевой позиции для текущей перетаскиваемой фигуры
-     * @param draggableTileView Текущая перетаскиваемая фигура
+     * Установка потенциальной перетаскиваемой фигуры и её целевой позиции
+     * @param draggableTileView Потенциальная перетаскиваемая фигура
      */
-    private setCurrentTargetTileViews(draggableTileView: DraggableTileView): void {
+    private setPotentialTileViews(draggableTileView: DraggableTileView): void {
+        this.potentialDraggableTileView = draggableTileView;
+
         const tilePositionString = draggableTileView.model.targetTilePosition.toString();
-        this.currentTargetStaticTileView = this.staticTileViewsByTilePositionStrings
+        this.potentialTargetStaticTileView = this.staticTileViewsByTilePositionStrings
             .get(tilePositionString);
-        this.currentTargetDraggableTileView
+        this.potentialTargetDraggableTileView
             = [...this.draggableTileViewsByTilePositionStrings.values()]
             .find(currentDraggableTileView =>
                 currentDraggableTileView.getSourceTilePosition()?.toString() === tilePositionString);
     }
 
-    private clearCurrentTargetTileViews(): void {
-        this.currentTargetStaticTileView = undefined;
-        this.currentTargetDraggableTileView = undefined;
+    private clearPotentialTileViews(): void {
+        this.potentialDraggableTileView = undefined;
+        this.potentialTargetStaticTileView = undefined;
+        this.potentialTargetDraggableTileView = undefined;
     }
 
-    public addHintGlowFilterToCurrentTargetTileViews(draggableTileView: DraggableTileView): void {
-        this.setCurrentTargetTileViews(draggableTileView);
-        if (this.currentTargetStaticTileView) {
-            this.currentTargetStaticTileView.addHintGlowFilter();
+    /**
+     * Подсветка выбранного для подсказки элемента мозаики и его целевой ячейки.
+     * Если целевая ячейка занята, то также подсвечивается фигура, которая занимает эту ячейку.
+     * @param draggableTileView Перетаскиваемый элемент мозаики, выбранный для подсказки
+     */
+    public addHintGlowFilterToPotentialTileViews(draggableTileView: DraggableTileView): void {
+        this.setPotentialTileViews(draggableTileView);
+
+        if (this.potentialDraggableTileView) {
+            this.potentialDraggableTileView.addHintGlowFilter();
         }
-        if (this.currentTargetDraggableTileView) {
-            this.currentTargetDraggableTileView.addHintGlowFilter();
+
+        const shouldShowPotentialTargetDraggableTileViewHintGlowFilter
+            = this.potentialTargetDraggableTileView
+            && this.potentialTargetDraggableTileView !== this.potentialDraggableTileView;
+
+        if (
+            this.potentialTargetStaticTileView
+            || shouldShowPotentialTargetDraggableTileViewHintGlowFilter
+        ) {
+            if (this.showPotentialTargetHintGlowFilterTimer !== undefined) {
+                clearTimeout(this.showPotentialTargetHintGlowFilterTimer);
+            }
+
+            this.showPotentialTargetHintGlowFilterTimer = setTimeout(() => {
+                    if (this.potentialTargetStaticTileView) {
+                        this.potentialTargetStaticTileView.addHintGlowFilter();
+                    }
+                    if (shouldShowPotentialTargetDraggableTileViewHintGlowFilter) {
+                        this.potentialTargetDraggableTileView?.addHintGlowFilter();
+                    }
+                },
+                this.parameters.potentialTargetHintGlowFilterShowDelay
+            );
         }
     }
 
-    public removeHintGlowFilterFromCurrentTargetTileViews(): void {
-        if (this.currentTargetStaticTileView) {
-            this.currentTargetStaticTileView.removeHintGlowFilter();
+    /**
+     * Удаление подсветки-подсказки со всех элементов, которые были затронуты:
+     * с элемента мозаики для перемещения,
+     * с целевой ячейки и с фигуры, которая занимает целевую ячейку, если она есть.
+     */
+    public removeHintGlowFilterFromPotentialTileViews(): void {
+        if (this.potentialDraggableTileView) {
+            this.potentialDraggableTileView.removeHintGlowFilter();
         }
-        if (this.currentTargetDraggableTileView) {
-            this.currentTargetDraggableTileView.removeHintGlowFilter();
+        if (this.potentialTargetStaticTileView) {
+            this.potentialTargetStaticTileView.removeHintGlowFilter();
         }
-        this.clearCurrentTargetTileViews();
-    } 
+        if (
+            this.potentialTargetDraggableTileView
+            && this.potentialTargetDraggableTileView !== this.potentialDraggableTileView
+        ) {
+            this.potentialTargetDraggableTileView.removeHintGlowFilter();
+        }
+        this.clearPotentialTileViews();
+    }
+
+    /**
+     * Получение первого элемента мозаики, размещённого на игровом поле,
+     * который точно размещён уже на игровом поле, а не на полосе прокрутки,
+     * и который размещён при этом не правильно.
+     * Этот метод необходим для получения подсказки: сначала для подсказки
+     * пытаемся выбрать первый видимый элемент мозаики.
+     * Если таких нет, то выбирается фигура, уже размещённая на игровом поле,
+     * при этом размещённая неправильно.
+     * @returns Первая неправильно размещённая фигура на игровом поле.
+     */
+    public getFirstTileInTilingContainerLocatedIncorrectly(): TileView | undefined {
+        return [...this.draggableTileViewsByTilePositionStrings.values()].find(tileView =>
+            tileView.dragSource && !tileView.isLocatedCorrectly);
+    }
 
     public destroy(): void {
         if (this.draggingTileTapTimer !== undefined) {
@@ -325,12 +391,17 @@ export class TilingView {
             this.imageInitialShowTimer = undefined;
         }
 
+        if (this.showPotentialTargetHintGlowFilterTimer !== undefined) {
+            clearTimeout(this.showPotentialTargetHintGlowFilterTimer);
+            this.showPotentialTargetHintGlowFilterTimer = undefined;
+        }
+
         window.removeEventListener(DraggableTileView.draggingTileWasSelectedEventName,
             this.boundOnDraggingTileWasSelected as EventListener);
         window.removeEventListener(DraggableTileView.draggingTileWasDeselectedEventName,
             this.boundOnDraggingTileIsDeselected as EventListener);
 
-        this.clearCurrentTargetTileViews();
+        this.clearPotentialTileViews();
 
         this.staticTilesAlphaController?.destroy();
 
