@@ -105,7 +105,7 @@ export class DraggableTileView implements TileView {
      * Признака того, что фигура находится в правильной позиции
      * и с правильным углом вращения, чтобы мозаика была собрана
      */
-    private isLocatedCorrectly: boolean = false;
+    public isLocatedCorrectly: boolean = false;
     private fixAsLocatedCorrectlyTimer?: number;
 
     private selectedGlowFilter?: GlowFilter;

@@ -624,6 +624,52 @@ export class TileLineContainer extends Container {
             < viewportLongitudinalCoordinate + viewportLongitudinalSize;
     }
 
+    /**
+     * Получение первого элемента мозаики, видимого во вьюпорте.
+     * Берётся первая видимая фигура при просмотре слева направо или сверху вниз.
+     * Видимой считается фигура, если во вьюпорте виден её левый верхний угол.
+     * Этот метод необходим для получения подсказки: сначала для подсказки
+     * пытаемся выбрать первый видимый элемент мозаики.
+     * Если таких нет, то выбирается фигура, уже размещённая на игровом поле.
+     * @returns Первый видимый элемент мозаики во вьюпорте.
+     */
+    public getFirstVisibleTileInViewportContainer(): TileView | undefined {
+        if (!this.tileViews.length) {
+            return undefined;
+        }
+
+        if (this.tileViews.length === 1) {
+            return this.tileViews[0];
+        }
+
+        const viewportContainer = this.getViewportContainerOrThrow();
+        const viewportLongitudinalCoordinate
+            = this.directionType === TileLineDirectionType.FromLeftToRight
+            ? viewportContainer.viewportGlobalPosition.x
+            : viewportContainer.viewportGlobalPosition.y;
+
+        return this.tileViews.find(tileView =>
+            this.getTileGlobalLeftTopLongitudinalCoordinate(tileView)
+            >= viewportLongitudinalCoordinate)
+            || this.tileViews[0];
+    }
+
+    private getTileGlobalLeftTopLongitudinalCoordinate(tileView: TileView): number {
+        const initialTileScale = this.getInitialTileScaleOrThrow(tileView);
+
+        const tileSizeHalf = tileView.model.geometry.maxBoundingSize * initialTileScale / 2.0;
+        const tileGlobalPosition = tileView.tile.parent
+            ? tileView.tile.parent.toGlobal(tileView.tile.position)
+            : tileView.tile.position;
+        
+        const tileLongitudinalCoordinate
+            = this.directionType === TileLineDirectionType.FromLeftToRight
+            ? tileGlobalPosition.x
+            : tileGlobalPosition.y;
+
+        return tileLongitudinalCoordinate - tileSizeHalf;
+    }
+
     public getPreviousTilePositionPoint(tilePositionPoint: Point): Point {
         return this.getNeighborTilePositionPoint(tilePositionPoint, -1);
     }

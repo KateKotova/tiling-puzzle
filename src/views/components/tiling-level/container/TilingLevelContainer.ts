@@ -13,6 +13,8 @@ import { TilingLevelControlContainer } from "../controls/TilingLevelControlConta
 import { TilingLevelImageContainer } from "../image/TilingLevelImageContainer.ts";
 import { TilingLevelCarouselContainer } from "../carousel/TilingLevelCarouselContainer.ts";
 import { TilingLevelUniqueParameters } from "./TilingLevelUniqueParameters.ts";
+import { LampHintButton } from "../../hint-button/LampHintButton.ts";
+import { DraggableTileView } from "../../../tile-decorators/DraggableTileView.ts";
 
 /**
  * Класс вертикального контейнера уровня мозаичного замощения
@@ -55,6 +57,11 @@ export class TilingLevelContainer extends Container {
      * Располагается вверху
      */
     private controlContainer?: TilingLevelControlContainer;
+
+    private boundOnLampHintButtonWasActivated: () => void
+        = this.onLampHintButtonWasActivated.bind(this);
+    private boundOnLampHintButtonWasDeactivated: () => void
+        = this.onLampHintButtonWasDeactivated.bind(this);
 
     constructor(
         parameters: TilingLevelParameters,
@@ -107,6 +114,8 @@ export class TilingLevelContainer extends Container {
             return;
         }
         this.addChild(this.carouselContainer);
+
+        this.addEventListeners();
     }
 
     private createBoundingRectangle(options?: ContainerOptions<ContainerChild>): Rectangle {
@@ -223,10 +232,40 @@ export class TilingLevelContainer extends Container {
         draggingTileData.animatingViews.clear();
     }
 
+    private addEventListeners(): void {
+        window.addEventListener(LampHintButton.wasActivatedEventName,
+            this.boundOnLampHintButtonWasActivated);
+        window.addEventListener(LampHintButton.wasDeactivatedEventName, 
+            this.boundOnLampHintButtonWasDeactivated);
+    }
+
+    private removeEventListeners(): void {
+        window.removeEventListener(LampHintButton.wasActivatedEventName,
+            this.boundOnLampHintButtonWasActivated);
+        window.removeEventListener(LampHintButton.wasDeactivatedEventName, 
+            this.boundOnLampHintButtonWasDeactivated);
+    }
+
+    private onLampHintButtonWasActivated(): void {
+        const hintTileView = (this.carouselContainer?.tileLineContainer
+            ?.getFirstVisibleTileInViewportContainer()
+            || this.imageContainer?.tilingView
+            ?.getFirstTileInTilingContainerLocatedIncorrectly()) as DraggableTileView;
+        if (hintTileView) {
+            this.imageContainer?.tilingView?.addHintGlowFilterToPotentialTileViews(hintTileView);
+        }
+    }
+
+    private onLampHintButtonWasDeactivated(): void {
+        this.imageContainer?.tilingView?.removeHintGlowFilterFromPotentialTileViews();
+    }
+
     public destroy(options?: DestroyOptions): void {
         if (this.destroyed) {
             return;
         }
+
+        this.removeEventListeners();
 
         this.clearDraggingTileData();
 
