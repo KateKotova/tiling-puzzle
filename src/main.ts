@@ -86,8 +86,8 @@ async function main(): Promise<void> {
 
     const tilingLevelUniqueParameters: TilingLevelUniqueParameters = {
       imageParameters: {
-        textureMinSideTileCount: 4,
-        tilingType: TilingType.OctagonAndSquareWithSingleLock,
+        textureMinSideTileCount: 2,
+        tilingType: TilingType.TriangleWithSpiralLockWithTail,
         tilingTexture: Assets.get<Texture>("horse"),
         tilingLayoutStrategyType: TilingLayoutStrategyType.FromEdgesToCenter,
         defaultStaticTileFillColor: new Color(0x008F00),

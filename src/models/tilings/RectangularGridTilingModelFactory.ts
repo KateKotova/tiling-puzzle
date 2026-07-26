@@ -14,6 +14,8 @@ import { OctagonAndSquareTilingModel } from "./polygons/OctagonAndSquareTilingMo
 import { SquareTilingModel } from "./polygons/SquareTilingModel.ts";
 import { TriangleTilingModel } from "./polygons/TriangleTilingModel.ts";
 import { TileParameters } from "../tiles/TileParameters.ts";
+import { TriangleWithSpiralLockWithTailTilingModel }
+    from "./polygons-with-spiral-locks-with-tails/TriangleWithSpiralLockWithTailTilingModel.ts";
 
 /**
  * Класс фабрики для создания замощения
@@ -56,6 +58,10 @@ export class RectangularGridTilingModelFactory {
                 break;
             case TilingType.OctagonAndSquareWithSingleLock:
                 model = new OctagonAndSquareWithSingleLockTilingModel(tileParameters, textureModel,
+                    textureMinSideTileCount, imageContainerModel, renderer);
+                break;
+            case TilingType.TriangleWithSpiralLockWithTail:
+                model = new TriangleWithSpiralLockWithTailTilingModel(tileParameters, textureModel,
                     textureMinSideTileCount, imageContainerModel, renderer);
                 break;
             default:
