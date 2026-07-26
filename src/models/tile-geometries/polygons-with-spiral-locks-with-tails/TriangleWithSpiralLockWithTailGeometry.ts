@@ -3,7 +3,22 @@ import { Size } from "../../../math/Size.ts";
 import { TileLockType } from "../../tile-locks/TileLockType.ts";
 import { TriangleBaseGeometry } from "../polygon-bases/TriangleBaseGeometry.ts";
 import { TileGeometryType } from "../TileGeometryType.ts";
+import { TileLockHeightToBaseValueRatios } from "../../tile-locks/TileLockHeightToBaseValueRatios.ts";
 
+/**
+ * Класс геометрии треугольника со спиральными замками с хвостиками.
+ * Положением треугольника со спиральными замками с хвостиками
+ * по умолчанию будем считать, когда нижняя сторона параллельна оси OX,
+ * а вверху находится первая вершина треугольника,
+ * При этом замки располагаются на всех сторонах.
+ * Замок имеет сложную форму и подменяет форму стороны, бывшую ранее отрезком.
+ * Замок возвышается не только над центральной частью стороны, но и около вершин.
+ * Поэтому для начального положения вводятся дополнительные коэффициенты
+ * высоты замка для каждой из вершин.
+ * Локальная система координат: начало координат - в левом верхнем углу,
+ * ось OX направлена вправо, ось OY направлена вниз.
+ * Потом начало координат переместится в точку опоры.
+ */
 export class TriangleWithSpiralLockWithTailGeometry extends TriangleBaseGeometry {
     public readonly geometryType: TileGeometryType
         = TileGeometryType.TriangleWithSpiralLockWithTail;
@@ -41,6 +56,23 @@ c-4.3,7.5-13.9,10-21.3,5.7C0,133.5,7,140.5,15.6,140.5z`;
      * в положении по умолчанию к базовой величине
      */
     public static readonly defaultLeftVertexLockHeightToBaseValueRatio: number = 0;
+    
+    /**
+     * Отношение максимальной горизонтальной высоты замка в положении по умолчанию
+     * к базовой величине
+     */
+    public static readonly defaultHorizontalMaxLockHeightToBaseValueRatio: number = Math.max(
+        TriangleWithSpiralLockWithTailGeometry.defaultRightVertexLockHeightToBaseValueRatio,
+        TriangleWithSpiralLockWithTailGeometry.defaultLeftVertexLockHeightToBaseValueRatio   
+    );
+    /**
+     * Отношение максимальной вертикальной высоты замка в положении по умолчанию
+     * к базовой величине
+     */
+    public static readonly defaultVerticalMaxLockHeightToTileSideRatio: number = Math.max(
+        TileLockHeightToBaseValueRatios[TileLockType.SpiralWithTail],
+        TriangleWithSpiralLockWithTailGeometry.defaultTopVertexLockHeightToBaseValueRatio   
+    );
 
     public defaultTopVertexLockHeight: number = 0;
     public defaultRightVertexLockHeight: number = 0;

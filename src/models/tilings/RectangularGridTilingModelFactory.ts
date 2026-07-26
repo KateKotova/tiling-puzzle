@@ -5,8 +5,8 @@ import { TilingTextureModel } from "../TilingTextureModel.ts";
 import { ImageContainerModel } from "../ImageContainerModel.ts";
 import { HexagonWithSingleLockTilingModel }
     from "./polygons-with-single-locks/HexagonWithSingleLockTilingModel.ts";
-import { OctagonAndSquareWithSpiralLockTilingModel }
-    from "./polygons-with-single-locks/OctagonAndSquareWithSpiralLockTilingModel.ts";
+import { OctagonAndSquareWithSingleLockTilingModel }
+    from "./polygons-with-single-locks/OctagonAndSquareWithSingleLockTilingModel.ts";
 import { SquareWithSingleLockTilingModel }
     from "./polygons-with-single-locks/SquareWithSingleLockTilingModel.ts";
 import { HexagonTilingModel } from "./polygons/HexagonTilingModel.ts";
@@ -55,7 +55,7 @@ export class RectangularGridTilingModelFactory {
                     textureMinSideTilePairCount, imageContainerModel, renderer);
                 break;
             case TilingType.OctagonAndSquareWithSingleLock:
-                model = new OctagonAndSquareWithSpiralLockTilingModel(tileParameters, textureModel,
+                model = new OctagonAndSquareWithSingleLockTilingModel(tileParameters, textureModel,
                     textureMinSideTileCount, imageContainerModel, renderer);
                 break;
             default:
