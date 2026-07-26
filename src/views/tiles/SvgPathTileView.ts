@@ -70,12 +70,17 @@ export class SvgPathTileView extends TileBaseView {
                 alpha: 1
             });
 
-        const spriteSideToGraphicsSideRatio = this.spriteBoundingSize.width
-            / maskGraphics.width;
+        const scaleX = spriteWidth / this.spriteBoundingSize.width;
+        const scaleY = spriteHeight / this.spriteBoundingSize.height;
+        
+        maskGraphics.scale.set(scaleX, scaleY);
+        
         const resultStrokeWidth = 1;
+        const minScale = Math.min(scaleX, scaleY);
+        const scaledStrokeWidth = resultStrokeWidth / minScale;
 
         maskGraphics.stroke({ 
-            width: Math.trunc(resultStrokeWidth / spriteSideToGraphicsSideRatio),
+            width: Math.trunc(scaledStrokeWidth),
             color: 0xFFFFFF, 
             alpha: 1,
             alignment: 0.5 
