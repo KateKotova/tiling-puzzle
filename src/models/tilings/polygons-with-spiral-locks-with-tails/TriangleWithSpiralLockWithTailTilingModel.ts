@@ -89,27 +89,26 @@ export class TriangleWithSpiralLockWithTailTilingModel extends RectangularGridTi
             this.textureTileSide = this.textureModel.minSide
                 / (this.textureMinSideTilePairCount + 0.5
                 + TriangleWithSpiralLockWithTailGeometry
-                .defaultHorizontalMaxLockHeightToBaseValueRatio * 2);
+                .defaultHorizontalMaxLockHeightToSideRatio * 2);
             textureTileHeight = TriangleWithSpiralLockWithTailGeometry.heightToSideRatio
                 * this.textureTileSide;
         } else {
             textureTileHeight = this.textureModel.minSide
                 / (this.textureMinSideTilePairCount
                 + TriangleWithSpiralLockWithTailGeometry
-                .defaultVerticalMaxLockHeightToTileSideRatio) / 2;
+                .defaultVerticalMaxLockHeightToSideRatio) / 2;
             this.textureTileSide = textureTileHeight
                 / TriangleWithSpiralLockWithTailGeometry.heightToSideRatio;
         }
 
         const textureHorizontalMaxLockHeight = this.textureTileSide
-            * TriangleWithSpiralLockWithTailGeometry
-            .defaultHorizontalMaxLockHeightToBaseValueRatio;
+            * TriangleWithSpiralLockWithTailGeometry.defaultHorizontalMaxLockHeightToSideRatio;
         const textureVerticalMaxLockHeight = this.textureTileSide
-            * TriangleWithSpiralLockWithTailGeometry.defaultVerticalMaxLockHeightToTileSideRatio;
+            * TriangleWithSpiralLockWithTailGeometry.defaultVerticalMaxLockHeightToSideRatio;
 
         this.tileColumnCount = 2 * Math.trunc(
-            (this.textureModel.width - textureHorizontalMaxLockHeight * 2
-            - this.textureTileSide / 2.0) / this.textureTileSide);
+            (this.textureModel.width - this.textureTileSide / 2.0
+            - textureHorizontalMaxLockHeight * 2) / this.textureTileSide);
         this.tileRowCount = Math.trunc((this.textureModel.height
             - textureVerticalMaxLockHeight * 2) / textureTileHeight);
 
@@ -144,14 +143,12 @@ export class TriangleWithSpiralLockWithTailTilingModel extends RectangularGridTi
         const sideHalf = this.tileGeometry.side / 2.0;
         result.targetPositionPoint = new Point(
             (targetTilePosition.columnIndex + 1) * sideHalf
-                + TriangleWithSpiralLockWithTailGeometry
-                .defaultHorizontalMaxLockHeightToBaseValueRatio,
+                + this.tileGeometry.defaultHorizontalMaxLockHeight,
             targetTilePosition.rowIndex * this.tileGeometry.height
+                + this.tileGeometry.defaultVerticalMaxLockHeight
                 + (tileIsRotated
                     ? this.tileGeometry.inscribedCircleRadius
                     : this.tileGeometry.circumscribedCircleRadius)
-                + TriangleWithSpiralLockWithTailGeometry
-                .defaultVerticalMaxLockHeightToTileSideRatio
         );
         
         return result;

@@ -41,48 +41,49 @@ c-4.3,7.5-13.9,10-21.3,5.7C0,133.5,7,140.5,15.6,140.5z`;
 
     /**
      * Отношение высоты замка у верхней вершины треугольника
-     * в положении по умолчанию к базовой величине
+     * в положении по умолчанию к стороне
      */
-    public static readonly defaultTopVertexLockHeightToBaseValueRatio: number
+    public static readonly defaultTopVertexLockHeightToSideRatio: number
         = 0.73863566 / 50.0;
     /**
      * Отношение высоты замка у правой вершины треугольника
-     * в положении по умолчанию к базовой величине
+     * в положении по умолчанию к стороне
      */
-    public static readonly defaultRightVertexLockHeightToBaseValueRatio: number
-        = 0.75662582 / 50.0;
+    public static readonly defaultRightVertexLockHeightToSideRatio: number
+        = 2.75662582 / 50.0;
     /**
      * Отношение высоты замка у левой вершины треугольника
-     * в положении по умолчанию к базовой величине
+     * в положении по умолчанию к стороне
      */
-    public static readonly defaultLeftVertexLockHeightToBaseValueRatio: number = 0;
-    
+    public static readonly defaultLeftVertexLockHeightToSideRatio: number = 0;    
     /**
      * Отношение максимальной горизонтальной высоты замка в положении по умолчанию
-     * к базовой величине
+     * к стороне
      */
-    public static readonly defaultHorizontalMaxLockHeightToBaseValueRatio: number = Math.max(
-        TriangleWithSpiralLockWithTailGeometry.defaultRightVertexLockHeightToBaseValueRatio,
-        TriangleWithSpiralLockWithTailGeometry.defaultLeftVertexLockHeightToBaseValueRatio   
+    public static readonly defaultHorizontalMaxLockHeightToSideRatio: number = Math.max(
+        TriangleWithSpiralLockWithTailGeometry.defaultRightVertexLockHeightToSideRatio,
+        TriangleWithSpiralLockWithTailGeometry.defaultLeftVertexLockHeightToSideRatio   
     );
     /**
      * Отношение максимальной вертикальной высоты замка в положении по умолчанию
-     * к базовой величине
+     * к стороне
      */
-    public static readonly defaultVerticalMaxLockHeightToTileSideRatio: number = Math.max(
+    public static readonly defaultVerticalMaxLockHeightToSideRatio: number = Math.max(
         TileLockHeightToBaseValueRatios[TileLockType.SpiralWithTail],
-        TriangleWithSpiralLockWithTailGeometry.defaultTopVertexLockHeightToBaseValueRatio   
+        TriangleWithSpiralLockWithTailGeometry.defaultTopVertexLockHeightToSideRatio   
     );
 
-    public defaultTopVertexLockHeight: number = 0;
-    public defaultRightVertexLockHeight: number = 0;
-    public defaultLeftVertexLockHeight: number = 0;
+    private defaultTopVertexLockHeight: number = 0;
+    private defaultRightVertexLockHeight: number = 0;
+    private defaultLeftVertexLockHeight: number = 0;
+    public defaultHorizontalMaxLockHeight: number = 0;
+    public defaultVerticalMaxLockHeight: number = 0; 
 
     /**
      * Отношение радиуса описанной окружности треугольника c замками включительно
-     * к базовой величине
+     * к стороне
      */
-    private static readonly circumscribedCircleRadiusWithLocksToBaseValueRatio: number
+    private static readonly circumscribedCircleRadiusWithLocksToSideRatio: number
         = 29.76333814 / 50.0;
 
     constructor(
@@ -106,21 +107,22 @@ c-4.3,7.5-13.9,10-21.3,5.7C0,133.5,7,140.5,15.6,140.5z`;
         );
         this.hitArea = this.getHitAreaRegularPolygon(hitAreaSizeMultiplier);
         this.maxBoundingSize = TriangleWithSpiralLockWithTailGeometry
-            .circumscribedCircleRadiusWithLocksToBaseValueRatio
-            * this.baseValue * 2;
+            .circumscribedCircleRadiusWithLocksToSideRatio
+            * this.side * 2;
     }
 
     protected setLockHeight(): void {
         super.setLockHeight();
 
-        this.defaultTopVertexLockHeight = this.baseValue
-            * TriangleWithSpiralLockWithTailGeometry
-            .defaultTopVertexLockHeightToBaseValueRatio;
-        this.defaultRightVertexLockHeight = this.baseValue
-            * TriangleWithSpiralLockWithTailGeometry
-            .defaultRightVertexLockHeightToBaseValueRatio;
-        this.defaultLeftVertexLockHeight = this.baseValue
-            * TriangleWithSpiralLockWithTailGeometry
-            .defaultLeftVertexLockHeightToBaseValueRatio;
+        this.defaultTopVertexLockHeight = this.side
+            * TriangleWithSpiralLockWithTailGeometry.defaultTopVertexLockHeightToSideRatio;
+        this.defaultRightVertexLockHeight = this.side
+            * TriangleWithSpiralLockWithTailGeometry.defaultRightVertexLockHeightToSideRatio;
+        this.defaultLeftVertexLockHeight = this.side
+            * TriangleWithSpiralLockWithTailGeometry.defaultLeftVertexLockHeightToSideRatio;
+        this.defaultHorizontalMaxLockHeight = this.side
+            * TriangleWithSpiralLockWithTailGeometry.defaultHorizontalMaxLockHeightToSideRatio;
+        this.defaultVerticalMaxLockHeight = this.side
+            * TriangleWithSpiralLockWithTailGeometry.defaultVerticalMaxLockHeightToSideRatio;
     }
 }
