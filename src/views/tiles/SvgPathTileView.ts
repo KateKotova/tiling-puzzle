@@ -65,10 +65,10 @@ export class SvgPathTileView extends TileBaseView {
             result.addChild(innerBlurredSpriteWithMask);
         }
 
-        // +0.5 - чтобы избежать зазоров
-        result.width = this.spriteBoundingSize.width; // + 0.5
-        // +0.5 - чтобы избежать зазоров
-        result.height = this.spriteBoundingSize.height; // + 0.5
+        // -0.5 - чтобы избежать зазоров
+        result.width = this.spriteBoundingSize.width - 0.5;
+        // -0.5 - чтобы избежать зазоров
+        result.height = this.spriteBoundingSize.height - 0.5;
 
         result.cacheAsTexture({ resolution: this.parameters.cacheTileAsTextureResolution });
 
