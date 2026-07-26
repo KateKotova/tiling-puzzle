@@ -33,5 +33,9 @@ export enum TileGeometryType {
     /**
      * Правильный восьмиугольник с одинарным замком
      */
-    OctagonWithSingleLock = "OctagonWithSingleLock"
+    OctagonWithSingleLock = "OctagonWithSingleLock",
+    /**
+     * Правильный треугольник со спиральным замком с хвостиками
+     */
+    TriangleWithSpiralLockWithTail = "TriangleWithSpiralLockWithTail"
 }

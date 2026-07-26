@@ -9,5 +9,6 @@ export const TileLockHeightToBaseValueRatios: {
     readonly [key in TileLockType]: number;
 } = {
     [TileLockType.None]: 0,
-    [TileLockType.Single]: 13.5926405 / 50.0
+    [TileLockType.Single]: 13.5926405 / 50.0,
+    [TileLockType.SpiralWithTail]: 5.51370109 / 50.0
 } as const;
