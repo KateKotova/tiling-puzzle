@@ -36,19 +36,40 @@ export class SvgPathTileView extends TileBaseView {
         const graphicsTexture = this.getGraphicsTexture(graphicsPath, shouldAddBevelFilter);
 
         const sprite = new Sprite(graphicsTexture);
-        // +0.5 - чтобы избежать зазоров
-        sprite.width = this.spriteBoundingSize.width + 0.5;
-        // +0.5 - чтобы избежать зазоров
-        sprite.height = this.spriteBoundingSize.height + 0.5;
         sprite.roundPixels = false;
 
         const result = new Container();        
         result.addChild(sprite);
         
-        const blurredSpriteWithMask = this.getBlurredSpriteWithMask(this.renderer, graphicsPath,
-            graphicsTexture, sprite.width, sprite.height);
-        result.addChild(blurredSpriteWithMask);
-        
+        const borderBlurredSpriteWithMask = this.getBlurredSpriteWithMask(
+            this.renderer,
+            graphicsPath,
+            graphicsTexture,
+            sprite.width,
+            sprite.height,
+            2,
+            0.5
+        );
+        result.addChild(borderBlurredSpriteWithMask);
+
+        if (shouldAddBevelFilter) {
+            const innerBlurredSpriteWithMask = this.getBlurredSpriteWithMask(
+                this.renderer,
+                graphicsPath,
+                graphicsTexture,
+                sprite.width,
+                sprite.height,
+                2,
+                1
+            );
+            result.addChild(innerBlurredSpriteWithMask);
+        }
+
+        // +0.5 - чтобы избежать зазоров
+        result.width = this.spriteBoundingSize.width + 0.5;
+        // +0.5 - чтобы избежать зазоров
+        result.height = this.spriteBoundingSize.height + 0.5;
+
         result.cacheAsTexture({ resolution: this.parameters.cacheTileAsTextureResolution });
 
         result.hitArea = this.model.geometry.hitArea.clone();
@@ -61,7 +82,9 @@ export class SvgPathTileView extends TileBaseView {
         graphicsPath: GraphicsPath,
         graphicsTexture: Texture,
         spriteWidth: number,
-        spriteHeight: number
+        spriteHeight: number,
+        maskStrokeWidth: number,
+        maskStrokeAlignment: number
     ): Container {
         const maskGraphics = new Graphics()
             .path(graphicsPath)
@@ -75,7 +98,7 @@ export class SvgPathTileView extends TileBaseView {
         
         maskGraphics.scale.set(scaleX, scaleY);
         
-        const resultStrokeWidth = 1;
+        const resultStrokeWidth = maskStrokeWidth;
         const minScale = Math.min(scaleX, scaleY);
         const scaledStrokeWidth = resultStrokeWidth / minScale;
 
@@ -83,7 +106,7 @@ export class SvgPathTileView extends TileBaseView {
             width: Math.trunc(scaledStrokeWidth),
             color: 0xFFFFFF, 
             alpha: 1,
-            alignment: 0.5 
+            alignment: maskStrokeAlignment
         });
 
         const maskTexture = renderer.generateTexture({

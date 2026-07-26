@@ -10,6 +10,7 @@ import { ImageContainerModel } from "../../ImageContainerModel.ts";
 import { Point, Renderer } from "pixi.js";
 import { RectangularGridTilePosition } from "../../tiles/RectangularGridTilePosition.ts";
 import { TileModel } from "../../tiles/TileModel.ts";
+import { TriangleGeometry } from "../../tile-geometries/polygons/TriangleGeometry.ts";
 
 /**
  * Класс модели замощения, представляющего собой прямоугольную сетку,
@@ -90,15 +91,13 @@ export class TriangleWithSpiralLockWithTailTilingModel extends RectangularGridTi
                 / (this.textureMinSideTilePairCount + 0.5
                 + TriangleWithSpiralLockWithTailGeometry
                 .defaultHorizontalMaxLockHeightToSideRatio * 2);
-            textureTileHeight = TriangleWithSpiralLockWithTailGeometry.heightToSideRatio
-                * this.textureTileSide;
+            textureTileHeight = TriangleGeometry.heightToSideRatio * this.textureTileSide;
         } else {
             textureTileHeight = this.textureModel.minSide
                 / (this.textureMinSideTilePairCount
                 + TriangleWithSpiralLockWithTailGeometry
                 .defaultVerticalMaxLockHeightToSideRatio) / 2;
-            this.textureTileSide = textureTileHeight
-                / TriangleWithSpiralLockWithTailGeometry.heightToSideRatio;
+            this.textureTileSide = textureTileHeight / TriangleGeometry.heightToSideRatio;
         }
 
         const textureHorizontalMaxLockHeight = this.textureTileSide
@@ -107,10 +106,8 @@ export class TriangleWithSpiralLockWithTailTilingModel extends RectangularGridTi
             * TriangleWithSpiralLockWithTailGeometry.defaultVerticalMaxLockHeightToSideRatio;
 
         this.tileColumnCount = 2 * Math.trunc(
-            (this.textureModel.width - this.textureTileSide / 2.0
-            - textureHorizontalMaxLockHeight * 2) / this.textureTileSide);
-        this.tileRowCount = Math.trunc((this.textureModel.height
-            - textureVerticalMaxLockHeight * 2) / textureTileHeight);
+            (this.textureModel.width - this.textureTileSide / 2.0) / this.textureTileSide);
+        this.tileRowCount = Math.trunc((this.textureModel.height) / textureTileHeight);
 
         this.textureXTilingOffset = (this.textureModel.width
             - this.textureTileSide / 2.0 * (this.tileColumnCount + 1)
