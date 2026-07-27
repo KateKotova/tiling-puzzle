@@ -47,7 +47,7 @@ export class SvgPathTileView extends TileBaseView {
             graphicsTexture,
             sprite.width,
             sprite.height,
-            2,
+            1,
             0.5
         );
         result.addChild(borderBlurredSpriteWithMask);
