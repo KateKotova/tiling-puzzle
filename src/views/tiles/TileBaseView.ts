@@ -98,6 +98,7 @@ export abstract class TileBaseView implements TileView {
 
     public addFilter(filter: Filter): void {
         if (!this.tile.filters?.length) {
+            filter.padding = 1;
             this.tile.filters = [filter];
             this.tile.updateCacheTexture();
             return;
@@ -109,6 +110,7 @@ export abstract class TileBaseView implements TileView {
         }
 
         const filters = [...this.tile.filters];
+        filter.padding = 1;
         filters.push(filter);
         this.tile.filters = filters;
         this.tile.updateCacheTexture();
