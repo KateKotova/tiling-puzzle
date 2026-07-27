@@ -75,6 +75,8 @@ export class TilingView {
      */
     private showPotentialTargetHintGlowFilterTimer?: number;
 
+    public onDestroy?: () => void;
+
     private boundOnDraggingTileWasSelected: (event: CustomEvent<DraggableTileView>) => void
         = this.onDraggingTileWasSelected.bind(this);
     private boundOnDraggingTileIsDeselected: (event: CustomEvent<DraggableTileView>) => void
@@ -423,5 +425,8 @@ export class TilingView {
         this.staticTilesContainer.destroy();
         this.draggableTilesContainer.destroy();
         this.tilingContainer.destroy();
+
+        this.onDestroy?.();
+        this.onDestroy = undefined;
     }
 }
