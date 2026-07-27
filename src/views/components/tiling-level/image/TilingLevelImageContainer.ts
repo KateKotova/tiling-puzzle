@@ -150,6 +150,10 @@ export class TilingLevelImageContainer extends Container {
             this.uniqueParameters.defaultStaticTileFillColor,
             this.uniqueParameters.targetStaticTileFillColor
         );
+        draggingTileData.tilingView = this.tilingView;
+        this.tilingView.onDestroy = (): void => {
+            draggingTileData.tilingView = undefined;
+        };
 
         this.tilingView.createStaticTileViews(this.renderer, this.ticker);
         this.imageContainer.addChild(this.tilingView.tilingContainer);

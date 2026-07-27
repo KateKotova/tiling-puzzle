@@ -108,6 +108,9 @@ export class DraggableTileView implements TileView {
     public isLocatedCorrectly: boolean = false;
     private fixAsLocatedCorrectlyTimer?: number;
 
+    private static readonly staticTileRemoveTargetGlowFilterDelay: number = 100;
+    private staticTileRemoveTargetGlowFilterTimer?: number;
+
     private selectedGlowFilter?: GlowFilter;
     private correctLocatedGlowFilter?: GlowFilter;
 
@@ -512,7 +515,7 @@ export class DraggableTileView implements TileView {
             }
         }
 
-        this.isDragging = false;   
+        this.isDragging = false;
 
         const finalTarget = this.dragTarget;
         const finalSource = this.dragSource;
@@ -585,6 +588,46 @@ export class DraggableTileView implements TileView {
             this.dragTarget = undefined;
             this.initialContainer.addTileView(this);
         }
+
+        this.removeTargetGlowFilterFromStaticTiles();
+    }
+
+    /**
+     * После того, как текущий перемещаемый элемент замощения занял своё место,
+     * иногда остаются подсвеченными посторонние ячейки как целевые.
+     * Это происходит, когда перемещаемый элемент замощения быстро проходит
+     * сначала над потенциальной целевой ячейкой,
+     * а затем проходит над другими перемещаемыми фигурами,
+     * которые в данный момент пассивны и находятся в ячейках.
+     * В этом случае потенциальная целевая ячейка остаётся подсвеченной,
+     * хотя она уже перестаёт быть целевой.
+     * Также из-за быстрого прохода текущей перемещаемой фигуры
+     * может запаздывать событие назначения статической ячейки потенциально целевой.
+     * Поэтому после того, как текущий перемещаемый элемент отпускается указателем,
+     * следует убрать подсветку со всех ячеек, кроме той,
+     * что становится исходной для данного перемещаемого элемента.
+     * Также вводится небольшая задержка, для компенсации запаздывающего события целевой ячейки.
+     */
+    private removeTargetGlowFilterFromStaticTiles(): void {
+        if (!draggingTileData.tilingView) {
+            return;
+        }
+
+        this.staticTileRemoveTargetGlowFilterTimer = setTimeout(() => {
+                if (!draggingTileData.tilingView) {
+                    return;
+                }
+
+                const staticTileViews = [...draggingTileData.tilingView
+                    .staticTileViewsByTilePositionStrings.values()];
+                staticTileViews
+                    .filter(staticTileView => staticTileView !== this.dragSource)
+                    .forEach(staticTileView => staticTileView.removeTargetGlowFilter());
+                
+                this.staticTileRemoveTargetGlowFilterTimer = undefined;
+            },
+            DraggableTileView.staticTileRemoveTargetGlowFilterDelay
+        ); 
     }
 
     private getPointerIsMouseAndButtonIsNotLeft(event: PointerEvent): boolean {
@@ -789,6 +832,11 @@ export class DraggableTileView implements TileView {
         if (this.fixAsLocatedCorrectlyTimer !== undefined) {
             clearTimeout(this.fixAsLocatedCorrectlyTimer);
             this.fixAsLocatedCorrectlyTimer = undefined;
+        }
+
+        if (this.staticTileRemoveTargetGlowFilterTimer !== undefined) {
+            clearTimeout(this.staticTileRemoveTargetGlowFilterTimer);
+            this.staticTileRemoveTargetGlowFilterTimer = undefined;
         }
 
         this.removeEventListeners();
