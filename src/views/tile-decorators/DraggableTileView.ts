@@ -5,7 +5,6 @@ import {
     FederatedPointerEvent,
     Filter,
     Polygon,
-    Matrix,
     IHitArea,
     Ticker,
     Color,
@@ -77,13 +76,6 @@ export class DraggableTileView implements TileView {
      */
     public dragSource?: StaticTileView;
     /**
-     * Зона целевой статической фигуры-ячейки, определяемая указателем.
-     * Исходная ячейка почему-то не определяется как целевая и не реагирует на события мыши.
-     * Эту зону нужно вычислять и хранить для перетаскивания,
-     * потому что под перетаскиваемой фигурой зона не видна.
-     */
-    private dragSourceWorldHitArea?: Polygon;
-    /**
      * Статическая фигура-ячейка, на которую происходит перетаскивание
      */
     public dragTarget?: StaticTileView;
@@ -108,7 +100,7 @@ export class DraggableTileView implements TileView {
     public isLocatedCorrectly: boolean = false;
     private fixAsLocatedCorrectlyTimer?: number;
 
-    private static readonly staticTileRemoveTargetGlowFilterDelay: number = 100;
+    private static readonly staticTileRemoveTargetGlowFilterDelay: number = 150;
     private staticTileRemoveTargetGlowFilterTimer?: number;
 
     private selectedGlowFilter?: GlowFilter;
@@ -485,11 +477,12 @@ export class DraggableTileView implements TileView {
 
         const targetPosition = this.getTargetParentPosition(globalPosition);
 
-        if (this.dragSource && this.dragSourceWorldHitArea) {
+        if (this.dragSource?.worldHitArea) {
             this.tryToEnterToDragSource(
                 this.dragSource,
-                this.dragSourceWorldHitArea,
-                targetPosition
+                this.dragSource.worldHitArea,
+                targetPosition,
+                event
             );
         }
     }
@@ -564,7 +557,7 @@ export class DraggableTileView implements TileView {
         }
 
         if (finalTarget) {
-            this.setDragSource(finalTarget);
+            this.dragSource = finalTarget;
         }
         
         this.dragTarget = this.dragSource;
@@ -613,18 +606,27 @@ export class DraggableTileView implements TileView {
             return;
         }
 
+        if (this.staticTileRemoveTargetGlowFilterTimer !== undefined) {
+            clearTimeout(this.staticTileRemoveTargetGlowFilterTimer);
+            this.staticTileRemoveTargetGlowFilterTimer = undefined;
+        }
+
         this.staticTileRemoveTargetGlowFilterTimer = setTimeout(() => {
+                this.staticTileRemoveTargetGlowFilterTimer = undefined;
+
                 if (!draggingTileData.tilingView) {
                     return;
                 }
 
                 const staticTileViews = [...draggingTileData.tilingView
                     .staticTileViewsByTilePositionStrings.values()];
+                const currentDragTarget = draggingTileData.view?.dragTarget;
                 staticTileViews
-                    .filter(staticTileView => staticTileView !== this.dragSource)
+                    .filter(staticTileView =>
+                        staticTileView !== this.dragSource
+                        && staticTileView !== currentDragTarget
+                    )
                     .forEach(staticTileView => staticTileView.removeTargetGlowFilter());
-                
-                this.staticTileRemoveTargetGlowFilterTimer = undefined;
             },
             DraggableTileView.staticTileRemoveTargetGlowFilterDelay
         ); 
@@ -645,12 +647,14 @@ export class DraggableTileView implements TileView {
      * в координатах родителя
      * @param tileWorldPosition Координаты точки в мире координат,
      * где живёт модель элемента замощения)
+     * @param event Событие, содержащее координаты указателя
      * @returns 
      */
     private tryToEnterToDragSource(
         dragSource: StaticTileView,
         dragSourceTileWorldHitArea: Polygon,
-        tileWorldPosition: Point
+        tileWorldPosition: Point,
+        event: FederatedPointerEvent
     ): boolean {
         const pointerIsInsideHitArea = Algorithm.getPointIsInsidePolygon(
             tileWorldPosition,
@@ -663,7 +667,7 @@ export class DraggableTileView implements TileView {
         }
         
         if (this.dragTarget === dragSource && !pointerIsInsideHitArea) {
-            dragSource.onPointerLeave();
+            dragSource.onPointerLeave(event);
         }
 
         return false;
@@ -715,29 +719,6 @@ export class DraggableTileView implements TileView {
     public getGlobalPosition(): Point {
         return this.view.tile.parent?.toGlobal(this.view.tile.position)
             ?? this.view.tile.position;
-    }
-
-    public setDragSource(dragSource?: StaticTileView): void {
-        this.dragSource = dragSource;
-        if (!dragSource) {
-            this.dragSourceWorldHitArea = undefined;
-            return;
-        }
-
-        const pivotPoint = dragSource.view.model.geometry.pivotPoint;
-        const currentPositionPoint = dragSource.view.model.currentPositionPoint;
-        
-        const tileMatrix = new Matrix()
-            .translate(-pivotPoint.x, -pivotPoint.y)
-            .rotate(dragSource.view.model.currentRotationAngle)
-            .translate(currentPositionPoint.x, currentPositionPoint.y);
-        
-        const tileWorldHitArea = Algorithm.getTransformedPolygon(
-            dragSource.view.model.geometry.hitArea,
-            tileMatrix
-        );
-        
-        this.dragSourceWorldHitArea = tileWorldHitArea;
     }
 
     private getTargetParentPosition(globalPoint: Point): Point {
@@ -794,11 +775,11 @@ export class DraggableTileView implements TileView {
         }
 
         this.fixAsLocatedCorrectlyTimer = setTimeout(() => {
+                this.fixAsLocatedCorrectlyTimer = undefined;
                 this.clearFilters();
                 this.addTileToTargetContainerOnFixAsLocatedCorrectly();
                 const contentWithoutBevelFilter = this.view.createContent(false);
                 this.view.replaceContent(contentWithoutBevelFilter);
-                this.fixAsLocatedCorrectlyTimer = undefined;
             }, 
             this.parameters.correctLocatedFilterShowTime
         );
@@ -844,7 +825,6 @@ export class DraggableTileView implements TileView {
         this.view.tile.hitArea = undefined;
         this.view.content.hitArea = undefined;
         this.clearHitArea();
-        this.dragSourceWorldHitArea = undefined;
         
         this.rotationController.destroy();
         this.moveAfterDragController.destroy();
