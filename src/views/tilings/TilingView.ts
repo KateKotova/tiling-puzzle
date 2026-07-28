@@ -189,6 +189,7 @@ export class TilingView {
         }
 
         this.imageInitialShowTimer = setTimeout(() => {
+                this.imageInitialShowTimer = undefined;
                 if (this.getStaticTilesAlpha()
                     === this.parameters.staticTileParameters.transparentAlpha) {
                     this.staticTilesAlphaController?.restart(
@@ -196,7 +197,6 @@ export class TilingView {
                         this.parameters.staticTileParameters.defaultAlpha
                     );
                 }
-                this.imageInitialShowTimer = undefined;
             },
             this.parameters.imageInitialShowTime
         );
@@ -266,6 +266,7 @@ export class TilingView {
         // Делаем небольшую паузу на тап, чтобы не было моргания при тапе на фигуре,
         // потому что тап предполагает только поворот, а не длительное перетаскивание        
         this.draggingTileTapTimer = setTimeout(() => {
+                this.draggingTileTapTimer = undefined;
                 if (draggingTileData.view) {
                     const geometryType = event.detail.model.geometry.geometryType;
                     this.setStaticTileFillColor(geometryType, this.targetStaticTileFillColor);
@@ -273,7 +274,6 @@ export class TilingView {
                     window.addEventListener(DraggableTileView.draggingTileWasDeselectedEventName,
                         this.boundOnDraggingTileIsDeselected as EventListener);
                 }
-                this.draggingTileTapTimer = undefined;
             }, 
             this.parameters.tapParameters.maxDuration
         );
@@ -334,6 +334,7 @@ export class TilingView {
             }
 
             this.showPotentialTargetHintGlowFilterTimer = setTimeout(() => {
+                    this.showPotentialTargetHintGlowFilterTimer = undefined;
                     if (this.potentialTargetStaticTileView) {
                         this.potentialTargetStaticTileView.addHintGlowFilter();
                     }

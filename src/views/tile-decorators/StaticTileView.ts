@@ -1,9 +1,19 @@
-import { Texture, Container, Filter, FederatedPointerEvent, Color } from "pixi.js";
+import {
+    Texture,
+    Container,
+    Filter,
+    FederatedPointerEvent,
+    Color,
+    Polygon,
+    Matrix,
+    Point
+} from "pixi.js";
 import { GlowFilter } from "pixi-filters";
 import { TileModel } from "../../models/tiles/TileModel.ts";
 import { TileView } from "../tiles/TileView.ts";
 import { draggingTileData } from "./DraggingTileData.ts";
 import { StaticTileParameters } from "./StaticTileParameters.ts";
+import { Algorithm } from "../../math/Algorithm.ts";
 
 /**
  * Класс декоратора представления неподвижного элемента замощения,
@@ -16,12 +26,27 @@ export class StaticTileView implements TileView {
      */
     public view: TileView;
     /**
+     * Зона статической фигуры-ячейки, определяемая указателем,
+     * когда он проходит над этой ячейкой.
+     * Эту зону нужно вычислять и хранить,
+     * потому что под перетаскиваемой фигурой во время перетаскивания
+     * факт нахождения над статической ячейкой может быть иногда определён не верно,
+     * поэтому берутся координаты указателя и определяется, попадает ли указатель в данную зону.
+     */
+    public worldHitArea?: Polygon;
+    /**
      * Признак того, что данная статическая фигура является ячейкой-целью
      * для перетаскивания подвижной фигуры
      */
     private isDragTarget: boolean = false;
 
     private targetGlowFilter?: GlowFilter;
+
+    private pointerIsOver: boolean = false;
+    private pointerEnterTimer?: number;
+    private pointerLeaveTimer?: number;
+    private static readonly pointerEnterDelay: number = 50;
+    private static readonly pointerLeaveDelay: number = 50;
 
     /**
      * Создание неподвижного элемента замощения,
@@ -32,6 +57,7 @@ export class StaticTileView implements TileView {
     constructor (parameters: StaticTileParameters, view: TileView) {
         this.parameters = parameters;
         this.view = view;
+        this.setWorldHitArea();
 
         this.view.tile.eventMode = "static";
         this.view.tile.on('pointerenter', this.onPointerEnter, this);
@@ -97,38 +123,88 @@ export class StaticTileView implements TileView {
         return draggingGeometryType === currentGeometryType;
     }
 
+    private setWorldHitArea(): void {
+        const pivotPoint = this.view.model.geometry.pivotPoint;
+        const currentPositionPoint = this.view.model.currentPositionPoint;
+        
+        const tileMatrix = new Matrix()
+            .translate(-pivotPoint.x, -pivotPoint.y)
+            .rotate(this.view.model.currentRotationAngle)
+            .translate(currentPositionPoint.x, currentPositionPoint.y);
+        
+        this.worldHitArea = Algorithm.getTransformedPolygon(
+            this.view.model.geometry.hitArea,
+            tileMatrix
+        );
+    }
+
     public onPointerEnter(): void {
         if (!this.getDraggingTileHasTheSameType()) {
             return;
         }
 
-        if (draggingTileData.view) {
-            if (draggingTileData.view.dragTarget) {
-                draggingTileData.view.dragTarget.removeTargetGlowFilter();
-                draggingTileData.view.dragTarget.isDragTarget = false;
-            }
-            
-            draggingTileData.view.dragTarget = this;
+        if (this.pointerLeaveTimer !== undefined) {
+            clearTimeout(this.pointerLeaveTimer);
+            this.pointerLeaveTimer = undefined;
         }
-        
-        this.isDragTarget = true;
-        
-        const filter = this.getTargetGlowFilter();      
-        this.view.addFilter(filter);
 
-        draggingTileData.view?.rotateToDragTarget(this.view.model);     
+        // Задерживаем вход, чтобы избежать мерцания при быстром движении
+        this.pointerEnterTimer = setTimeout(() => {
+                this.pointerEnterTimer = undefined;
+
+                if (draggingTileData.view) {
+                    if (draggingTileData.view.dragTarget) {
+                        draggingTileData.view.dragTarget.removeTargetGlowFilter();
+                        draggingTileData.view.dragTarget.isDragTarget = false;
+                    }
+                    
+                    draggingTileData.view.dragTarget = this;
+                }
+                
+                this.isDragTarget = true;
+                this.pointerIsOver = true;
+                
+                const filter = this.getTargetGlowFilter();      
+                this.view.addFilter(filter);
+
+                draggingTileData.view?.rotateToDragTarget(this.view.model);
+            },
+            StaticTileView.pointerEnterDelay
+        );
     }
 
-    public onPointerLeave(): void {
-        if (!this.isDragTarget || draggingTileData.view?.dragTarget !== this) {
-            return;
+    public onPointerLeave(event: FederatedPointerEvent): void {
+        if (this.pointerEnterTimer !== undefined) {
+            clearTimeout(this.pointerEnterTimer);
+            this.pointerEnterTimer = undefined;
         }
 
-        this.isDragTarget = false;
-        this.removeTargetGlowFilter();
-        if (draggingTileData.view) {
-            draggingTileData.view.dragTarget = draggingTileData.view.dragSource;
-        }
+        this.pointerIsOver = false;
+
+        // Задерживаем выход, чтобы избежать мерцания
+        this.pointerLeaveTimer = setTimeout(() => {
+                this.pointerLeaveTimer = undefined;
+
+                if (this.pointerIsOver
+                    || !this.isDragTarget
+                    || draggingTileData.view?.dragTarget !== this
+                ) {
+                    return;
+                }
+
+                if (this.getPointerIsInsideWorldHitArea(event)) {
+                    this.pointerIsOver = true;
+                    return;
+                }
+
+                this.isDragTarget = false;
+                this.removeTargetGlowFilter();
+                if (draggingTileData.view) {
+                    draggingTileData.view.dragTarget = draggingTileData.view.dragSource;
+                }
+            },
+            StaticTileView.pointerLeaveDelay
+        );
     }
 
     public onPointerUp(event: FederatedPointerEvent): void {
@@ -144,6 +220,18 @@ export class StaticTileView implements TileView {
                 draggingTileData.view.onGlobalPointerUp(event.nativeEvent);
             }
         }
+    }
+
+    private getPointerIsInsideWorldHitArea(event: FederatedPointerEvent): boolean {
+        if (!this.worldHitArea) {
+            return false;
+        }
+
+        const parent = this.view.tile.parent ?? this.view.tile;
+        const globalPosition = new Point(event.global.x, event.global.y);
+        const parentPosition = parent.toLocal(globalPosition);
+
+        return Algorithm.getPointIsInsidePolygon(parentPosition, this.worldHitArea);
     }
 
     private getTargetGlowFilter(): GlowFilter {
@@ -177,6 +265,16 @@ export class StaticTileView implements TileView {
     }
 
     public destroy(): void {
+        if (this.pointerLeaveTimer !== undefined) {
+            clearTimeout(this.pointerLeaveTimer);
+            this.pointerLeaveTimer = undefined;
+        }
+
+        if (this.pointerEnterTimer !== undefined) {
+            clearTimeout(this.pointerEnterTimer);
+            this.pointerEnterTimer = undefined;
+        }
+
         this.removeEventListeners();
         
         this.view.clearFilters();
