@@ -116,6 +116,15 @@ async function main(): Promise<void> {
     
     app.stage.addChild(tilingLevelContainer);
 
+    const appElement = document.getElementById('app');
+    const loadingElement = document.getElementById('loading-container');
+    
+    if (appElement && loadingElement) {
+      appElement.classList.add('visible');
+      loadingElement.classList.add('hidden');
+      setTimeout(() => loadingElement.style.display = "none", 500);
+    }
+
   } catch (error) {
     console.error(`Failed to start application: ${error}`);
   }
