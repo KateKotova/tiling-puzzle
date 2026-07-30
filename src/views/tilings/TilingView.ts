@@ -292,6 +292,23 @@ export class TilingView {
     }
 
     /**
+     * Удаление подсветки целевых элементов со всех статических ячеек, кроме тех,
+     * что указаны в параметрах как исключения
+     * @param event Событие, содержащее множество статических ячеек,
+     * с которых подсветка убираться не будет
+     */
+    public onShouldRemoveStaticTileTargetGlowFilters(
+        event: CustomEvent<Set<StaticTileView>>
+    ): void {
+        const excludingStaticTileViews = event.detail;
+        let tileViews = [...this.staticTileViewsByTilePositionStrings.values()];
+        if (excludingStaticTileViews.size) {
+            tileViews = tileViews.filter(tileView => !excludingStaticTileViews.has(tileView));
+        }
+        tileViews.forEach(tileView => tileView.removeTargetGlowFilter());
+    }
+
+    /**
      * Установка потенциальной перетаскиваемой фигуры и её целевой позиции
      * @param draggableTileView Потенциальная перетаскиваемая фигура
      */
@@ -385,23 +402,6 @@ export class TilingView {
     public getFirstTileInTilingContainerLocatedIncorrectly(): TileView | undefined {
         return [...this.draggableTileViewsByTilePositionStrings.values()].find(tileView =>
             tileView.dragSource && !tileView.isLocatedCorrectly);
-    }
-
-    /**
-     * Удаление подсветки целевых элементов со всех статических ячеек, кроме тех,
-     * что указаны в параметрах как исключения
-     * @param event Событие, содержащее множество статических ячеек,
-     * с которых подсветка убираться не будет
-     */
-    public onShouldRemoveStaticTileTargetGlowFilters(
-        event: CustomEvent<Set<StaticTileView>>
-    ): void {
-        const excludingStaticTileViews = event.detail;
-        let tileViews = [...this.staticTileViewsByTilePositionStrings.values()];
-        if (excludingStaticTileViews.size) {
-            tileViews = tileViews.filter(tileView => !excludingStaticTileViews.has(tileView));
-        }
-        tileViews.forEach(tileView => tileView.removeTargetGlowFilter());
     }
 
     public destroy(): void {
