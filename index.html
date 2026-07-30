@@ -118,15 +118,6 @@
                     <stop offset="60%" stop-color="var(--loading-ray-color)" stop-opacity="0.1" />
                     <stop offset="100%" stop-color="var(--loading-ray-color)" stop-opacity="0" />
                 </linearGradient>
-
-                <!-- Движение луча по диагонали -->
-                <animateTransform id="ray-move" 
-                                  attributeName="transform" 
-                                  type="translate" 
-                                  values="-100,-100;149.5,245" 
-                                  dur="1s" 
-                                  begin="0s" 
-                                  fill="freeze" />
             </defs>
 
             <style type="text/css">
@@ -326,12 +317,11 @@
                 <g>
                     <animateTransform attributeName="transform" 
                                       type="translate" 
-                                      values="-150,-100;300,350;300,350" 
+                                      values="-300,0;300,0;300,0" 
                                       keyTimes="0;0.5;1" 
                                       dur="2s" 
-                                      repeatCount="indefinite" />
-                    
-                    <rect x="-50" y="-50" width="250" height="350" fill="url(#ray-gradient)" />
+                                      repeatCount="indefinite" />    
+                    <rect x="-350" y="-50" width="800" height="400" fill="url(#ray-gradient)" />
                 </g>
             </g>
         </svg>
