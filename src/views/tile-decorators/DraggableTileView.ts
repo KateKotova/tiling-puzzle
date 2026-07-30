@@ -39,6 +39,8 @@ export class DraggableTileView implements TileView {
         = "draggingTileWasSelectedEvent";
     public static readonly draggingTileWasDeselectedEventName: string
         = "draggingTileWasDeselectedEvent";
+    public static readonly shouldRemoveStaticTileTargetGlowFiltersEventName: string
+        = "shouldRemoveStaticTileTargetGlowFiltersEventName";
 
     public readonly parameters: DraggableTileParameters;
     /**
@@ -100,8 +102,8 @@ export class DraggableTileView implements TileView {
     public isLocatedCorrectly: boolean = false;
     private fixAsLocatedCorrectlyTimer?: number;
 
-    private static readonly staticTileRemoveTargetGlowFilterDelay: number = 150;
-    private staticTileRemoveTargetGlowFilterTimer?: number;
+    private static readonly removeStaticTileTargetGlowFiltersDelay: number = 150;
+    private removeStaticTileTargetGlowFiltersTimer?: number;
 
     private selectedGlowFilter?: GlowFilter;
     private correctLocatedGlowFilter?: GlowFilter;
@@ -582,7 +584,7 @@ export class DraggableTileView implements TileView {
             this.initialContainer.addTileView(this);
         }
 
-        this.removeTargetGlowFilterFromStaticTiles();
+        this.removeStaticTileTargetGlowFilters();
     }
 
     /**
@@ -601,34 +603,31 @@ export class DraggableTileView implements TileView {
      * что становится исходной для данного перемещаемого элемента.
      * Также вводится небольшая задержка, для компенсации запаздывающего события целевой ячейки.
      */
-    private removeTargetGlowFilterFromStaticTiles(): void {
-        if (!draggingTileData.tilingView) {
-            return;
+    private removeStaticTileTargetGlowFilters(): void {
+        if (this.removeStaticTileTargetGlowFiltersTimer !== undefined) {
+            clearTimeout(this.removeStaticTileTargetGlowFiltersTimer);
+            this.removeStaticTileTargetGlowFiltersTimer = undefined;
         }
 
-        if (this.staticTileRemoveTargetGlowFilterTimer !== undefined) {
-            clearTimeout(this.staticTileRemoveTargetGlowFilterTimer);
-            this.staticTileRemoveTargetGlowFilterTimer = undefined;
-        }
+        this.removeStaticTileTargetGlowFiltersTimer = setTimeout(() => {
+                this.removeStaticTileTargetGlowFiltersTimer = undefined;
 
-        this.staticTileRemoveTargetGlowFilterTimer = setTimeout(() => {
-                this.staticTileRemoveTargetGlowFilterTimer = undefined;
-
-                if (!draggingTileData.tilingView) {
-                    return;
+                const excludingStaticTileViews = new Set<StaticTileView>();
+                if (this.dragSource) {
+                    excludingStaticTileViews.add(this.dragSource);
+                }
+                const currentDragTarget = draggingTileData.view?.dragTarget;
+                if (currentDragTarget) {
+                    excludingStaticTileViews.add(currentDragTarget);
                 }
 
-                const staticTileViews = [...draggingTileData.tilingView
-                    .staticTileViewsByTilePositionStrings.values()];
-                const currentDragTarget = draggingTileData.view?.dragTarget;
-                staticTileViews
-                    .filter(staticTileView =>
-                        staticTileView !== this.dragSource
-                        && staticTileView !== currentDragTarget
-                    )
-                    .forEach(staticTileView => staticTileView.removeTargetGlowFilter());
+                const event = new CustomEvent<Set<StaticTileView>>(
+                    DraggableTileView.shouldRemoveStaticTileTargetGlowFiltersEventName,
+                    { detail: excludingStaticTileViews }
+                );
+                window.dispatchEvent(event);
             },
-            DraggableTileView.staticTileRemoveTargetGlowFilterDelay
+            DraggableTileView.removeStaticTileTargetGlowFiltersDelay
         ); 
     }
 
@@ -815,9 +814,9 @@ export class DraggableTileView implements TileView {
             this.fixAsLocatedCorrectlyTimer = undefined;
         }
 
-        if (this.staticTileRemoveTargetGlowFilterTimer !== undefined) {
-            clearTimeout(this.staticTileRemoveTargetGlowFilterTimer);
-            this.staticTileRemoveTargetGlowFilterTimer = undefined;
+        if (this.removeStaticTileTargetGlowFiltersTimer !== undefined) {
+            clearTimeout(this.removeStaticTileTargetGlowFiltersTimer);
+            this.removeStaticTileTargetGlowFiltersTimer = undefined;
         }
 
         this.removeEventListeners();

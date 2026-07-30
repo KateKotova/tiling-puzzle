@@ -75,12 +75,13 @@ export class TilingView {
      */
     private showPotentialTargetHintGlowFilterTimer?: number;
 
-    public onDestroy?: () => void;
-
     private boundOnDraggingTileWasSelected: (event: CustomEvent<DraggableTileView>) => void
         = this.onDraggingTileWasSelected.bind(this);
     private boundOnDraggingTileIsDeselected: (event: CustomEvent<DraggableTileView>) => void
         = this.onDraggingTileIsDeselected.bind(this);
+    private boundOnShouldRemoveStaticTileTargetGlowFilters:
+        (event: CustomEvent<Set<StaticTileView>>) => void
+        = this.onShouldRemoveStaticTileTargetGlowFilters.bind(this);
 
     constructor(
         parameters: TilingParameters,
@@ -107,7 +108,10 @@ export class TilingView {
         this.tilingContainer.addChild(this.draggableTilesContainer);
 
         window.addEventListener(DraggableTileView.draggingTileWasSelectedEventName,
-            this.boundOnDraggingTileWasSelected as EventListener);        
+            this.boundOnDraggingTileWasSelected as EventListener);
+        window.addEventListener(
+            DraggableTileView.shouldRemoveStaticTileTargetGlowFiltersEventName,
+            this.boundOnShouldRemoveStaticTileTargetGlowFilters as EventListener);     
     }
 
     private createTilingContainer(): Container {
@@ -383,6 +387,23 @@ export class TilingView {
             tileView.dragSource && !tileView.isLocatedCorrectly);
     }
 
+    /**
+     * Удаление подсветки целевых элементов со всех статических ячеек, кроме тех,
+     * что указаны в параметрах как исключения
+     * @param event Событие, содержащее множество статических ячеек,
+     * с которых подсветка убираться не будет
+     */
+    public onShouldRemoveStaticTileTargetGlowFilters(
+        event: CustomEvent<Set<StaticTileView>>
+    ): void {
+        const excludingStaticTileViews = event.detail;
+        let tileViews = [...this.staticTileViewsByTilePositionStrings.values()];
+        if (excludingStaticTileViews.size) {
+            tileViews = tileViews.filter(tileView => !excludingStaticTileViews.has(tileView));
+        }
+        tileViews.forEach(tileView => tileView.removeTargetGlowFilter());
+    }
+
     public destroy(): void {
         if (this.draggingTileTapTimer !== undefined) {
             clearTimeout(this.draggingTileTapTimer);
@@ -403,6 +424,9 @@ export class TilingView {
             this.boundOnDraggingTileWasSelected as EventListener);
         window.removeEventListener(DraggableTileView.draggingTileWasDeselectedEventName,
             this.boundOnDraggingTileIsDeselected as EventListener);
+        window.removeEventListener(
+            DraggableTileView.shouldRemoveStaticTileTargetGlowFiltersEventName,
+            this.boundOnShouldRemoveStaticTileTargetGlowFilters as EventListener);
 
         this.clearPotentialTileViews();
 
@@ -426,8 +450,5 @@ export class TilingView {
         this.staticTilesContainer.destroy();
         this.draggableTilesContainer.destroy();
         this.tilingContainer.destroy();
-
-        this.onDestroy?.();
-        this.onDestroy = undefined;
     }
 }
