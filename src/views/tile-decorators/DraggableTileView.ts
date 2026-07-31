@@ -450,6 +450,9 @@ export class DraggableTileView implements TileView {
         // Убираем зону попадания, чтобы события указателя были видны
         // статическим элементам замощения уровнем ниже
         this.disableHitArea();
+        // Делаем контейнер "прозрачным" для событий,
+        // позволяя им проходить к статическим ячейкам ниже
+        this.view.tile.interactiveChildren = false;
     }
 
     private onPointerMove(event: FederatedPointerEvent): void {
@@ -524,6 +527,9 @@ export class DraggableTileView implements TileView {
             finalSource.stopBeingDragTarget();
         }
 
+        // Восстанавливаем интерактивность:
+        // контейнер перестаёт быть "прозрачным" для событий
+        this.view.tile.interactiveChildren = true;
         // Восстанавливаем зону попадания, чтобы снова получать события указателя
         this.restoreHitArea();
 
@@ -681,8 +687,8 @@ export class DraggableTileView implements TileView {
             }
             this.view.tile.scale = draggingTileData.viewport.scale.x;
         } else {
-            this.initialContainer.setScaleRelativeToScaleChangeGlobalRectangle(
-                this.savedGlobalPosition, this);
+            this.view.tile.scale = this.initialContainer
+                .getInitialTileScaleOrThrow(this.view);
         }
         this.restoreGlobalPosition();
     }

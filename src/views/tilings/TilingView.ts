@@ -153,7 +153,8 @@ export class TilingView {
                     model: tileModel,
                     texture: undefined,
                     renderer,
-                    replacingTextureFillColor: this.defaultStaticTileFillColor
+                    replacingTextureFillColor: this.defaultStaticTileFillColor,
+                    shouldCacheTileAsTexture: true
                 };
                 const tileView = tileViewFactory.getView(
                     this.parameters.tileParameters,
