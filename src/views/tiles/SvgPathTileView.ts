@@ -32,8 +32,11 @@ export class SvgPathTileView extends TileBaseView {
     public createContent(shouldAddBevelFilter: boolean): Container {
         this.spriteBoundingSize = this.model.geometry.defaultBoundingRectangleSize.clone();
 
+        const borderBlurPadding = 0.5;
+
         const graphicsPath = new GraphicsPath(this.model.geometry.svgPath);
-        const graphicsTexture = this.getGraphicsTexture(graphicsPath, shouldAddBevelFilter);
+        const graphicsTexture = this.getGraphicsTexture(graphicsPath, shouldAddBevelFilter,
+            borderBlurPadding);
 
         const sprite = new Sprite(graphicsTexture);
         sprite.roundPixels = false;
@@ -51,7 +54,7 @@ export class SvgPathTileView extends TileBaseView {
             graphicsTexture,
             sprite.width,
             sprite.height,
-            1,
+            borderBlurPadding * 2,
             0.5
         );
         result.addChild(maskedBorderBlurredSprite);
@@ -65,7 +68,7 @@ export class SvgPathTileView extends TileBaseView {
                 graphicsTexture,
                 sprite.width,
                 sprite.height,
-                2,
+                3,
                 1
             );
             result.addChild(innerMaskedBlurredSprite);
@@ -164,12 +167,24 @@ export class SvgPathTileView extends TileBaseView {
 
     private getGraphicsTexture(
         graphicsPath: GraphicsPath,
-        shouldAddBevelFilter: boolean
+        shouldAddBevelFilter: boolean,
+        padding: number = 0
     ): Texture {
         const graphics = new Graphics();
         graphics.roundPixels = false;
+
+        const doublePadding = padding * 2;        
+        const textureWidth = this.getPowerOfTwoSize(this.spriteBoundingSize.width
+            + doublePadding);
+        const textureHeight = this.getPowerOfTwoSize(this.spriteBoundingSize.height
+            + doublePadding);
+        
+        const scaleX = textureWidth / this.spriteBoundingSize.width;
+        const scaleY = textureHeight / this.spriteBoundingSize.height;
+        
         graphics.path(graphicsPath);
-        graphics.position.set(0, 0);
+        graphics.scale.set(scaleX, scaleY);
+        graphics.position.set(padding, padding);
         
         if (this.texture) {
             graphics.fill({
@@ -190,9 +205,6 @@ export class SvgPathTileView extends TileBaseView {
             bevelFilter = this.getBevelFilter(graphicsSideToSpriteSideRatio);
             graphics.filters = [bevelFilter];
         }
-
-        const textureWidth = this.getPowerOfTwoSize(this.spriteBoundingSize.width);
-        const textureHeight = this.getPowerOfTwoSize(this.spriteBoundingSize.height);
 
         const result = this.renderer.generateTexture({
             target: graphics,
