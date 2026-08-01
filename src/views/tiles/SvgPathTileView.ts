@@ -68,7 +68,7 @@ export class SvgPathTileView extends TileBaseView {
                 graphicsTexture,
                 sprite.width,
                 sprite.height,
-                (this.parameters.bevelFilterOptions.thickness ?? 2) + 1,
+                (this.parameters.bevelFilterOptions.thickness ?? 2) + 2,
                 1
             );
             result.addChild(innerMaskedBlurredSprite);

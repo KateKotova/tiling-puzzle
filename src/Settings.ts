@@ -152,13 +152,13 @@ export class Settings {
             knockout: false
         },
         iconSideToDiameterRatio: 0.6,
-        defaultFillColor: new Color(0x008800),
-        activeFillColor: new Color(0x888800),
+        defaultFillColor: new Color(0x509DBC),
+        activeFillColor: new Color(0xD09974),
         strokeWidth: 2,
-        defaultStrokeColor: new Color(0x006600),
-        activeStrokeColor: new Color(0x666600),
-        defaultIconFillColor: new Color(0xFFFFFF),
-        activeIconFillColor: new Color(0x000000)
+        defaultStrokeColor: new Color(0x234654),
+        activeStrokeColor: new Color(0x6C4E3C),
+        defaultIconFillColor: new Color(0x234654),
+        activeIconFillColor: new Color(0x6C4E3C)
     };
 
     public readonly tilingLevelParameters: TilingLevelParameters = {

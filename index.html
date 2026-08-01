@@ -8,10 +8,10 @@
     <title>TilingPuzzle</title>
     <style>
         :root {
-            --background-color: #1099bb;
-            --loading-color: #152E38;
+            --background-color: #8BB4D8;
+            --loading-color: #31414C;
             --loading-stroke-width: 0.7087;
-            --loading-ray-color: #C9F6FF;
+            --loading-ray-color: #C5CED6;
             --loading-opacity-animation-time: 0.5s;
         }
 
@@ -61,9 +61,13 @@
             left: 0;
             width: 100vw;
             height: 100vh;
+            overflow: hidden;
             opacity: 0;
             transition: opacity var(--loading-opacity-animation-time) ease;
-            z-index: 1;
+            z-index: 1;            
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         #app.visible {
