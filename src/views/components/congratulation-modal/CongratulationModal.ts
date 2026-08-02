@@ -110,7 +110,12 @@ export class CongratulationModal extends Container {
                 alpha: this.parameters.overlayAlpha
             });
         result.cacheAsTexture({ antialias: true });
+
+        // Не будет пропускать события указателя ниже
         result.eventMode = "static";
+        result.cursor = "default";
+        result.on("pointerdown", e => e.stopPropagation());
+
         return result;
     }
 

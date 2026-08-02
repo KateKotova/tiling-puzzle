@@ -1,6 +1,7 @@
 import { TilingLevelControlParameters } from "../controls/TilingLevelControlParameters.ts";
 import { TilingLevelImageParameters } from "../image/TilingLevelImageParameters.ts";
 import { TilingLevelCarouselParameters } from "../carousel/TilingLevelCarouselParameters.ts";
+import { CongratulationModalParameters } from "../../congratulation-modal/CongratulationModalParameters.ts";
 
 /**
  * Интерфейс параметров вертикального контейнера уровня мозаичного замощения
@@ -9,6 +10,12 @@ export interface TilingLevelParameters {
     imageParameters: TilingLevelImageParameters;    
     carouselParameters: TilingLevelCarouselParameters;
     controlParameters: TilingLevelControlParameters;
+    congratulationModalParameters: CongratulationModalParameters;
+    /**
+     * Задержка показа модального окна с поздравлениями
+     * после успешного окончания игры
+     */
+    congratulationModalShowDelay: number;
     /**
      * Коэффициент отношения высоты контейнера панели управления
      * к минимальной стороне данного контейнера.

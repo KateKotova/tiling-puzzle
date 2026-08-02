@@ -9,7 +9,6 @@ import { Settings } from "./Settings.ts";
 import { TilingLayoutStrategyType } from "./models/tilings/TilingLayoutStrategyType.ts";
 import { TilingLevelUniqueParameters } from "./views/components/tiling-level/container/TilingLevelUniqueParameters.ts";
 import { TilingLevelContainer } from "./views/components/tiling-level/container/TilingLevelContainer.ts";
-import { CongratulationModal } from "./views/components/congratulation-modal/CongratulationModal.ts";
 
 async function main(): Promise<void> {
   try {
@@ -130,15 +129,6 @@ async function main(): Promise<void> {
     );
 
     app.stage.addChild(tilingLevelContainer);
-
-    const congratulationModal = new CongratulationModal(
-      settings.congratulationModalParameters,
-      app.screen.width,
-      app.screen.height,
-      app.ticker
-    );
-    app.stage.addChild(congratulationModal);
-    setTimeout(() => congratulationModal.show(), 4000);
 
     const appElement = document.getElementById('app');
     const loadingElement = document.getElementById('loading-container');

@@ -15,6 +15,7 @@ import { TilingLevelCarouselContainer } from "../carousel/TilingLevelCarouselCon
 import { TilingLevelUniqueParameters } from "./TilingLevelUniqueParameters.ts";
 import { LampHintButton } from "../../hint-button/LampHintButton.ts";
 import { DraggableTileView } from "../../../tile-decorators/DraggableTileView.ts";
+import { CongratulationModal } from "../../congratulation-modal/CongratulationModal.ts";
 
 /**
  * Класс вертикального контейнера уровня мозаичного замощения
@@ -57,6 +58,9 @@ export class TilingLevelContainer extends Container {
      * Располагается вверху
      */
     private controlContainer?: TilingLevelControlContainer;
+
+    private congratulationModal?: CongratulationModal;
+    private congratulationModalShowTimer?: ReturnType<typeof setTimeout>;
 
     private boundOnLampHintButtonWasActivated: () => void
         = this.onLampHintButtonWasActivated.bind(this);
@@ -116,6 +120,8 @@ export class TilingLevelContainer extends Container {
         this.addChild(this.carouselContainer);
 
         this.addEventListeners();
+
+        this.showCongratulationModal();
     }
 
     private createBoundingRectangle(options?: ContainerOptions<ContainerChild>): Rectangle {
@@ -226,6 +232,34 @@ export class TilingLevelContainer extends Container {
         );
     }
 
+    private createCongratulationModal(): CongratulationModal {
+        return new CongratulationModal(
+            this.parameters.congratulationModalParameters,
+            this.boundingRectangle.width,
+            this.boundingRectangle.height,
+            this.ticker
+        );
+    }
+
+    private showCongratulationModal(): void {
+        if (this.congratulationModalShowTimer !== undefined) {
+            clearTimeout(this.congratulationModalShowTimer);
+            this.congratulationModalShowTimer = undefined;
+        }
+
+        this.congratulationModalShowTimer = setTimeout(() => {
+                this.congratulationModalShowTimer = undefined;
+                
+                if (!this.congratulationModal) {
+                    this.congratulationModal = this.createCongratulationModal();
+                    this.addChild(this.congratulationModal);
+                }
+                this.congratulationModal.show();
+            },
+            this.parameters.congratulationModalShowDelay
+        );
+    }
+
     private clearDraggingTileData(): void {
         draggingTileData.view = undefined;
         draggingTileData.viewport = undefined;
@@ -263,6 +297,11 @@ export class TilingLevelContainer extends Container {
     public destroy(options?: DestroyOptions): void {
         if (this.destroyed) {
             return;
+        }
+
+        if (this.congratulationModalShowTimer !== undefined) {
+            clearTimeout(this.congratulationModalShowTimer);
+            this.congratulationModalShowTimer = undefined;
         }
 
         this.removeEventListeners();
