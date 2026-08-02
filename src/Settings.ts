@@ -10,8 +10,11 @@ import { TilingParameters } from "./views/tilings/TilingParameters.ts";
 import { AnimationParameters } from "./AnimationParameters.ts";
 import { CarouselParameters } from "./views/components/carousel/CarouselParameters.ts";
 import { HintButtonParameters } from "./views/components/hint-button/HintButtonParameters.ts";
-import { TilingLevelParameters } from "./views/components/tiling-level/container/TilingLevelParameters.ts";
+import { TilingLevelParameters }
+    from "./views/components/tiling-level/container/TilingLevelParameters.ts";
 import { Padding } from "./math/Padding.ts";
+import { CongratulationModalParameters }
+    from "./views/components/congratulation-modal/CongratulationModalParameters.ts";
 
 /**
  * Singleton-класс настроек представления.
@@ -152,13 +155,28 @@ export class Settings {
             knockout: false
         },
         iconSideToDiameterRatio: 0.6,
-        defaultFillColor: new Color(0x008800),
-        activeFillColor: new Color(0x888800),
+        defaultFillColor: new Color(0x509DBC),
+        activeFillColor: new Color(0xD09974),
         strokeWidth: 2,
-        defaultStrokeColor: new Color(0x006600),
-        activeStrokeColor: new Color(0x666600),
-        defaultIconFillColor: new Color(0xFFFFFF),
-        activeIconFillColor: new Color(0x000000)
+        defaultStrokeColor: new Color(0x234654),
+        activeStrokeColor: new Color(0x6C4E3C),
+        defaultIconFillColor: new Color(0x234654),
+        activeIconFillColor: new Color(0x6C4E3C)
+    };
+
+    public readonly congratulationModalParameters: CongratulationModalParameters = {
+        animationParameters: this.animationParameters,
+        maxWidthToScreenWidthRatio: 0.5,
+        maxHeightToScreenHeightRatio: 0.5,
+        overlayColor: new Color(0x31414C),
+        overlayAlpha: 0.5,
+        paddingToMinSideRatio: 0.5,
+        fillColor: new Color(0xD09974),
+        strokeColor: new Color(0x6C4E3C),
+        strokeWidth: 2,
+        textColor: new Color(0x6C4E3C),
+        text: "Вы победили!",
+        fontFamily: "GOST_type_A"
     };
 
     public readonly tilingLevelParameters: TilingLevelParameters = {
@@ -180,6 +198,8 @@ export class Settings {
             hintButtonCenterYToControlContainerHeightRatio: 0.5,
             hintButtonRadiusToControlContainerMinSideRatio: 0.35
         },
+        congratulationModalParameters: this.congratulationModalParameters,
+        congratulationModalShowDelay: 2000,
         controlContainerHeightToMinSideRatio: 0.2,
         carouselContainerMaxHeightToMinSideRatio: 0.25,
         // Рассчитывается так, чтобы поместилось 3 фигуры с отступами

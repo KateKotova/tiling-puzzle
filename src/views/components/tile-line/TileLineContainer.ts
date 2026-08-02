@@ -308,7 +308,8 @@ export class TileLineContainer extends Container {
                 model: model,
                 texture: this.tilingView.model.getTileTexture(model),
                 renderer,
-                replacingTextureFillColor: this.tilingView.defaultStaticTileFillColor
+                replacingTextureFillColor: this.tilingView.defaultStaticTileFillColor,
+                shouldCacheTileAsTexture: false
             };
             const view = viewFactory.getView(
                 this.parameters.tileParameters,

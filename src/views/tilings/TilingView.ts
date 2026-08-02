@@ -14,6 +14,9 @@ import { TileView } from "../tiles/TileView.ts";
  * Класс представления замощения
  */
 export class TilingView {
+    public static readonly allDraggableTilesWereLocatedCorrectlyEventName: string
+        = "allDraggableTilesWereLocatedCorrectlyEventName";
+
     public readonly parameters: TilingParameters;
     public model: TilingModel;
     public tilingContainer: Container;
@@ -41,6 +44,11 @@ export class TilingView {
      */
     public draggableTileViewsByTilePositionStrings: Map<string, DraggableTileView>
         = new Map<string, DraggableTileView>();
+    /**
+     * Количество правильно размещённых на поле перетаскиваемых элементов замощения.
+     * Подсчитывается, чтобы понять, когда все фигуры будут размещены верно.
+     */
+    private correctlyLocatedDraggableTileCount: number = 0;
 
     public staticTilesAlphaController?: TilesAlphaController;
 
@@ -63,24 +71,27 @@ export class TilingView {
      * чтобы не было моргания при тапе на фигуре,
      * потому что тап предполагает только поворот, а не длительное перетаскивание
      */
-    private draggingTileTapTimer?: number;
+    private draggingTileTapTimer?: ReturnType<typeof setTimeout>;
     /**
      * Таймер, который обеспечивает показ картинки пользователю перед началом сборки
      */
-    private imageInitialShowTimer?: number;
+    private imageInitialShowTimer?: ReturnType<typeof setTimeout>;
     /**
      * Таймер, который обеспечивает небольшую паузу между показом фильтра подсказки
      * потенциальной перетаскиваемой фигуры и показом фильтра подсказки
      * целевой ячейки и фигуры, которая, возможно, находится на этой ячейке в данный момент.
      */
-    private showPotentialTargetHintGlowFilterTimer?: number;
-
-    public onDestroy?: () => void;
+    private showPotentialTargetHintGlowFilterTimer?: ReturnType<typeof setTimeout>;
 
     private boundOnDraggingTileWasSelected: (event: CustomEvent<DraggableTileView>) => void
         = this.onDraggingTileWasSelected.bind(this);
     private boundOnDraggingTileIsDeselected: (event: CustomEvent<DraggableTileView>) => void
         = this.onDraggingTileIsDeselected.bind(this);
+    private boundOnShouldRemoveStaticTileTargetGlowFilters:
+        (event: CustomEvent<Set<StaticTileView>>) => void
+        = this.onShouldRemoveStaticTileTargetGlowFilters.bind(this);
+    private boundOnDraggingTileWasLocatedCorrectly: () => void
+        = this.onDraggingTileWasLocatedCorrectly.bind(this);
 
     constructor(
         parameters: TilingParameters,
@@ -107,7 +118,12 @@ export class TilingView {
         this.tilingContainer.addChild(this.draggableTilesContainer);
 
         window.addEventListener(DraggableTileView.draggingTileWasSelectedEventName,
-            this.boundOnDraggingTileWasSelected as EventListener);        
+            this.boundOnDraggingTileWasSelected as EventListener);
+        window.addEventListener(
+            DraggableTileView.shouldRemoveStaticTileTargetGlowFiltersEventName,
+            this.boundOnShouldRemoveStaticTileTargetGlowFilters as EventListener);
+        window.addEventListener(DraggableTileView.draggingTileWasLocatedCorrectlyEventName,
+            this.boundOnDraggingTileWasLocatedCorrectly as EventListener);   
     }
 
     private createTilingContainer(): Container {
@@ -149,7 +165,8 @@ export class TilingView {
                     model: tileModel,
                     texture: undefined,
                     renderer,
-                    replacingTextureFillColor: this.defaultStaticTileFillColor
+                    replacingTextureFillColor: this.defaultStaticTileFillColor,
+                    shouldCacheTileAsTexture: true
                 };
                 const tileView = tileViewFactory.getView(
                     this.parameters.tileParameters,
@@ -186,6 +203,7 @@ export class TilingView {
     private hideInitialShownImage(): void {
         if (this.imageInitialShowTimer !== undefined) {
             clearTimeout(this.imageInitialShowTimer);
+            this.imageInitialShowTimer = undefined;
         }
 
         this.imageInitialShowTimer = setTimeout(() => {
@@ -261,6 +279,7 @@ export class TilingView {
     private onDraggingTileWasSelected(event: CustomEvent<DraggableTileView>): void {
         if (this.draggingTileTapTimer !== undefined) {
             clearTimeout(this.draggingTileTapTimer);
+            this.draggingTileTapTimer = undefined;
         }
 
         // Делаем небольшую паузу на тап, чтобы не было моргания при тапе на фигуре,
@@ -285,6 +304,32 @@ export class TilingView {
 
         const geometryType = event.detail.model.geometry.geometryType;
         this.setStaticTileFillColor(geometryType, this.defaultStaticTileFillColor);
+    }
+
+    /**
+     * Удаление подсветки целевых элементов со всех статических ячеек, кроме тех,
+     * что указаны в параметрах как исключения
+     * @param event Событие, содержащее множество статических ячеек,
+     * с которых подсветка убираться не будет
+     */
+    public onShouldRemoveStaticTileTargetGlowFilters(
+        event: CustomEvent<Set<StaticTileView>>
+    ): void {
+        const excludingStaticTileViews = event.detail;
+        let tileViews = [...this.staticTileViewsByTilePositionStrings.values()];
+        if (excludingStaticTileViews.size) {
+            tileViews = tileViews.filter(tileView => !excludingStaticTileViews.has(tileView));
+        }
+        tileViews.forEach(tileView => tileView.removeTargetGlowFilter());
+    }
+
+    public onDraggingTileWasLocatedCorrectly(): void {
+        this.correctlyLocatedDraggableTileCount++;
+        if (this.correctlyLocatedDraggableTileCount
+            === this.staticTileViewsByTilePositionStrings.size) {
+            window.dispatchEvent(new Event(
+                TilingView.allDraggableTilesWereLocatedCorrectlyEventName));
+        }
     }
 
     /**
@@ -331,6 +376,7 @@ export class TilingView {
         ) {
             if (this.showPotentialTargetHintGlowFilterTimer !== undefined) {
                 clearTimeout(this.showPotentialTargetHintGlowFilterTimer);
+                this.showPotentialTargetHintGlowFilterTimer = undefined;
             }
 
             this.showPotentialTargetHintGlowFilterTimer = setTimeout(() => {
@@ -403,6 +449,11 @@ export class TilingView {
             this.boundOnDraggingTileWasSelected as EventListener);
         window.removeEventListener(DraggableTileView.draggingTileWasDeselectedEventName,
             this.boundOnDraggingTileIsDeselected as EventListener);
+        window.removeEventListener(
+            DraggableTileView.shouldRemoveStaticTileTargetGlowFiltersEventName,
+            this.boundOnShouldRemoveStaticTileTargetGlowFilters as EventListener);
+        window.removeEventListener(DraggableTileView.draggingTileWasLocatedCorrectlyEventName,
+            this.boundOnDraggingTileWasLocatedCorrectly as EventListener);
 
         this.clearPotentialTileViews();
 
@@ -426,8 +477,5 @@ export class TilingView {
         this.staticTilesContainer.destroy();
         this.draggableTilesContainer.destroy();
         this.tilingContainer.destroy();
-
-        this.onDestroy?.();
-        this.onDestroy = undefined;
     }
 }

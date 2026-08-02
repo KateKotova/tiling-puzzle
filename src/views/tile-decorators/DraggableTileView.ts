@@ -39,6 +39,10 @@ export class DraggableTileView implements TileView {
         = "draggingTileWasSelectedEvent";
     public static readonly draggingTileWasDeselectedEventName: string
         = "draggingTileWasDeselectedEvent";
+    public static readonly shouldRemoveStaticTileTargetGlowFiltersEventName: string
+        = "shouldRemoveStaticTileTargetGlowFiltersEventName";
+    public static readonly draggingTileWasLocatedCorrectlyEventName: string
+        = "draggingTileWasLocatedCorrectlyEventName";
 
     public readonly parameters: DraggableTileParameters;
     /**
@@ -98,10 +102,10 @@ export class DraggableTileView implements TileView {
      * и с правильным углом вращения, чтобы мозаика была собрана
      */
     public isLocatedCorrectly: boolean = false;
-    private fixAsLocatedCorrectlyTimer?: number;
+    private fixAsLocatedCorrectlyTimer?: ReturnType<typeof setTimeout>;
 
-    private static readonly staticTileRemoveTargetGlowFilterDelay: number = 150;
-    private staticTileRemoveTargetGlowFilterTimer?: number;
+    private static readonly removeStaticTileTargetGlowFiltersDelay: number = 150;
+    private removeStaticTileTargetGlowFiltersTimer?: ReturnType<typeof setTimeout>;
 
     private selectedGlowFilter?: GlowFilter;
     private correctLocatedGlowFilter?: GlowFilter;
@@ -448,6 +452,9 @@ export class DraggableTileView implements TileView {
         // Убираем зону попадания, чтобы события указателя были видны
         // статическим элементам замощения уровнем ниже
         this.disableHitArea();
+        // Делаем контейнер "прозрачным" для событий,
+        // позволяя им проходить к статическим ячейкам ниже
+        this.view.tile.interactiveChildren = false;
     }
 
     private onPointerMove(event: FederatedPointerEvent): void {
@@ -522,6 +529,9 @@ export class DraggableTileView implements TileView {
             finalSource.stopBeingDragTarget();
         }
 
+        // Восстанавливаем интерактивность:
+        // контейнер перестаёт быть "прозрачным" для событий
+        this.view.tile.interactiveChildren = true;
         // Восстанавливаем зону попадания, чтобы снова получать события указателя
         this.restoreHitArea();
 
@@ -582,7 +592,7 @@ export class DraggableTileView implements TileView {
             this.initialContainer.addTileView(this);
         }
 
-        this.removeTargetGlowFilterFromStaticTiles();
+        this.removeStaticTileTargetGlowFilters();
     }
 
     /**
@@ -601,34 +611,31 @@ export class DraggableTileView implements TileView {
      * что становится исходной для данного перемещаемого элемента.
      * Также вводится небольшая задержка, для компенсации запаздывающего события целевой ячейки.
      */
-    private removeTargetGlowFilterFromStaticTiles(): void {
-        if (!draggingTileData.tilingView) {
-            return;
+    private removeStaticTileTargetGlowFilters(): void {
+        if (this.removeStaticTileTargetGlowFiltersTimer !== undefined) {
+            clearTimeout(this.removeStaticTileTargetGlowFiltersTimer);
+            this.removeStaticTileTargetGlowFiltersTimer = undefined;
         }
 
-        if (this.staticTileRemoveTargetGlowFilterTimer !== undefined) {
-            clearTimeout(this.staticTileRemoveTargetGlowFilterTimer);
-            this.staticTileRemoveTargetGlowFilterTimer = undefined;
-        }
+        this.removeStaticTileTargetGlowFiltersTimer = setTimeout(() => {
+                this.removeStaticTileTargetGlowFiltersTimer = undefined;
 
-        this.staticTileRemoveTargetGlowFilterTimer = setTimeout(() => {
-                this.staticTileRemoveTargetGlowFilterTimer = undefined;
-
-                if (!draggingTileData.tilingView) {
-                    return;
+                const excludingStaticTileViews = new Set<StaticTileView>();
+                if (this.dragSource) {
+                    excludingStaticTileViews.add(this.dragSource);
+                }
+                const currentDragTarget = draggingTileData.view?.dragTarget;
+                if (currentDragTarget) {
+                    excludingStaticTileViews.add(currentDragTarget);
                 }
 
-                const staticTileViews = [...draggingTileData.tilingView
-                    .staticTileViewsByTilePositionStrings.values()];
-                const currentDragTarget = draggingTileData.view?.dragTarget;
-                staticTileViews
-                    .filter(staticTileView =>
-                        staticTileView !== this.dragSource
-                        && staticTileView !== currentDragTarget
-                    )
-                    .forEach(staticTileView => staticTileView.removeTargetGlowFilter());
+                const event = new CustomEvent<Set<StaticTileView>>(
+                    DraggableTileView.shouldRemoveStaticTileTargetGlowFiltersEventName,
+                    { detail: excludingStaticTileViews }
+                );
+                window.dispatchEvent(event);
             },
-            DraggableTileView.staticTileRemoveTargetGlowFilterDelay
+            DraggableTileView.removeStaticTileTargetGlowFiltersDelay
         ); 
     }
 
@@ -682,8 +689,8 @@ export class DraggableTileView implements TileView {
             }
             this.view.tile.scale = draggingTileData.viewport.scale.x;
         } else {
-            this.initialContainer.setScaleRelativeToScaleChangeGlobalRectangle(
-                this.savedGlobalPosition, this);
+            this.view.tile.scale = this.initialContainer
+                .getInitialTileScaleOrThrow(this.view);
         }
         this.restoreGlobalPosition();
     }
@@ -780,6 +787,9 @@ export class DraggableTileView implements TileView {
                 this.addTileToTargetContainerOnFixAsLocatedCorrectly();
                 const contentWithoutBevelFilter = this.view.createContent(false);
                 this.view.replaceContent(contentWithoutBevelFilter);
+
+                window.dispatchEvent(new Event(
+                    DraggableTileView.draggingTileWasLocatedCorrectlyEventName));
             }, 
             this.parameters.correctLocatedFilterShowTime
         );
@@ -815,9 +825,9 @@ export class DraggableTileView implements TileView {
             this.fixAsLocatedCorrectlyTimer = undefined;
         }
 
-        if (this.staticTileRemoveTargetGlowFilterTimer !== undefined) {
-            clearTimeout(this.staticTileRemoveTargetGlowFilterTimer);
-            this.staticTileRemoveTargetGlowFilterTimer = undefined;
+        if (this.removeStaticTileTargetGlowFiltersTimer !== undefined) {
+            clearTimeout(this.removeStaticTileTargetGlowFiltersTimer);
+            this.removeStaticTileTargetGlowFiltersTimer = undefined;
         }
 
         this.removeEventListeners();
