@@ -14,6 +14,9 @@ import { TileView } from "../tiles/TileView.ts";
  * Класс представления замощения
  */
 export class TilingView {
+    public static readonly allDraggableTilesWereLocatedCorrectlyEventName: string
+        = "allDraggableTilesWereLocatedCorrectlyEventName";
+
     public readonly parameters: TilingParameters;
     public model: TilingModel;
     public tilingContainer: Container;
@@ -41,6 +44,11 @@ export class TilingView {
      */
     public draggableTileViewsByTilePositionStrings: Map<string, DraggableTileView>
         = new Map<string, DraggableTileView>();
+    /**
+     * Количество правильно размещённых на поле перетаскиваемых элементов замощения.
+     * Подсчитывается, чтобы понять, когда все фигуры будут размещены верно.
+     */
+    private correctlyLocatedDraggableTileCount: number = 0;
 
     public staticTilesAlphaController?: TilesAlphaController;
 
@@ -82,6 +90,8 @@ export class TilingView {
     private boundOnShouldRemoveStaticTileTargetGlowFilters:
         (event: CustomEvent<Set<StaticTileView>>) => void
         = this.onShouldRemoveStaticTileTargetGlowFilters.bind(this);
+    private boundOnDraggingTileWasLocatedCorrectly: () => void
+        = this.onDraggingTileWasLocatedCorrectly.bind(this);
 
     constructor(
         parameters: TilingParameters,
@@ -111,7 +121,9 @@ export class TilingView {
             this.boundOnDraggingTileWasSelected as EventListener);
         window.addEventListener(
             DraggableTileView.shouldRemoveStaticTileTargetGlowFiltersEventName,
-            this.boundOnShouldRemoveStaticTileTargetGlowFilters as EventListener);     
+            this.boundOnShouldRemoveStaticTileTargetGlowFilters as EventListener);
+        window.addEventListener(DraggableTileView.draggingTileWasLocatedCorrectlyEventName,
+            this.boundOnDraggingTileWasLocatedCorrectly as EventListener);   
     }
 
     private createTilingContainer(): Container {
@@ -311,6 +323,15 @@ export class TilingView {
         tileViews.forEach(tileView => tileView.removeTargetGlowFilter());
     }
 
+    public onDraggingTileWasLocatedCorrectly(): void {
+        this.correctlyLocatedDraggableTileCount++;
+        if (this.correctlyLocatedDraggableTileCount
+            === this.staticTileViewsByTilePositionStrings.size) {
+            window.dispatchEvent(new Event(
+                TilingView.allDraggableTilesWereLocatedCorrectlyEventName));
+        }
+    }
+
     /**
      * Установка потенциальной перетаскиваемой фигуры и её целевой позиции
      * @param draggableTileView Потенциальная перетаскиваемая фигура
@@ -431,6 +452,8 @@ export class TilingView {
         window.removeEventListener(
             DraggableTileView.shouldRemoveStaticTileTargetGlowFiltersEventName,
             this.boundOnShouldRemoveStaticTileTargetGlowFilters as EventListener);
+        window.removeEventListener(DraggableTileView.draggingTileWasLocatedCorrectlyEventName,
+            this.boundOnDraggingTileWasLocatedCorrectly as EventListener);
 
         this.clearPotentialTileViews();
 

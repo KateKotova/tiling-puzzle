@@ -199,7 +199,7 @@ export class Settings {
             hintButtonRadiusToControlContainerMinSideRatio: 0.35
         },
         congratulationModalParameters: this.congratulationModalParameters,
-        congratulationModalShowDelay: 3000,
+        congratulationModalShowDelay: 2000,
         controlContainerHeightToMinSideRatio: 0.2,
         carouselContainerMaxHeightToMinSideRatio: 0.25,
         // Рассчитывается так, чтобы поместилось 3 фигуры с отступами

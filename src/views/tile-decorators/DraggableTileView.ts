@@ -41,6 +41,8 @@ export class DraggableTileView implements TileView {
         = "draggingTileWasDeselectedEvent";
     public static readonly shouldRemoveStaticTileTargetGlowFiltersEventName: string
         = "shouldRemoveStaticTileTargetGlowFiltersEventName";
+    public static readonly draggingTileWasLocatedCorrectlyEventName: string
+        = "draggingTileWasLocatedCorrectlyEventName";
 
     public readonly parameters: DraggableTileParameters;
     /**
@@ -785,6 +787,9 @@ export class DraggableTileView implements TileView {
                 this.addTileToTargetContainerOnFixAsLocatedCorrectly();
                 const contentWithoutBevelFilter = this.view.createContent(false);
                 this.view.replaceContent(contentWithoutBevelFilter);
+
+                window.dispatchEvent(new Event(
+                    DraggableTileView.draggingTileWasLocatedCorrectlyEventName));
             }, 
             this.parameters.correctLocatedFilterShowTime
         );

@@ -16,6 +16,7 @@ import { TilingLevelUniqueParameters } from "./TilingLevelUniqueParameters.ts";
 import { LampHintButton } from "../../hint-button/LampHintButton.ts";
 import { DraggableTileView } from "../../../tile-decorators/DraggableTileView.ts";
 import { CongratulationModal } from "../../congratulation-modal/CongratulationModal.ts";
+import { TilingView } from "../../../tilings/TilingView.ts";
 
 /**
  * Класс вертикального контейнера уровня мозаичного замощения
@@ -66,6 +67,8 @@ export class TilingLevelContainer extends Container {
         = this.onLampHintButtonWasActivated.bind(this);
     private boundOnLampHintButtonWasDeactivated: () => void
         = this.onLampHintButtonWasDeactivated.bind(this);
+    private boundOnAllDraggableTilesWereLocatedCorrectly: () => void
+        = this.onAllDraggableTilesWereLocatedCorrectly.bind(this);
 
     constructor(
         parameters: TilingLevelParameters,
@@ -120,8 +123,6 @@ export class TilingLevelContainer extends Container {
         this.addChild(this.carouselContainer);
 
         this.addEventListeners();
-
-        this.showCongratulationModal();
     }
 
     private createBoundingRectangle(options?: ContainerOptions<ContainerChild>): Rectangle {
@@ -271,6 +272,8 @@ export class TilingLevelContainer extends Container {
             this.boundOnLampHintButtonWasActivated);
         window.addEventListener(LampHintButton.wasDeactivatedEventName, 
             this.boundOnLampHintButtonWasDeactivated);
+        window.addEventListener(TilingView.allDraggableTilesWereLocatedCorrectlyEventName, 
+            this.boundOnAllDraggableTilesWereLocatedCorrectly);
     }
 
     private removeEventListeners(): void {
@@ -278,6 +281,8 @@ export class TilingLevelContainer extends Container {
             this.boundOnLampHintButtonWasActivated);
         window.removeEventListener(LampHintButton.wasDeactivatedEventName, 
             this.boundOnLampHintButtonWasDeactivated);
+        window.removeEventListener(TilingView.allDraggableTilesWereLocatedCorrectlyEventName, 
+            this.boundOnAllDraggableTilesWereLocatedCorrectly);
     }
 
     private onLampHintButtonWasActivated(): void {
@@ -292,6 +297,10 @@ export class TilingLevelContainer extends Container {
 
     private onLampHintButtonWasDeactivated(): void {
         this.imageContainer?.tilingView?.removeHintGlowFilterFromPotentialTileViews();
+    }
+
+    private onAllDraggableTilesWereLocatedCorrectly(): void {
+        this.showCongratulationModal();
     }
 
     public destroy(options?: DestroyOptions): void {
