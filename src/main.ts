@@ -1,7 +1,6 @@
 import {
   Application,
   Assets,
-  BitmapText,
   Color,
   Texture
 } from "pixi.js";
@@ -10,6 +9,7 @@ import { Settings } from "./Settings.ts";
 import { TilingLayoutStrategyType } from "./models/tilings/TilingLayoutStrategyType.ts";
 import { TilingLevelUniqueParameters } from "./views/components/tiling-level/container/TilingLevelUniqueParameters.ts";
 import { TilingLevelContainer } from "./views/components/tiling-level/container/TilingLevelContainer.ts";
+import { CongratulationModal } from "./views/components/congratulation-modal/CongratulationModal.ts";
 
 async function main(): Promise<void> {
   try {
@@ -131,24 +131,12 @@ async function main(): Promise<void> {
 
     app.stage.addChild(tilingLevelContainer);
 
-    const text = new BitmapText({
-        text: "Привет, мир!",
-        style: {
-            fontFamily: "GOST_type_A",
-            fontSize: 48,
-            fill: "#08586c",
-        }
-    });
-    
-    console.log(text.height); // 48
-    text.pivot.set(text.width / 2.0, text.height / 2.0);
-    text.position.set(app.screen.width / 2.0, app.screen.height / 2.0);
-
-    text.style.fontSize = 64;
-    console.log(text.height); // 48
-    text.pivot.set(text.width / 2.0, text.height / 2.0);
-
-    app.stage.addChild(text);
+    const congratulationModal = new CongratulationModal(
+      settings.congratulationModalParameters,
+      app.screen.width,
+      app.screen.height
+    );
+    app.stage.addChild(congratulationModal);
 
     const appElement = document.getElementById('app');
     const loadingElement = document.getElementById('loading-container');

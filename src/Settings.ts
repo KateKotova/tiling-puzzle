@@ -10,8 +10,11 @@ import { TilingParameters } from "./views/tilings/TilingParameters.ts";
 import { AnimationParameters } from "./AnimationParameters.ts";
 import { CarouselParameters } from "./views/components/carousel/CarouselParameters.ts";
 import { HintButtonParameters } from "./views/components/hint-button/HintButtonParameters.ts";
-import { TilingLevelParameters } from "./views/components/tiling-level/container/TilingLevelParameters.ts";
+import { TilingLevelParameters }
+    from "./views/components/tiling-level/container/TilingLevelParameters.ts";
 import { Padding } from "./math/Padding.ts";
+import { CongratulationModalParameters }
+    from "./views/components/congratulation-modal/CongratulationModalParameters.ts";
 
 /**
  * Singleton-класс настроек представления.
@@ -159,6 +162,20 @@ export class Settings {
         activeStrokeColor: new Color(0x6C4E3C),
         defaultIconFillColor: new Color(0x234654),
         activeIconFillColor: new Color(0x6C4E3C)
+    };
+
+    public readonly congratulationModalParameters: CongratulationModalParameters = {
+        maxWidthToScreenWidthRatio: 0.5,
+        maxHeightToScreenHeightRatio: 0.5,
+        overlayColor: new Color(0x31414C),
+        overlayAlpha: 0.5,
+        paddingToMinSideRatio: 0.5,
+        fillColor: new Color(0x509DBC),
+        strokeColor: new Color(0x234654),
+        strokeWidth: 2,
+        textColor: new Color(0x234654),
+        text: "Вы победили!",
+        fontFamily: "GOST_type_A"
     };
 
     public readonly tilingLevelParameters: TilingLevelParameters = {

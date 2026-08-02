@@ -14,6 +14,9 @@ import {
 import { GlowFilter } from "pixi-filters";
 import { HintButtonParameters } from "./HintButtonParameters.ts";
 
+/**
+ * Кнопка показа подсказки
+ */
 export abstract class HintButton extends Container {
     private readonly parameters: HintButtonParameters;
     private readonly radius: number;
