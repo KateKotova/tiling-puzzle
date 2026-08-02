@@ -20,7 +20,7 @@ export abstract class TileBaseView implements TileView {
      */
     public replacingTextureFillColor: Color;
     private hintGlowFilter?: GlowFilter;
-    private updateFiltersTimer?: number;
+    private updateFiltersTimer?: ReturnType<typeof setTimeout>;
 
     constructor (
         parameters: TileParameters,

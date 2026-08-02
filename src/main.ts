@@ -1,6 +1,7 @@
 import {
   Application,
   Assets,
+  BitmapText,
   Color,
   Texture
 } from "pixi.js";
@@ -32,6 +33,18 @@ async function main(): Promise<void> {
 
     const manifest = {
       bundles: [
+        {
+          name: 'fonts',
+          assets: [
+            {
+              alias: "GOST_type_A",
+              src: "assets/fonts/GOST_type_A.fnt",
+              data: {
+                parser: "loadBitmapFont"
+              }
+            }
+          ]
+        },
         {
           name: 'every-level-screen',
           assets: [
@@ -78,7 +91,9 @@ async function main(): Promise<void> {
     };
 
     await Assets.init({ manifest });
+
     // TODO: не забыть сделать Assets.unloadBundle
+    await Assets.loadBundle('fonts');
     await Assets.loadBundle('every-level-screen');
     await Assets.loadBundle('horse-level-screen');
 
@@ -113,9 +128,20 @@ async function main(): Promise<void> {
         height: app.screen.height
       }
     );
-    
+
     app.stage.addChild(tilingLevelContainer);
 
+    const text = new BitmapText({
+        text: "Привет, мир!",
+        style: {
+            fontFamily: "GOST_type_A",
+            fontSize: 48,
+            fill: "#00ff00",
+        }
+    });
+    text.position.set(100, 100);
+    app.stage.addChild(text);
+    
     const appElement = document.getElementById('app');
     const loadingElement = document.getElementById('loading-container');
     

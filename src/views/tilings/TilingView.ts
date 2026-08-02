@@ -63,17 +63,17 @@ export class TilingView {
      * чтобы не было моргания при тапе на фигуре,
      * потому что тап предполагает только поворот, а не длительное перетаскивание
      */
-    private draggingTileTapTimer?: number;
+    private draggingTileTapTimer?: ReturnType<typeof setTimeout>;
     /**
      * Таймер, который обеспечивает показ картинки пользователю перед началом сборки
      */
-    private imageInitialShowTimer?: number;
+    private imageInitialShowTimer?: ReturnType<typeof setTimeout>;
     /**
      * Таймер, который обеспечивает небольшую паузу между показом фильтра подсказки
      * потенциальной перетаскиваемой фигуры и показом фильтра подсказки
      * целевой ячейки и фигуры, которая, возможно, находится на этой ячейке в данный момент.
      */
-    private showPotentialTargetHintGlowFilterTimer?: number;
+    private showPotentialTargetHintGlowFilterTimer?: ReturnType<typeof setTimeout>;
 
     private boundOnDraggingTileWasSelected: (event: CustomEvent<DraggableTileView>) => void
         = this.onDraggingTileWasSelected.bind(this);

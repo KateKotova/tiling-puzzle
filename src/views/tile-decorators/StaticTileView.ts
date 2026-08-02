@@ -43,8 +43,8 @@ export class StaticTileView implements TileView {
     private targetGlowFilter?: GlowFilter;
 
     private pointerIsOver: boolean = false;
-    private pointerEnterTimer?: number;
-    private pointerLeaveTimer?: number;
+    private pointerEnterTimer?: ReturnType<typeof setTimeout>;
+    private pointerLeaveTimer?: ReturnType<typeof setTimeout>;
     private static readonly pointerEnterDelay: number = 50;
     private static readonly pointerLeaveDelay: number = 50;
 

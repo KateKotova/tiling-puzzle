@@ -100,10 +100,10 @@ export class DraggableTileView implements TileView {
      * и с правильным углом вращения, чтобы мозаика была собрана
      */
     public isLocatedCorrectly: boolean = false;
-    private fixAsLocatedCorrectlyTimer?: number;
+    private fixAsLocatedCorrectlyTimer?: ReturnType<typeof setTimeout>;
 
     private static readonly removeStaticTileTargetGlowFiltersDelay: number = 150;
-    private removeStaticTileTargetGlowFiltersTimer?: number;
+    private removeStaticTileTargetGlowFiltersTimer?: ReturnType<typeof setTimeout>;
 
     private selectedGlowFilter?: GlowFilter;
     private correctLocatedGlowFilter?: GlowFilter;
