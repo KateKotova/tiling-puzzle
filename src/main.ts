@@ -136,12 +136,20 @@ async function main(): Promise<void> {
         style: {
             fontFamily: "GOST_type_A",
             fontSize: 48,
-            fill: "#00ff00",
+            fill: "#08586c",
         }
     });
-    text.position.set(100, 100);
-    app.stage.addChild(text);
     
+    console.log(text.height); // 48
+    text.pivot.set(text.width / 2.0, text.height / 2.0);
+    text.position.set(app.screen.width / 2.0, app.screen.height / 2.0);
+
+    text.style.fontSize = 64;
+    console.log(text.height); // 48
+    text.pivot.set(text.width / 2.0, text.height / 2.0);
+
+    app.stage.addChild(text);
+
     const appElement = document.getElementById('app');
     const loadingElement = document.getElementById('loading-container');
     
