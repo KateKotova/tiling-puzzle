@@ -165,15 +165,16 @@ export class Settings {
     };
 
     public readonly congratulationModalParameters: CongratulationModalParameters = {
+        animationParameters: this.animationParameters,
         maxWidthToScreenWidthRatio: 0.5,
         maxHeightToScreenHeightRatio: 0.5,
         overlayColor: new Color(0x31414C),
         overlayAlpha: 0.5,
         paddingToMinSideRatio: 0.5,
-        fillColor: new Color(0x509DBC),
-        strokeColor: new Color(0x234654),
+        fillColor: new Color(0xD09974),
+        strokeColor: new Color(0x6C4E3C),
         strokeWidth: 2,
-        textColor: new Color(0x234654),
+        textColor: new Color(0x6C4E3C),
         text: "Вы победили!",
         fontFamily: "GOST_type_A"
     };

@@ -1,5 +1,6 @@
-import { BitmapText, Container, ContainerChild, ContainerOptions, Graphics } from "pixi.js";
+import { BitmapText, Container, ContainerChild, ContainerOptions, Graphics, Ticker } from "pixi.js";
 import { CongratulationModalParameters } from "./CongratulationModalParameters.ts";
+import { ContainerAlphaController } from "../../controllers/ContainerAlphaController.ts";
 
 /**
  * Кнопка показа подсказки
@@ -22,14 +23,24 @@ export class CongratulationModal extends Container {
     private readonly overlay: Graphics;
     private readonly modal: Graphics;
 
+    public readonly alphaController: ContainerAlphaController;
+
     constructor (
         parameters: CongratulationModalParameters,
         screenWidth: number,
         screenHeight: number,
+        ticker: Ticker,
         options?: ContainerOptions<ContainerChild>
     ) {
         super(options);       
         this.parameters = parameters;
+
+        this.alpha = 0;
+        this.alphaController = new ContainerAlphaController(
+            this.parameters.animationParameters,
+            this,
+            ticker
+        );
 
         this.createTextAndSetSizes(screenWidth, screenHeight);
 
@@ -99,6 +110,7 @@ export class CongratulationModal extends Container {
                 alpha: this.parameters.overlayAlpha
             });
         result.cacheAsTexture({ antialias: true });
+        result.eventMode = "static";
         return result;
     }
 
@@ -114,5 +126,13 @@ export class CongratulationModal extends Container {
         result.position.set(screenWidth / 2.0, screenHeight / 2.0);
         result.cacheAsTexture({ antialias: true });
         return result;
+    }
+
+    public hide(): void {
+        this.alphaController.restart(this.alpha, 0);
+    }
+
+    public show(): void {
+        this.alphaController.restart(this.alpha, 1);
     }
 }

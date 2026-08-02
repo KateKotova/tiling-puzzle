@@ -134,9 +134,11 @@ async function main(): Promise<void> {
     const congratulationModal = new CongratulationModal(
       settings.congratulationModalParameters,
       app.screen.width,
-      app.screen.height
+      app.screen.height,
+      app.ticker
     );
     app.stage.addChild(congratulationModal);
+    setTimeout(() => congratulationModal.show(), 4000);
 
     const appElement = document.getElementById('app');
     const loadingElement = document.getElementById('loading-container');

@@ -191,6 +191,7 @@ export class TilingView {
     private hideInitialShownImage(): void {
         if (this.imageInitialShowTimer !== undefined) {
             clearTimeout(this.imageInitialShowTimer);
+            this.imageInitialShowTimer = undefined;
         }
 
         this.imageInitialShowTimer = setTimeout(() => {
@@ -266,6 +267,7 @@ export class TilingView {
     private onDraggingTileWasSelected(event: CustomEvent<DraggableTileView>): void {
         if (this.draggingTileTapTimer !== undefined) {
             clearTimeout(this.draggingTileTapTimer);
+            this.draggingTileTapTimer = undefined;
         }
 
         // Делаем небольшую паузу на тап, чтобы не было моргания при тапе на фигуре,
@@ -353,6 +355,7 @@ export class TilingView {
         ) {
             if (this.showPotentialTargetHintGlowFilterTimer !== undefined) {
                 clearTimeout(this.showPotentialTargetHintGlowFilterTimer);
+                this.showPotentialTargetHintGlowFilterTimer = undefined;
             }
 
             this.showPotentialTargetHintGlowFilterTimer = setTimeout(() => {

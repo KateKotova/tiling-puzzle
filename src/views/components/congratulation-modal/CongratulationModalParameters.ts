@@ -1,9 +1,11 @@
 import { Color } from "pixi.js";
+import { AnimationParameters } from "../../../AnimationParameters";
 
 /**
  * Интерфейс параметров модального окна поздравления победителя
  */
 export interface CongratulationModalParameters {
+    animationParameters: AnimationParameters;
     /**
      * Коэффициент отношения максимально возможной ширины модального окна к ширине экрана
      */
