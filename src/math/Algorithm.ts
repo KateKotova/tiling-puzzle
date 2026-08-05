@@ -268,7 +268,7 @@ export class Algorithm {
             
             // Защита от деления на ноль,
             // хотя при isPointYBetweenVertices === true, edgeDeltaY не должен быть 0
-            if (Math.abs(edgeDeltaY) < 0.000001) {
+            if (edgeDeltaY === 0) {
                 continue;
             }
             

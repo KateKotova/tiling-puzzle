@@ -15,6 +15,8 @@ import { TilingLevelCarouselContainer } from "../carousel/TilingLevelCarouselCon
 import { TilingLevelUniqueParameters } from "./TilingLevelUniqueParameters.ts";
 import { LampHintButton } from "../../hint-button/LampHintButton.ts";
 import { DraggableTileView } from "../../../tile-decorators/DraggableTileView.ts";
+import { CongratulationModal } from "../../congratulation-modal/CongratulationModal.ts";
+import { TilingView } from "../../../tilings/TilingView.ts";
 
 /**
  * Класс вертикального контейнера уровня мозаичного замощения
@@ -58,10 +60,15 @@ export class TilingLevelContainer extends Container {
      */
     private controlContainer?: TilingLevelControlContainer;
 
+    private congratulationModal?: CongratulationModal;
+    private congratulationModalShowTimer?: ReturnType<typeof setTimeout>;
+
     private boundOnLampHintButtonWasActivated: () => void
         = this.onLampHintButtonWasActivated.bind(this);
     private boundOnLampHintButtonWasDeactivated: () => void
         = this.onLampHintButtonWasDeactivated.bind(this);
+    private boundOnAllDraggableTilesWereLocatedCorrectly: () => void
+        = this.onAllDraggableTilesWereLocatedCorrectly.bind(this);
 
     constructor(
         parameters: TilingLevelParameters,
@@ -226,6 +233,34 @@ export class TilingLevelContainer extends Container {
         );
     }
 
+    private createCongratulationModal(): CongratulationModal {
+        return new CongratulationModal(
+            this.parameters.congratulationModalParameters,
+            this.boundingRectangle.width,
+            this.boundingRectangle.height,
+            this.ticker
+        );
+    }
+
+    private showCongratulationModal(): void {
+        if (this.congratulationModalShowTimer !== undefined) {
+            clearTimeout(this.congratulationModalShowTimer);
+            this.congratulationModalShowTimer = undefined;
+        }
+
+        this.congratulationModalShowTimer = setTimeout(() => {
+                this.congratulationModalShowTimer = undefined;
+                
+                if (!this.congratulationModal) {
+                    this.congratulationModal = this.createCongratulationModal();
+                    this.addChild(this.congratulationModal);
+                }
+                this.congratulationModal.show();
+            },
+            this.parameters.congratulationModalShowDelay
+        );
+    }
+
     private clearDraggingTileData(): void {
         draggingTileData.view = undefined;
         draggingTileData.viewport = undefined;
@@ -237,6 +272,8 @@ export class TilingLevelContainer extends Container {
             this.boundOnLampHintButtonWasActivated);
         window.addEventListener(LampHintButton.wasDeactivatedEventName, 
             this.boundOnLampHintButtonWasDeactivated);
+        window.addEventListener(TilingView.allDraggableTilesWereLocatedCorrectlyEventName, 
+            this.boundOnAllDraggableTilesWereLocatedCorrectly);
     }
 
     private removeEventListeners(): void {
@@ -244,6 +281,8 @@ export class TilingLevelContainer extends Container {
             this.boundOnLampHintButtonWasActivated);
         window.removeEventListener(LampHintButton.wasDeactivatedEventName, 
             this.boundOnLampHintButtonWasDeactivated);
+        window.removeEventListener(TilingView.allDraggableTilesWereLocatedCorrectlyEventName, 
+            this.boundOnAllDraggableTilesWereLocatedCorrectly);
     }
 
     private onLampHintButtonWasActivated(): void {
@@ -260,9 +299,18 @@ export class TilingLevelContainer extends Container {
         this.imageContainer?.tilingView?.removeHintGlowFilterFromPotentialTileViews();
     }
 
+    private onAllDraggableTilesWereLocatedCorrectly(): void {
+        this.showCongratulationModal();
+    }
+
     public destroy(options?: DestroyOptions): void {
         if (this.destroyed) {
             return;
+        }
+
+        if (this.congratulationModalShowTimer !== undefined) {
+            clearTimeout(this.congratulationModalShowTimer);
+            this.congratulationModalShowTimer = undefined;
         }
 
         this.removeEventListeners();

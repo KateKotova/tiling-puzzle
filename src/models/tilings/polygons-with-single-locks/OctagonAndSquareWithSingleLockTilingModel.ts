@@ -41,7 +41,7 @@ import { TileGeometryType } from "../../tile-geometries/TileGeometryType.ts";
  * У одних выпуклые замки расположены на одной диагонали, а замки-впадины - на другой.
  * У других всё наоборот.
  */
-export class OctagonAndSquareWithSpiralLockTilingModel
+export class OctagonAndSquareWithSingleLockTilingModel
     extends OctagonAndSquareTilingBaseModel {
 
     public readonly tilingType: TilingType = TilingType.OctagonAndSquareWithSingleLock;
@@ -104,8 +104,8 @@ export class OctagonAndSquareWithSpiralLockTilingModel
         super(tileParameters, textureModel, imageContainerModel, renderer);
         this.textureMinSideOctagonTileCount
             = textureMinSideOctagonTileCount
-                < OctagonAndSquareWithSpiralLockTilingModel.textureMinSideMinOctagonTileCount
-                ? OctagonAndSquareWithSpiralLockTilingModel.textureMinSideMinOctagonTileCount
+                < OctagonAndSquareWithSingleLockTilingModel.textureMinSideMinOctagonTileCount
+                ? OctagonAndSquareWithSingleLockTilingModel.textureMinSideMinOctagonTileCount
                 : Math.floor(textureMinSideOctagonTileCount);
     }
 

@@ -19,7 +19,7 @@ import { TileParameters } from "./TileParameters.ts";
 export class SvgPathTileView extends TileBaseView {
     private spriteBoundingSize: Size = new Size();
 
-    constructor (
+    constructor(
         parameters: TileParameters,
         creationParameters: TileViewCreationParameters
     ) {
@@ -32,23 +32,52 @@ export class SvgPathTileView extends TileBaseView {
     public createContent(shouldAddBevelFilter: boolean): Container {
         this.spriteBoundingSize = this.model.geometry.defaultBoundingRectangleSize.clone();
 
+        const borderBlurPadding = 0.5;
+
         const graphicsPath = new GraphicsPath(this.model.geometry.svgPath);
-        const graphicsTexture = this.getGraphicsTexture(graphicsPath, shouldAddBevelFilter);
+        const graphicsTexture = this.getGraphicsTexture(graphicsPath, shouldAddBevelFilter,
+            borderBlurPadding);
 
         const sprite = new Sprite(graphicsTexture);
-        // +0.5 - чтобы избежать зазоров
-        sprite.width = this.spriteBoundingSize.width + 0.5;
-        // +0.5 - чтобы избежать зазоров
-        sprite.height = this.spriteBoundingSize.height + 0.5;
         sprite.roundPixels = false;
+        sprite.texture.source.scaleMode = "linear";
+        sprite.position.set(0, 0);
 
         const result = new Container();        
         result.addChild(sprite);
         
-        const blurredSpriteWithMask = this.getBlurredSpriteWithMask(this.renderer, graphicsPath,
-            graphicsTexture, sprite.width, sprite.height);
-        result.addChild(blurredSpriteWithMask);
-        
+        // Размытый край с помощью маски.
+        // Выравнивание маски-обводки - по центру края фигуры.
+        const maskedBorderBlurredSprite = this.getMaskedBlurredSprite(
+            this.renderer,
+            graphicsPath,
+            graphicsTexture,
+            sprite.width,
+            sprite.height,
+            borderBlurPadding * 2,
+            0.5
+        );
+        result.addChild(maskedBorderBlurredSprite);
+
+        if (shouldAddBevelFilter) {
+            // Размытый край с помощью маски.
+            // Выравнивание маски-обводки - внутрь от края фигуры.
+            const innerMaskedBlurredSprite = this.getMaskedBlurredSprite(
+                this.renderer,
+                graphicsPath,
+                graphicsTexture,
+                sprite.width,
+                sprite.height,
+                (this.parameters.bevelFilterOptions.thickness ?? 2) + 2,
+                1
+            );
+            result.addChild(innerMaskedBlurredSprite);
+        }
+
+        // -0.5 - чтобы избежать зазоров
+        result.width = this.spriteBoundingSize.width - 0.5;
+        result.height = this.spriteBoundingSize.height - 0.5;
+
         result.cacheAsTexture({ resolution: this.parameters.cacheTileAsTextureResolution });
 
         result.hitArea = this.model.geometry.hitArea.clone();
@@ -56,13 +85,17 @@ export class SvgPathTileView extends TileBaseView {
         return result;
     }
 
-    private getBlurredSpriteWithMask(
+    private getMaskedBlurredSprite(
         renderer: Renderer,
         graphicsPath: GraphicsPath,
         graphicsTexture: Texture,
         spriteWidth: number,
-        spriteHeight: number
+        spriteHeight: number,
+        maskStrokeWidth: number,
+        maskStrokeAlignment: number
     ): Container {
+        // Изнутри маска залита чёрным, это цвет прозрачности,
+        // потому что внутри - не размытая фигура
         const maskGraphics = new Graphics()
             .path(graphicsPath)
             .fill({
@@ -70,20 +103,27 @@ export class SvgPathTileView extends TileBaseView {
                 alpha: 1
             });
 
-        const spriteSideToGraphicsSideRatio = this.spriteBoundingSize.width
-            / maskGraphics.width;
-        const resultStrokeWidth = 1;
+        const scaleX = spriteWidth / this.spriteBoundingSize.width;
+        const scaleY = spriteHeight / this.spriteBoundingSize.height;
+        
+        maskGraphics.scale.set(scaleX, scaleY);
+        
+        const minScale = Math.min(scaleX, scaleY);
+        const scaledStrokeWidth = maskStrokeWidth / minScale;
 
+        // Снаружи маски - беля обводка, это цвет непрозрачности,
+        // потому что фигура по контуру будет размываться с использованием этой маски
         maskGraphics.stroke({ 
-            width: Math.trunc(resultStrokeWidth / spriteSideToGraphicsSideRatio),
-            color: 0xFFFFFF, 
+            width: scaledStrokeWidth,
+            color: 0xFFFFFF,
             alpha: 1,
-            alignment: 0.5 
+            alignment: maskStrokeAlignment
         });
 
+        // Для маски берётся более высокое разрешение
         const maskTexture = renderer.generateTexture({
             target: maskGraphics,
-            resolution: this.parameters.generateTileTextureResolution,
+            resolution: this.parameters.generateTileTextureResolution * 2,
             width: spriteWidth,
             height: spriteHeight,
             textureSourceOptions: {
@@ -94,11 +134,12 @@ export class SvgPathTileView extends TileBaseView {
 
         const result = new Container();
         
+        // Для размытия используется спрайт с размытым изображением фигуры
         const blurredSprite = new Sprite(graphicsTexture);
         blurredSprite.roundPixels = false;
 
         const blurFilter = new BlurFilter({ 
-            strength: 8.0,
+            strength: 4.0,
             quality: 5,
             kernelSize: 5
         });
@@ -109,8 +150,13 @@ export class SvgPathTileView extends TileBaseView {
 
         const maskSprite = new Sprite(maskTexture);
         maskSprite.roundPixels = false;
-        maskSprite.position.set((blurredSprite.width - maskSprite.width) / 2.0,
-            (blurredSprite.height - maskSprite.height) / 2.0);
+        maskSprite.position.set(
+            (blurredSprite.width - maskSprite.width) / 2.0,
+            (blurredSprite.height - maskSprite.height) / 2.0
+        );
+        // Размытый спрайт маскируется с помощью маски,
+        // представляющей собой обводку контура фигуры.
+        // Таким образом, край фигуры окажется размытым.
         blurredSprite.mask = maskSprite;
 
         result.addChild(blurredSprite);
@@ -119,10 +165,26 @@ export class SvgPathTileView extends TileBaseView {
         return result;
     }
 
-    private getGraphicsTexture(graphicsPath: GraphicsPath, shouldAddBevelFilter: boolean): Texture {
+    private getGraphicsTexture(
+        graphicsPath: GraphicsPath,
+        shouldAddBevelFilter: boolean,
+        padding: number = 0
+    ): Texture {
         const graphics = new Graphics();
         graphics.roundPixels = false;
+
+        const doublePadding = padding * 2;        
+        const textureWidth = this.getPowerOfTwoSize(this.spriteBoundingSize.width
+            + doublePadding);
+        const textureHeight = this.getPowerOfTwoSize(this.spriteBoundingSize.height
+            + doublePadding);
+        
+        const scaleX = textureWidth / this.spriteBoundingSize.width;
+        const scaleY = textureHeight / this.spriteBoundingSize.height;
+        
         graphics.path(graphicsPath);
+        graphics.scale.set(scaleX, scaleY);
+        graphics.position.set(padding, padding);
         
         if (this.texture) {
             graphics.fill({
@@ -138,13 +200,11 @@ export class SvgPathTileView extends TileBaseView {
 
         let bevelFilter: BevelFilter | undefined;
         if (shouldAddBevelFilter) {
-            const graphicsSideToSpriteSideRatio = graphics.width / this.spriteBoundingSize.width;
+            const graphicsSideToSpriteSideRatio = graphics.width
+                / this.spriteBoundingSize.width;
             bevelFilter = this.getBevelFilter(graphicsSideToSpriteSideRatio);
             graphics.filters = [bevelFilter];
         }
-
-        const textureWidth = this.getPowerOfTwoSize(this.spriteBoundingSize.width);
-        const textureHeight = this.getPowerOfTwoSize(this.spriteBoundingSize.height);
 
         const result = this.renderer.generateTexture({
             target: graphics,
@@ -152,9 +212,10 @@ export class SvgPathTileView extends TileBaseView {
             width: textureWidth,
             height: textureHeight,
             textureSourceOptions: {
-                scaleMode: "nearest"
+                scaleMode: "linear"
             }
         });
+        
         graphics.filters = null;
         graphics.destroy();
         if (bevelFilter) {
@@ -166,5 +227,5 @@ export class SvgPathTileView extends TileBaseView {
 
     private getPowerOfTwoSize(size: number): number {
         return Math.pow(2, Math.ceil(Math.log2(size)));
-    };
+    }
 }

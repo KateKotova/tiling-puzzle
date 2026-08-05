@@ -17,7 +17,7 @@ async function main(): Promise<void> {
     globalThis.__PIXI_APP__ = app;
 
     await app.init({
-      background: "#1099bb",
+      background: "#8BB4D8",
       resizeTo: window,
       //antialias: true
     });
@@ -32,6 +32,18 @@ async function main(): Promise<void> {
 
     const manifest = {
       bundles: [
+        {
+          name: 'fonts',
+          assets: [
+            {
+              alias: "GOST_type_A",
+              src: "assets/fonts/GOST_type_A.fnt",
+              data: {
+                parser: "loadBitmapFont"
+              }
+            }
+          ]
+        },
         {
           name: 'every-level-screen',
           assets: [
@@ -78,7 +90,9 @@ async function main(): Promise<void> {
     };
 
     await Assets.init({ manifest });
+
     // TODO: не забыть сделать Assets.unloadBundle
+    await Assets.loadBundle('fonts');
     await Assets.loadBundle('every-level-screen');
     await Assets.loadBundle('horse-level-screen');
 
@@ -86,16 +100,16 @@ async function main(): Promise<void> {
 
     const tilingLevelUniqueParameters: TilingLevelUniqueParameters = {
       imageParameters: {
-        textureMinSideTileCount: 4,
-        tilingType: TilingType.OctagonAndSquareWithSingleLock,
+        textureMinSideTileCount: 2,
+        tilingType: TilingType.TriangleWithSpiralLockWithTail,
         tilingTexture: Assets.get<Texture>("horse"),
         tilingLayoutStrategyType: TilingLayoutStrategyType.FromEdgesToCenter,
-        defaultStaticTileFillColor: new Color(0x008F00),
-        targetStaticTileFillColor: new Color(0x00AF00)
+        defaultStaticTileFillColor: new Color(0x709DC1),
+        targetStaticTileFillColor: new Color(0x83B9DD)
       },
       carouselParameters: {
-        tileLineBackgroundFillColor: new Color(0x008F00),
-        carouselBackgroundFillColor: new Color(0x00AF00)
+        tileLineBackgroundFillColor: new Color(0x83B9DD),
+        carouselBackgroundFillColor: new Color(0x709DC1)
       },
       eyeHintButtonIconSvgPath: Assets.get<string>("eye-hint-icon-path"),
       lampHintButtonIconSvgPath: Assets.get<string>("lamp-hint-icon-path"),
@@ -113,8 +127,17 @@ async function main(): Promise<void> {
         height: app.screen.height
       }
     );
-    
+
     app.stage.addChild(tilingLevelContainer);
+
+    const appElement = document.getElementById('app');
+    const loadingElement = document.getElementById('loading-container');
+    
+    if (appElement && loadingElement) {
+      appElement.classList.add('visible');
+      loadingElement.classList.add('hidden');
+      setTimeout(() => loadingElement.style.display = "none", 500);
+    }
 
   } catch (error) {
     console.error(`Failed to start application: ${error}`);

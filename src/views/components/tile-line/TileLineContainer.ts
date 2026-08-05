@@ -33,6 +33,7 @@ import { TileLineCreationParameters } from "./TileLineCreationParameters.ts";
 export class TileLineContainer extends Container {
     public static readonly tileLineStartResizeEventName: string = "tileLineStartResizeEvent";
     public static readonly tileLineStopResizeEventName: string = "tileLineStopResizeEvent";
+    public static readonly scaleEpsilon = 0.01;
 
     public readonly parameters: TileLineParameters;
     public readonly directionType: TileLineDirectionType;
@@ -74,6 +75,10 @@ export class TileLineContainer extends Container {
     public initialTileScalesByTileGeometryTypes: Map<TileGeometryType, number>
         = new Map<TileGeometryType, number>();
 
+    /**
+     * Прямоугольная зона данного компонента в глобальных координатах
+     */
+    private globalRectangle?: Rectangle;
     /**
      * Прямоугольная зона изменения масштаба элемента мозаики.
      * Когда пользователь захватывает фигуру и начинает двигать,
@@ -180,12 +185,26 @@ export class TileLineContainer extends Container {
      */
     public onAddedToParent(viewportContainer: ViewportContainer): void {
         this.viewportContainer = viewportContainer;
+        this.globalRectangle = this.getGlobalRectangle();
         this.scaleChangeGlobalRectangle = this.getTileScaleChangeGlobalRectangle();
     }
 
     public getPointIsInsideViewportRectangle(globalPoint: Point): boolean {
         return this.getViewportContainerOrThrow()
             .getPointIsInsideViewportRectangle(globalPoint);
+    }
+
+    private getGlobalRectangle(): Rectangle {
+        const viewportContainer = this.getViewportContainerOrThrow();
+        const viewportRectangle = viewportContainer.viewportRectangle;
+        const globalLeftTop = viewportContainer.viewportGlobalPosition;
+
+        return new Rectangle(
+            globalLeftTop.x,
+            globalLeftTop.y,
+            viewportRectangle.width,
+            viewportRectangle.height
+        ); 
     }
 
     private getTileScaleChangeGlobalRectangle(): Rectangle {
@@ -289,7 +308,8 @@ export class TileLineContainer extends Container {
                 model: model,
                 texture: this.tilingView.model.getTileTexture(model),
                 renderer,
-                replacingTextureFillColor: this.tilingView.defaultStaticTileFillColor
+                replacingTextureFillColor: this.tilingView.defaultStaticTileFillColor,
+                shouldCacheTileAsTexture: false
             };
             const view = viewFactory.getView(
                 this.parameters.tileParameters,
@@ -363,6 +383,27 @@ export class TileLineContainer extends Container {
         globalPoint: Point,
         tileView: DraggableTileView
     ): void {
+        if (!this.globalRectangle) {
+            throw new Error('globalRectangle was not created');
+        }
+
+        if (!draggingTileData.viewport) {
+            throw new Error('draggingTileData.viewport should be initialized');
+        }
+
+        const pointIsInsideGlobalRectangle = Algorithm.getPointIsInsideRectangle(
+            globalPoint,
+            this.globalRectangle
+        );
+
+        if (!pointIsInsideGlobalRectangle) {
+            if (Math.abs(tileView.view.tile.scale.x - draggingTileData.viewport.scale.x)
+                > TileLineContainer.scaleEpsilon) {
+                tileView.view.tile.scale = draggingTileData.viewport.scale.x;
+            }
+            return;
+        }
+
         if (!this.scaleChangeGlobalRectangle) {
             throw new Error('tileScaleChangeGlobalRectangle was not created');
         }
@@ -371,14 +412,11 @@ export class TileLineContainer extends Container {
             globalPoint,
             this.scaleChangeGlobalRectangle
         );
+
         if (!shouldChangeScale) {
             return;
         }
         
-        if (!draggingTileData.viewport) {
-            throw new Error('draggingTileData.viewport should be initialized');
-        }
-
         const initialTileScale = this.getInitialTileScaleOrThrow(tileView);
         const tilingViewportScale = draggingTileData.viewport.scale.x;
         const scaleDifference = tilingViewportScale - initialTileScale;

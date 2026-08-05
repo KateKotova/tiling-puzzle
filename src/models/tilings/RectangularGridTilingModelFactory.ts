@@ -5,8 +5,8 @@ import { TilingTextureModel } from "../TilingTextureModel.ts";
 import { ImageContainerModel } from "../ImageContainerModel.ts";
 import { HexagonWithSingleLockTilingModel }
     from "./polygons-with-single-locks/HexagonWithSingleLockTilingModel.ts";
-import { OctagonAndSquareWithSpiralLockTilingModel }
-    from "./polygons-with-single-locks/OctagonAndSquareWithSpiralLockTilingModel.ts";
+import { OctagonAndSquareWithSingleLockTilingModel }
+    from "./polygons-with-single-locks/OctagonAndSquareWithSingleLockTilingModel.ts";
 import { SquareWithSingleLockTilingModel }
     from "./polygons-with-single-locks/SquareWithSingleLockTilingModel.ts";
 import { HexagonTilingModel } from "./polygons/HexagonTilingModel.ts";
@@ -14,6 +14,8 @@ import { OctagonAndSquareTilingModel } from "./polygons/OctagonAndSquareTilingMo
 import { SquareTilingModel } from "./polygons/SquareTilingModel.ts";
 import { TriangleTilingModel } from "./polygons/TriangleTilingModel.ts";
 import { TileParameters } from "../tiles/TileParameters.ts";
+import { TriangleWithSpiralLockWithTailTilingModel }
+    from "./polygons-with-spiral-locks-with-tails/TriangleWithSpiralLockWithTailTilingModel.ts";
 
 /**
  * Класс фабрики для создания замощения
@@ -55,7 +57,11 @@ export class RectangularGridTilingModelFactory {
                     textureMinSideTilePairCount, imageContainerModel, renderer);
                 break;
             case TilingType.OctagonAndSquareWithSingleLock:
-                model = new OctagonAndSquareWithSpiralLockTilingModel(tileParameters, textureModel,
+                model = new OctagonAndSquareWithSingleLockTilingModel(tileParameters, textureModel,
+                    textureMinSideTileCount, imageContainerModel, renderer);
+                break;
+            case TilingType.TriangleWithSpiralLockWithTail:
+                model = new TriangleWithSpiralLockWithTailTilingModel(tileParameters, textureModel,
                     textureMinSideTileCount, imageContainerModel, renderer);
                 break;
             default:

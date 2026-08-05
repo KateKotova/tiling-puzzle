@@ -279,7 +279,7 @@ export class TilingLevelImageContainer extends Container {
                 this.innerContainerBoundingRectangle.width,
                 this.innerContainerBoundingRectangle.height
             )
-            .fill({ color: "green" });
+            .fill({ color: 0x709DC1 });
         graphics.eventMode = 'none';
         graphics.interactiveChildren = false;
         graphics.cacheAsTexture(true);

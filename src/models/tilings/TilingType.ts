@@ -33,5 +33,9 @@ export enum TilingType {
     /**
      * Замощение правильными восьмиугольниками и квадратами с одинарными замками
      */
-    OctagonAndSquareWithSingleLock = "OctagonAndSquareWithSingleLock"
+    OctagonAndSquareWithSingleLock = "OctagonAndSquareWithSingleLock",
+    /**
+     * Замощение правильными треугольниками со спиральными замками с хвостиками
+     */
+    TriangleWithSpiralLockWithTail = "TriangleWithSpiralLockWithTail"
 }

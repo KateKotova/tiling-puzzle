@@ -1,16 +1,15 @@
-import { Ticker } from "pixi.js";
+import { Container, Ticker } from "pixi.js";
 import { SmoothNumberStepController }
     from "../../math/controllers/SmoothNumberStepController.ts";
 import { AnimationParameters } from "../../AnimationParameters.ts";
-import { TileView } from "../tiles/TileView.ts";
 
 /**
- * Класс контроллера для элементов замощения,
- * прозрачность которых меняется со временем
+ * Класс контроллера для контейнера,
+ * прозрачность которого меняется со временем
  */
-export class TilesAlphaController {
+export class ContainerAlphaController {
     private readonly parameters: AnimationParameters;
-    private readonly tileViews: TileView[];
+    private readonly container: Container;
     private readonly ticker: Ticker;
     private controller?: SmoothNumberStepController;
 
@@ -20,11 +19,11 @@ export class TilesAlphaController {
 
     constructor(
         parameters: AnimationParameters,
-        tileViews: TileView[],
+        container: Container,
         ticker: Ticker
     ) {
         this.parameters = parameters;
-        this.tileViews = tileViews;
+        this.container = container;
         this.ticker = ticker;
     }
 
@@ -32,7 +31,7 @@ export class TilesAlphaController {
         if (this.onTickerWasAdded) {
             this.ticker.remove(this.boundOnTicker);
             this.onTickerWasAdded = false;
-            TilesAlphaController.onTickerCount--;
+            ContainerAlphaController.onTickerCount--;
             //this.logTicker();
         }
     }
@@ -41,13 +40,13 @@ export class TilesAlphaController {
         if (!this.onTickerWasAdded) {
             this.ticker.add(this.boundOnTicker);
             this.onTickerWasAdded = true;
-            TilesAlphaController.onTickerCount++;
+            ContainerAlphaController.onTickerCount++;
             //this.logTicker();
         }
     }
 
     public logTicker() {
-        console.log(`${this.constructor.name}: ${TilesAlphaController.onTickerCount}`);
+        console.log(`${this.constructor.name}: ${ContainerAlphaController.onTickerCount}`);
     }
 
     public restart(newStartValue: number, newTargetValue: number): void {
@@ -58,11 +57,13 @@ export class TilesAlphaController {
 
     private stop(): void {
         this.removeTickerListener();
+        this.updateAllCacheTextures(this.container, true);
     }
 
     private start(): void {
         this.removeTickerListener();
         this.addTickerListener();
+        this.updateAllCacheTextures(this.container, false);
     }
 
     private onTicker(): void {
@@ -92,10 +93,7 @@ export class TilesAlphaController {
             : (this.controller?.getIncrement(deltaTime) ?? 0);
         
         if (valueIncrement !== 0) {
-            this.tileViews.forEach(tileView => {
-                tileView.tile.alpha += valueIncrement;
-                tileView.tile.updateCacheTexture();
-            });
+            this.container.alpha += valueIncrement;
         }
     }
 
@@ -107,10 +105,9 @@ export class TilesAlphaController {
         this.controller.complete();
         
         const targetValue = this.controller.targetValue;
-        this.tileViews.forEach(tileView => {
-            tileView.tile.alpha = targetValue;
-            tileView.tile.updateCacheTexture();
-        });
+        this.container.alpha = targetValue;
+
+        this.updateAllCacheTextures(this.container, true);
     }
 
     public removeEventListeners(): void {
@@ -119,5 +116,17 @@ export class TilesAlphaController {
 
     public destroy(): void {
         this.removeEventListeners();
+    }
+
+    private updateAllCacheTextures(container: Container, shouldCacheTextures: boolean) {
+        for (const child of container.children) {
+            if (child.children?.length > 0) {
+                this.updateAllCacheTextures(child, shouldCacheTextures);
+            }
+            
+            if (typeof child.cacheAsTexture === 'function') {
+                child.cacheAsTexture(shouldCacheTextures ? { antialias: true } : false);
+            }
+        }
     }
 }

@@ -20,7 +20,7 @@ export abstract class TileBaseView implements TileView {
      */
     public replacingTextureFillColor: Color;
     private hintGlowFilter?: GlowFilter;
-    private updateFiltersTimer?: number;
+    private updateFiltersTimer?: ReturnType<typeof setTimeout>;
 
     constructor (
         parameters: TileParameters,
@@ -32,7 +32,7 @@ export abstract class TileBaseView implements TileView {
         this.renderer = creationParameters.renderer;
         this.replacingTextureFillColor = creationParameters.replacingTextureFillColor;
         this.content = this.createContent(true);
-        this.tile = this.createTile();
+        this.tile = this.createTile(creationParameters.shouldCacheTileAsTexture);
     }
 
     public abstract createContent(shouldAddBevelFilter: boolean): Container;
@@ -65,20 +65,26 @@ export abstract class TileBaseView implements TileView {
             }
 
             this.updateFiltersTimer = setTimeout(() => {
+                this.updateFiltersTimer = undefined;
                 this.tile.filters = filters;
                 this.tile.updateCacheTexture();
             }, 15);
         }
     }
 
-    protected createTile(): Container {
+    protected createTile(shouldCacheTileAsTexture: boolean): Container {
         const result = new Container();       
-        result.addChild(this.content);        
-        result.cacheAsTexture({ resolution: this.parameters.cacheTileAsTextureResolution });
+        result.addChild(this.content);
+
         result.pivot.set(this.model.geometry.pivotPoint.x, this.model.geometry.pivotPoint.y);        
         result.rotation = this.model.currentRotationAngle;   
         result.position.copyFrom(this.model.currentPositionPoint);
-        result.hitArea = this.model.geometry.hitArea.clone();     
+        result.hitArea = this.model.geometry.hitArea.clone();
+        
+        if (shouldCacheTileAsTexture) {
+            result.cacheAsTexture({ resolution: this.parameters.cacheTileAsTextureResolution });
+        } 
+
         return result;
     }
 
@@ -98,6 +104,7 @@ export abstract class TileBaseView implements TileView {
 
     public addFilter(filter: Filter): void {
         if (!this.tile.filters?.length) {
+            filter.padding = 1;
             this.tile.filters = [filter];
             this.tile.updateCacheTexture();
             return;
@@ -109,6 +116,7 @@ export abstract class TileBaseView implements TileView {
         }
 
         const filters = [...this.tile.filters];
+        filter.padding = 1;
         filters.push(filter);
         this.tile.filters = filters;
         this.tile.updateCacheTexture();

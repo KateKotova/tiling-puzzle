@@ -5,7 +5,6 @@ import {
     FederatedPointerEvent,
     Filter,
     Polygon,
-    Matrix,
     IHitArea,
     Ticker,
     Color,
@@ -40,6 +39,10 @@ export class DraggableTileView implements TileView {
         = "draggingTileWasSelectedEvent";
     public static readonly draggingTileWasDeselectedEventName: string
         = "draggingTileWasDeselectedEvent";
+    public static readonly shouldRemoveStaticTileTargetGlowFiltersEventName: string
+        = "shouldRemoveStaticTileTargetGlowFiltersEventName";
+    public static readonly draggingTileWasLocatedCorrectlyEventName: string
+        = "draggingTileWasLocatedCorrectlyEventName";
 
     public readonly parameters: DraggableTileParameters;
     /**
@@ -77,13 +80,6 @@ export class DraggableTileView implements TileView {
      */
     public dragSource?: StaticTileView;
     /**
-     * Зона целевой статической фигуры-ячейки, определяемая указателем.
-     * Исходная ячейка почему-то не определяется как целевая и не реагирует на события мыши.
-     * Эту зону нужно вычислять и хранить для перетаскивания,
-     * потому что под перетаскиваемой фигурой зона не видна.
-     */
-    private dragSourceWorldHitArea?: Polygon;
-    /**
      * Статическая фигура-ячейка, на которую происходит перетаскивание
      */
     public dragTarget?: StaticTileView;
@@ -106,7 +102,10 @@ export class DraggableTileView implements TileView {
      * и с правильным углом вращения, чтобы мозаика была собрана
      */
     public isLocatedCorrectly: boolean = false;
-    private fixAsLocatedCorrectlyTimer?: number;
+    private fixAsLocatedCorrectlyTimer?: ReturnType<typeof setTimeout>;
+
+    private static readonly removeStaticTileTargetGlowFiltersDelay: number = 150;
+    private removeStaticTileTargetGlowFiltersTimer?: ReturnType<typeof setTimeout>;
 
     private selectedGlowFilter?: GlowFilter;
     private correctLocatedGlowFilter?: GlowFilter;
@@ -453,6 +452,9 @@ export class DraggableTileView implements TileView {
         // Убираем зону попадания, чтобы события указателя были видны
         // статическим элементам замощения уровнем ниже
         this.disableHitArea();
+        // Делаем контейнер "прозрачным" для событий,
+        // позволяя им проходить к статическим ячейкам ниже
+        this.view.tile.interactiveChildren = false;
     }
 
     private onPointerMove(event: FederatedPointerEvent): void {
@@ -482,11 +484,12 @@ export class DraggableTileView implements TileView {
 
         const targetPosition = this.getTargetParentPosition(globalPosition);
 
-        if (this.dragSource && this.dragSourceWorldHitArea) {
+        if (this.dragSource?.worldHitArea) {
             this.tryToEnterToDragSource(
                 this.dragSource,
-                this.dragSourceWorldHitArea,
-                targetPosition
+                this.dragSource.worldHitArea,
+                targetPosition,
+                event
             );
         }
     }
@@ -512,7 +515,7 @@ export class DraggableTileView implements TileView {
             }
         }
 
-        this.isDragging = false;   
+        this.isDragging = false;
 
         const finalTarget = this.dragTarget;
         const finalSource = this.dragSource;
@@ -526,6 +529,9 @@ export class DraggableTileView implements TileView {
             finalSource.stopBeingDragTarget();
         }
 
+        // Восстанавливаем интерактивность:
+        // контейнер перестаёт быть "прозрачным" для событий
+        this.view.tile.interactiveChildren = true;
         // Восстанавливаем зону попадания, чтобы снова получать события указателя
         this.restoreHitArea();
 
@@ -561,7 +567,7 @@ export class DraggableTileView implements TileView {
         }
 
         if (finalTarget) {
-            this.setDragSource(finalTarget);
+            this.dragSource = finalTarget;
         }
         
         this.dragTarget = this.dragSource;
@@ -585,6 +591,52 @@ export class DraggableTileView implements TileView {
             this.dragTarget = undefined;
             this.initialContainer.addTileView(this);
         }
+
+        this.removeStaticTileTargetGlowFilters();
+    }
+
+    /**
+     * После того, как текущий перемещаемый элемент замощения занял своё место,
+     * иногда остаются подсвеченными посторонние ячейки как целевые.
+     * Это происходит, когда перемещаемый элемент замощения быстро проходит
+     * сначала над потенциальной целевой ячейкой,
+     * а затем проходит над другими перемещаемыми фигурами,
+     * которые в данный момент пассивны и находятся в ячейках.
+     * В этом случае потенциальная целевая ячейка остаётся подсвеченной,
+     * хотя она уже перестаёт быть целевой.
+     * Также из-за быстрого прохода текущей перемещаемой фигуры
+     * может запаздывать событие назначения статической ячейки потенциально целевой.
+     * Поэтому после того, как текущий перемещаемый элемент отпускается указателем,
+     * следует убрать подсветку со всех ячеек, кроме той,
+     * что становится исходной для данного перемещаемого элемента.
+     * Также вводится небольшая задержка, для компенсации запаздывающего события целевой ячейки.
+     */
+    private removeStaticTileTargetGlowFilters(): void {
+        if (this.removeStaticTileTargetGlowFiltersTimer !== undefined) {
+            clearTimeout(this.removeStaticTileTargetGlowFiltersTimer);
+            this.removeStaticTileTargetGlowFiltersTimer = undefined;
+        }
+
+        this.removeStaticTileTargetGlowFiltersTimer = setTimeout(() => {
+                this.removeStaticTileTargetGlowFiltersTimer = undefined;
+
+                const excludingStaticTileViews = new Set<StaticTileView>();
+                if (this.dragSource) {
+                    excludingStaticTileViews.add(this.dragSource);
+                }
+                const currentDragTarget = draggingTileData.view?.dragTarget;
+                if (currentDragTarget) {
+                    excludingStaticTileViews.add(currentDragTarget);
+                }
+
+                const event = new CustomEvent<Set<StaticTileView>>(
+                    DraggableTileView.shouldRemoveStaticTileTargetGlowFiltersEventName,
+                    { detail: excludingStaticTileViews }
+                );
+                window.dispatchEvent(event);
+            },
+            DraggableTileView.removeStaticTileTargetGlowFiltersDelay
+        ); 
     }
 
     private getPointerIsMouseAndButtonIsNotLeft(event: PointerEvent): boolean {
@@ -602,12 +654,14 @@ export class DraggableTileView implements TileView {
      * в координатах родителя
      * @param tileWorldPosition Координаты точки в мире координат,
      * где живёт модель элемента замощения)
+     * @param event Событие, содержащее координаты указателя
      * @returns 
      */
     private tryToEnterToDragSource(
         dragSource: StaticTileView,
         dragSourceTileWorldHitArea: Polygon,
-        tileWorldPosition: Point
+        tileWorldPosition: Point,
+        event: FederatedPointerEvent
     ): boolean {
         const pointerIsInsideHitArea = Algorithm.getPointIsInsidePolygon(
             tileWorldPosition,
@@ -620,7 +674,7 @@ export class DraggableTileView implements TileView {
         }
         
         if (this.dragTarget === dragSource && !pointerIsInsideHitArea) {
-            dragSource.onPointerLeave();
+            dragSource.onPointerLeave(event);
         }
 
         return false;
@@ -635,8 +689,8 @@ export class DraggableTileView implements TileView {
             }
             this.view.tile.scale = draggingTileData.viewport.scale.x;
         } else {
-            this.initialContainer.setScaleRelativeToScaleChangeGlobalRectangle(
-                this.savedGlobalPosition, this);
+            this.view.tile.scale = this.initialContainer
+                .getInitialTileScaleOrThrow(this.view);
         }
         this.restoreGlobalPosition();
     }
@@ -672,29 +726,6 @@ export class DraggableTileView implements TileView {
     public getGlobalPosition(): Point {
         return this.view.tile.parent?.toGlobal(this.view.tile.position)
             ?? this.view.tile.position;
-    }
-
-    public setDragSource(dragSource?: StaticTileView): void {
-        this.dragSource = dragSource;
-        if (!dragSource) {
-            this.dragSourceWorldHitArea = undefined;
-            return;
-        }
-
-        const pivotPoint = dragSource.view.model.geometry.pivotPoint;
-        const currentPositionPoint = dragSource.view.model.currentPositionPoint;
-        
-        const tileMatrix = new Matrix()
-            .translate(-pivotPoint.x, -pivotPoint.y)
-            .rotate(dragSource.view.model.currentRotationAngle)
-            .translate(currentPositionPoint.x, currentPositionPoint.y);
-        
-        const tileWorldHitArea = Algorithm.getTransformedPolygon(
-            dragSource.view.model.geometry.hitArea,
-            tileMatrix
-        );
-        
-        this.dragSourceWorldHitArea = tileWorldHitArea;
     }
 
     private getTargetParentPosition(globalPoint: Point): Point {
@@ -751,11 +782,14 @@ export class DraggableTileView implements TileView {
         }
 
         this.fixAsLocatedCorrectlyTimer = setTimeout(() => {
+                this.fixAsLocatedCorrectlyTimer = undefined;
                 this.clearFilters();
                 this.addTileToTargetContainerOnFixAsLocatedCorrectly();
                 const contentWithoutBevelFilter = this.view.createContent(false);
                 this.view.replaceContent(contentWithoutBevelFilter);
-                this.fixAsLocatedCorrectlyTimer = undefined;
+
+                window.dispatchEvent(new Event(
+                    DraggableTileView.draggingTileWasLocatedCorrectlyEventName));
             }, 
             this.parameters.correctLocatedFilterShowTime
         );
@@ -791,12 +825,16 @@ export class DraggableTileView implements TileView {
             this.fixAsLocatedCorrectlyTimer = undefined;
         }
 
+        if (this.removeStaticTileTargetGlowFiltersTimer !== undefined) {
+            clearTimeout(this.removeStaticTileTargetGlowFiltersTimer);
+            this.removeStaticTileTargetGlowFiltersTimer = undefined;
+        }
+
         this.removeEventListeners();
 
         this.view.tile.hitArea = undefined;
         this.view.content.hitArea = undefined;
         this.clearHitArea();
-        this.dragSourceWorldHitArea = undefined;
         
         this.rotationController.destroy();
         this.moveAfterDragController.destroy();
