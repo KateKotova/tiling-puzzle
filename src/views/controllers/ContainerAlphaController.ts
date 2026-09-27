@@ -1,4 +1,4 @@
-import { Container, Ticker } from "pixi.js";
+import { BitmapText, Container, Ticker } from "pixi.js";
 import { SmoothNumberStepController }
     from "../../math/controllers/SmoothNumberStepController.ts";
 import { AnimationParameters } from "../../AnimationParameters.ts";
@@ -121,7 +121,11 @@ export class ContainerAlphaController {
     private updateAllCacheTextures(container: Container, shouldCacheTextures: boolean) {
         for (const child of container.children) {
             if (child.children?.length > 0) {
-                this.updateAllCacheTextures(child, shouldCacheTextures);
+                this.updateAllCacheTextures(child as Container, shouldCacheTextures);
+            }
+
+            if (child instanceof BitmapText) {
+                continue;
             }
             
             if (typeof child.cacheAsTexture === 'function') {
