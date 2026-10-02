@@ -31,7 +31,8 @@ export abstract class HintButton extends Container {
     private readonly defaultIconTexture: Texture;
     private activeIconTexture?: Texture;
     private readonly icon: Sprite;
-    private isActive = false;
+    private isToggle: boolean = false;
+    private isActive: boolean = false;
     private pivotPointCoordinate: number;
     private glowFilter?: GlowFilter;
 
@@ -40,6 +41,7 @@ export abstract class HintButton extends Container {
         radius: number,
         iconSvgPath: string,
         centerPoint: Point,
+        isToggle: boolean,
         options?: ContainerOptions<ContainerChild>
     ) {     
         super(options);       
@@ -66,6 +68,8 @@ export abstract class HintButton extends Container {
 
         this.pivot.set(this.pivotPointCoordinate, this.pivotPointCoordinate);        
         this.position.set(centerPoint.x, centerPoint.y);
+
+        this.isToggle = isToggle;
 
         this.eventMode = 'static';
         this.addEventListeners();
@@ -190,20 +194,27 @@ export abstract class HintButton extends Container {
     }
 
     private onPointerDown(): void {
-        if (this.isActive) {
+        if (!this.isToggle && this.isActive) {
             return;
         }
         this.filters = [this.getGlowFilter()];
     }
 
     private onPointerUp(): void {
-        if (this.isActive) {
+        if (!this.isToggle && this.isActive) {
             return;
         }
 
-        this.isActive = true;
+        this.isActive = this.isToggle
+            ? !this.isActive
+            : true;
         this.showActivity();
-        this.dispatchWasActivatedEvent();
+
+        if (this.isActive) {
+            this.dispatchWasActivatedEvent();
+        } else {
+            this.dispatchWasDeactivatedEvent();
+        }
     }
 
     private onPointerCancel(): void {
