@@ -99,7 +99,6 @@ export class TilingLevelControlContainer extends Container {
     }
 
     private onDraggingTileWasDeselected(): void {
-        this.eyeHintButton?.deactivate();
         this.lampHintButton?.deactivate();
     }
 
