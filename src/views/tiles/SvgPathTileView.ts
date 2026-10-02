@@ -3,6 +3,7 @@ import {
     Container,
     Graphics,
     GraphicsPath,
+    Matrix,
     Renderer,
     Sprite,
     Texture
@@ -32,7 +33,7 @@ export class SvgPathTileView extends TileBaseView {
     public createContent(shouldAddBevelFilter: boolean): Container {
         this.spriteBoundingSize = this.model.geometry.defaultBoundingRectangleSize.clone();
 
-        const borderBlurPadding = 0.5;
+        const borderBlurPadding = 1.5;//0.5;
 
         const graphicsPath = new GraphicsPath(this.model.geometry.svgPath);
         const graphicsTexture = this.getGraphicsTexture(graphicsPath, shouldAddBevelFilter,
@@ -46,32 +47,34 @@ export class SvgPathTileView extends TileBaseView {
         const result = new Container();        
         result.addChild(sprite);
         
-        // Размытый край с помощью маски.
-        // Выравнивание маски-обводки - по центру края фигуры.
-        const maskedBorderBlurredSprite = this.getMaskedBlurredSprite(
-            this.renderer,
-            graphicsPath,
-            graphicsTexture,
-            sprite.width,
-            sprite.height,
-            borderBlurPadding * 2,
-            0.5
-        );
-        result.addChild(maskedBorderBlurredSprite);
-
-        if (shouldAddBevelFilter) {
+        if (this.parameters.shouldSmoothOutline) {
             // Размытый край с помощью маски.
-            // Выравнивание маски-обводки - внутрь от края фигуры.
-            const innerMaskedBlurredSprite = this.getMaskedBlurredSprite(
+            // Выравнивание маски-обводки - по центру края фигуры.
+            const maskedBorderBlurredSprite = this.getMaskedBlurredSprite(
                 this.renderer,
                 graphicsPath,
                 graphicsTexture,
                 sprite.width,
                 sprite.height,
-                (this.parameters.bevelFilterOptions.thickness ?? 2) + 2,
-                1
+                borderBlurPadding * 2,
+                0.5
             );
-            result.addChild(innerMaskedBlurredSprite);
+            result.addChild(maskedBorderBlurredSprite);
+
+            if (shouldAddBevelFilter) {
+                // Размытый край с помощью маски.
+                // Выравнивание маски-обводки - внутрь от края фигуры.
+                const innerMaskedBlurredSprite = this.getMaskedBlurredSprite(
+                    this.renderer,
+                    graphicsPath,
+                    graphicsTexture,
+                    sprite.width,
+                    sprite.height,
+                    (this.parameters.bevelFilterOptions.thickness ?? 2) + 2,
+                    1
+                );
+                result.addChild(innerMaskedBlurredSprite);
+            }
         }
 
         // -0.5 - чтобы избежать зазоров
@@ -181,9 +184,58 @@ export class SvgPathTileView extends TileBaseView {
         
         const scaleX = textureWidth / this.spriteBoundingSize.width;
         const scaleY = textureHeight / this.spriteBoundingSize.height;
+
+        ///
+
+// Официальный костыль для исправления бага PixiJS #11988
+const originalTransform = GraphicsPath.prototype.transform;
+GraphicsPath.prototype.transform = function(matrix) {
+    const originalInstructions = this.instructions;
+    
+    // Временно убираем closePath, чтобы движок не ругался
+    this.instructions = originalInstructions.filter(inst => inst.action !== 'closePath');
+    
+    // Выполняем стандартное масштабирование
+    originalTransform.call(this, matrix);
+    
+    // Возвращаем closePath на место
+    this.instructions = originalInstructions;
+    
+    return this;
+};
+
+
+        const matrix = new Matrix();
+        matrix.scale(scaleX, scaleY);
+        graphicsPath.transform(matrix);
+
+
+        // // const matrix = new Matrix();
+        // // matrix.scale(scaleX, scaleY);
+
+        // const graphics = new Graphics();
+        // //graphics.context.transform(matrix);
+        // graphics.roundPixels = false;
+
+
+        // graphics.context.save();
+
+        // // 2. Применяем масштабирование ТОЛЬКО для этого пути (через встроенный метод scale)
+        // graphics.context.scale(scaleX, scaleY);
+
+        // // 3. Рисуем путь и заливаем его — предупреждения не будет!
+        // graphics.path(graphicsPath);
+
+        // // 4. Восстанавливаем состояние контекста для последующих фигур
+        // graphics.context.restore();
+
+
+        ///
+        
         
         graphics.path(graphicsPath);
-        graphics.scale.set(scaleX, scaleY);
+        //graphics.scale.set(scaleX, scaleY);
+        //graphics.context.scale(scaleX, scaleY);
         graphics.position.set(padding, padding);
         
         if (this.texture) {

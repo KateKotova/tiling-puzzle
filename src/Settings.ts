@@ -45,9 +45,10 @@ export class Settings {
     public readonly tileViewParameters: TileViewParameters = {
         cacheTileAsTextureResolution: 2,
         generateTileTextureResolution: 1,
+        shouldSmoothOutline: true,
         bevelFilterOptions: { 
             rotation: 45,
-            thickness: 1.8,
+            thickness: 2.8,
             lightColor: 0xFFFFFF,
             lightAlpha: 0.8,
             shadowColor: 0x000000,

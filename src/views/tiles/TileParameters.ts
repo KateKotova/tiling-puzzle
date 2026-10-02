@@ -6,6 +6,10 @@ import { BevelFilterOptions, GlowFilterOptions } from "pixi-filters";
 export interface TileParameters {
     cacheTileAsTextureResolution: number;
     generateTileTextureResolution: number;
+    /**
+     * Признак того, что обводку элемента замощения следует сглаживать.
+     */
+    shouldSmoothOutline: boolean;
     bevelFilterOptions: BevelFilterOptions;
     hintGlowFilterOptions: GlowFilterOptions;
 }
