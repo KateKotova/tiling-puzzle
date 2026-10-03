@@ -11,7 +11,6 @@ import { TilingLevelUniqueParameters }
   from "./views/components/tiling-level/container/TilingLevelUniqueParameters.ts";
 import { TilingLevelContainer }
   from "./views/components/tiling-level/container/TilingLevelContainer.ts";
-import { GraphicsPathMonkeyPatches } from "./monkey-patches/graphics-path-monkey-patches.ts";
 
 async function main(): Promise<void> {
   try {
@@ -98,8 +97,6 @@ async function main(): Promise<void> {
     await Assets.loadBundle('fonts');
     await Assets.loadBundle('every-level-screen');
     await Assets.loadBundle('horse-level-screen');
-
-    GraphicsPathMonkeyPatches.applyTransformMonkeyPatch();
 
     const settings = Settings.getInstance();
 
