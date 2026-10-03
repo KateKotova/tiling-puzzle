@@ -4,6 +4,7 @@ import {
   Color,
   Texture
 } from "pixi.js";
+import 'pixi.js/text-bitmap';
 import { TilingType } from "./models/tilings/TilingType.ts";
 import { Settings } from "./Settings.ts";
 import { TilingLayoutStrategyType } from "./models/tilings/TilingLayoutStrategyType.ts";
@@ -32,6 +33,16 @@ async function main(): Promise<void> {
       '3x': { maxSize: 2048, quality: 0.7 }
     };
 
+    const pixelRatio = window.devicePixelRatio;
+    const fontFileName = pixelRatio < 1
+        ? 'GOST_type_A_0_5x.fnt'
+        : pixelRatio >= 3
+          ? 'GOST_type_A_3x.fnt'
+          : pixelRatio >= 2
+            ? 'GOST_type_A_2x.fnt'
+            : 'GOST_type_A_1x.fnt';
+    const fontPath = `assets/fonts/${fontFileName}`;
+
     const manifest = {
       bundles: [
         {
@@ -39,9 +50,9 @@ async function main(): Promise<void> {
           assets: [
             {
               alias: "GOST_type_A",
-              src: "assets/fonts/GOST_type_A.fnt",
+              src: fontPath,
               data: {
-                parser: "loadBitmapFont"
+                parser: 'bitmap-font'
               }
             }
           ]
@@ -71,7 +82,7 @@ async function main(): Promise<void> {
             {
               alias: 'horse',
               src: 'assets/horse@{0.5,1,2,3}x.{png,webp}',
-              loadParser: 'loadTextures',
+              parser: 'loadTextures',
               format: 'webp',
               data: {
                 sizes: assetSizes
@@ -80,7 +91,7 @@ async function main(): Promise<void> {
             {
               alias: 'horse-rotated',
               src: 'assets/horse-rotated@{0.5,1,2,3}x.{png,webp}',
-              loadParser: 'loadTextures',
+              parser: 'loadTextures',
               format: 'webp',
               data: {
                 sizes: assetSizes
