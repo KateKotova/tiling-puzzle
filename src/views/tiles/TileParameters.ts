@@ -7,9 +7,13 @@ export interface TileParameters {
     cacheTileAsTextureResolution: number;
     generateTileTextureResolution: number;
     /**
-     * Признак того, что обводку элемента замощения следует сглаживать.
+     * Признак того, что границу элемента замощения следует размывать.
      */
-    shouldSmoothOutline: boolean;
+    shouldBlurBorder: boolean;
+    /**
+     * Ширина области размытия границы элемента замощения.
+     */
+    borderBlurPadding: 1.5,
     bevelFilterOptions: BevelFilterOptions;
     hintGlowFilterOptions: GlowFilterOptions;
 }

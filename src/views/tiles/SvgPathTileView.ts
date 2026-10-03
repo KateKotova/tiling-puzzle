@@ -33,11 +33,9 @@ export class SvgPathTileView extends TileBaseView {
     public createContent(shouldAddBevelFilter: boolean): Container {
         this.spriteBoundingSize = this.model.geometry.defaultBoundingRectangleSize.clone();
 
-        const borderBlurPadding = 1.5;//0.5;
-
         const graphicsPath = new GraphicsPath(this.model.geometry.svgPath);
         const graphicsTexture = this.getGraphicsTexture(graphicsPath, shouldAddBevelFilter,
-            borderBlurPadding);
+            this.parameters.borderBlurPadding);
 
         const sprite = new Sprite(graphicsTexture);
         sprite.roundPixels = false;
@@ -47,7 +45,7 @@ export class SvgPathTileView extends TileBaseView {
         const result = new Container();        
         result.addChild(sprite);
         
-        if (this.parameters.shouldSmoothOutline) {
+        if (this.parameters.shouldBlurBorder) {
             // Размытый край с помощью маски.
             // Выравнивание маски-обводки - по центру края фигуры.
             const maskedBorderBlurredSprite = this.getMaskedBlurredSprite(
@@ -56,7 +54,7 @@ export class SvgPathTileView extends TileBaseView {
                 graphicsTexture,
                 sprite.width,
                 sprite.height,
-                borderBlurPadding * 2,
+                this.parameters.borderBlurPadding * 2,
                 0.5
             );
             result.addChild(maskedBorderBlurredSprite);
@@ -173,9 +171,6 @@ export class SvgPathTileView extends TileBaseView {
         shouldAddBevelFilter: boolean,
         padding: number = 0
     ): Texture {
-        const graphics = new Graphics();
-        graphics.roundPixels = false;
-
         const doublePadding = padding * 2;        
         const textureWidth = this.getPowerOfTwoSize(this.spriteBoundingSize.width
             + doublePadding);
@@ -185,57 +180,13 @@ export class SvgPathTileView extends TileBaseView {
         const scaleX = textureWidth / this.spriteBoundingSize.width;
         const scaleY = textureHeight / this.spriteBoundingSize.height;
 
-        ///
-
-// Официальный костыль для исправления бага PixiJS #11988
-const originalTransform = GraphicsPath.prototype.transform;
-GraphicsPath.prototype.transform = function(matrix) {
-    const originalInstructions = this.instructions;
-    
-    // Временно убираем closePath, чтобы движок не ругался
-    this.instructions = originalInstructions.filter(inst => inst.action !== 'closePath');
-    
-    // Выполняем стандартное масштабирование
-    originalTransform.call(this, matrix);
-    
-    // Возвращаем closePath на место
-    this.instructions = originalInstructions;
-    
-    return this;
-};
-
-
         const matrix = new Matrix();
         matrix.scale(scaleX, scaleY);
         graphicsPath.transform(matrix);
 
-
-        // // const matrix = new Matrix();
-        // // matrix.scale(scaleX, scaleY);
-
-        // const graphics = new Graphics();
-        // //graphics.context.transform(matrix);
-        // graphics.roundPixels = false;
-
-
-        // graphics.context.save();
-
-        // // 2. Применяем масштабирование ТОЛЬКО для этого пути (через встроенный метод scale)
-        // graphics.context.scale(scaleX, scaleY);
-
-        // // 3. Рисуем путь и заливаем его — предупреждения не будет!
-        // graphics.path(graphicsPath);
-
-        // // 4. Восстанавливаем состояние контекста для последующих фигур
-        // graphics.context.restore();
-
-
-        ///
-        
-        
+        const graphics = new Graphics();
+        graphics.roundPixels = false;
         graphics.path(graphicsPath);
-        //graphics.scale.set(scaleX, scaleY);
-        //graphics.context.scale(scaleX, scaleY);
         graphics.position.set(padding, padding);
         
         if (this.texture) {

@@ -106,33 +106,7 @@ export class TilingLevelImageContainer extends Container {
         }
         this.innerContainer.addChild(this.background);
 
-        ////
-
-        const texture = this.uniqueParameters.tilingTexture;
-        const textureMaxSize = new Size(this.innerContainerBoundingRectangle.width,
-            this.innerContainerBoundingRectangle.height);
-        console.log(textureMaxSize);
-
-        const textureWidthToHeightRatio = texture.width / texture.height;
-
-        let textureNewWidth = textureMaxSize.width;
-        let textureNewHeight = textureNewWidth / textureWidthToHeightRatio;
-
-        if (textureNewHeight > textureMaxSize.height) {
-            textureNewHeight = textureMaxSize.height;
-            textureNewWidth = textureNewHeight * textureWidthToHeightRatio;
-        }
-
-        texture.frame.set(0, 0, textureNewWidth, textureNewHeight);
-        texture.update();
-        console.log(textureNewWidth, textureNewHeight);
-
-        /////
-
-        this.tilingTextureModel = new TilingTextureModel(
-            //this.uniqueParameters.tilingTexture
-            texture
-        );
+        this.tilingTextureModel = new TilingTextureModel(this.uniqueParameters.tilingTexture);
         this.imageContainerModel = new ImageContainerModel(
             this.tilingTextureModel,
             this.innerContainerBoundingRectangle.width,
