@@ -106,8 +106,7 @@ export class TilingLevelImageContainer extends Container {
         }
         this.innerContainer.addChild(this.background);
 
-        this.tilingTextureModel = new TilingTextureModel(
-            this.uniqueParameters.tilingTexture);
+        this.tilingTextureModel = new TilingTextureModel(this.uniqueParameters.tilingTexture);
         this.imageContainerModel = new ImageContainerModel(
             this.tilingTextureModel,
             this.innerContainerBoundingRectangle.width,
