@@ -1,11 +1,11 @@
-import { HintButtonParameters } from "../../hint-button/HintButtonParameters.ts";
+import { CircleButtonParameters } from "../../button/CircleButtonParameters.ts";
 
 /**
  * Интерфейс параметров контейнера панели управления,
  * которая должна находиться в вертикальном контейнере уровня мозаичного замощения
  */
 export interface TilingLevelControlParameters {
-    hintButtonParameters: HintButtonParameters;
+    hintButtonParameters: CircleButtonParameters;
     /**
      * Коэффициент отношения абсциссы центра кнопки подсказки-глазика
      * к ширине контейнера панели управления.

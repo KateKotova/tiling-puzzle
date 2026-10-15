@@ -2,9 +2,9 @@ import { GlowFilterOptions } from "pixi-filters";
 import { Color } from "pixi.js";
 
 /**
- * Интерфейс параметров для кнопки показа подсказки
+ * Интерфейс параметров для круглой кнопки
  */
-export interface HintButtonParameters {
+export interface CircleButtonParameters {
     glowFilterOptions: GlowFilterOptions;
     iconSideToDiameterRatio: number;
     defaultFillColor: Color;

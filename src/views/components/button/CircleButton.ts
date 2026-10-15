@@ -12,13 +12,13 @@ import {
     Texture
 } from "pixi.js";
 import { GlowFilter } from "pixi-filters";
-import { HintButtonParameters } from "./HintButtonParameters.ts";
+import { CircleButtonParameters } from "./CircleButtonParameters.ts";
 
 /**
- * Кнопка показа подсказки
+ * Круглая кнопка
  */
-export abstract class HintButton extends Container {
-    private readonly parameters: HintButtonParameters;
+export abstract class CircleButton extends Container {
+    private readonly parameters: CircleButtonParameters;
     private readonly radius: number;
     private readonly iconSide: number;
     private readonly invisibleRectangle: Graphics;
@@ -37,7 +37,7 @@ export abstract class HintButton extends Container {
     private glowFilter?: GlowFilter;
 
     constructor (
-        parameters: HintButtonParameters,
+        parameters: CircleButtonParameters,
         radius: number,
         iconSvgPath: string,
         centerPoint: Point,

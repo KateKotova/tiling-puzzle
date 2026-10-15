@@ -5,12 +5,12 @@ import {
     DestroyOptions,
     Point
 } from "pixi.js";
-import { HintButton } from "../../hint-button/HintButton.ts";
+import { CircleButton } from "../../button/CircleButton.ts";
 import { TilingLevelControlParameters } from "./TilingLevelControlParameters.ts";
 import { Size } from "../../../../math/Size.ts";
 import { DraggableTileView } from "../../../tile-decorators/DraggableTileView.ts";
-import { EyeHintButton } from "../../hint-button/EyeHintButton.ts";
-import { LampHintButton } from "../../hint-button/LampHintButton.ts";
+import { EyeHintButton } from "../../button/EyeHintButton.ts";
+import { LampHintButton } from "../../button/LampHintButton.ts";
 
 /**
  * Класс контейнера панели управления,
@@ -24,8 +24,8 @@ export class TilingLevelControlContainer extends Container {
     private readonly lampHintButtonIconSvgPath: string;
     private readonly hintButtonRadius: number;
     private readonly hintButtonCenterY: number;
-    private eyeHintButton?: HintButton;
-    private lampHintButton?: HintButton;
+    private eyeHintButton?: CircleButton;
+    private lampHintButton?: CircleButton;
 
     private boundOnDraggingTileWasDeselected: () => void
         = this.onDraggingTileWasDeselected.bind(this);
@@ -74,7 +74,7 @@ export class TilingLevelControlContainer extends Container {
             this.boundOnDraggingTileWasDeselected);
     }
 
-    private createEyeHintButton(): HintButton | undefined {
+    private createEyeHintButton(): CircleButton | undefined {
         const centerX = this.parameters.eyeHintButtonCenterXToControlContainerWidthRatio
             * this.size.width;
 
@@ -86,7 +86,7 @@ export class TilingLevelControlContainer extends Container {
         );
     }
 
-    private createLampHintButton(): HintButton | undefined {
+    private createLampHintButton(): CircleButton | undefined {
         const centerX = this.parameters.lampHintButtonCenterXToControlContainerWidthRatio
             * this.size.width;
 

@@ -1,16 +1,16 @@
 import { ContainerChild, ContainerOptions, Point } from "pixi.js";
-import { HintButton } from "./HintButton.ts";
-import { HintButtonParameters } from "./HintButtonParameters.ts";
+import { CircleButton } from "./CircleButton.ts";
+import { CircleButtonParameters } from "./CircleButtonParameters.ts";
 
 /**
  * Кнопка показа подсказки-лампочки, когда подсвечивается фигура и её ячейка
  */
-export class LampHintButton extends HintButton {
+export class LampHintButton extends CircleButton {
     public static readonly wasActivatedEventName: string = "lampHintButtonWasActivatedEvent";
     public static readonly wasDeactivatedEventName: string = "lampHintButtonWasDeactivatedEvent";
 
     constructor (
-        parameters: HintButtonParameters,
+        parameters: CircleButtonParameters,
         radius: number,
         iconSvgPath: string,
         centerPoint: Point,

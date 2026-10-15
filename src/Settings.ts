@@ -9,7 +9,7 @@ import { TileLineParameters } from "./views/components/tile-line/TileLineParamet
 import { TilingParameters } from "./views/tilings/TilingParameters.ts";
 import { AnimationParameters } from "./AnimationParameters.ts";
 import { CarouselParameters } from "./views/components/carousel/CarouselParameters.ts";
-import { HintButtonParameters } from "./views/components/hint-button/HintButtonParameters.ts";
+import { CircleButtonParameters } from "./views/components/button/CircleButtonParameters.ts";
 import { TilingLevelParameters }
     from "./views/components/tiling-level/container/TilingLevelParameters.ts";
 import { Padding } from "./math/Padding.ts";
@@ -147,7 +147,7 @@ export class Settings {
         }
     };
 
-    public readonly hintButtonParameters: HintButtonParameters = {
+    public readonly hintButtonParameters: CircleButtonParameters = {
         glowFilterOptions: {
             distance: 7,
             outerStrength: 3,

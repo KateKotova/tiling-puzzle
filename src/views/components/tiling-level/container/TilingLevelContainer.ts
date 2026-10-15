@@ -13,7 +13,7 @@ import { TilingLevelControlContainer } from "../controls/TilingLevelControlConta
 import { TilingLevelImageContainer } from "../image/TilingLevelImageContainer.ts";
 import { TilingLevelCarouselContainer } from "../carousel/TilingLevelCarouselContainer.ts";
 import { TilingLevelUniqueParameters } from "./TilingLevelUniqueParameters.ts";
-import { LampHintButton } from "../../hint-button/LampHintButton.ts";
+import { LampHintButton } from "../../button/LampHintButton.ts";
 import { DraggableTileView } from "../../../tile-decorators/DraggableTileView.ts";
 import { CongratulationModal } from "../../congratulation-modal/CongratulationModal.ts";
 import { TilingView } from "../../../tilings/TilingView.ts";

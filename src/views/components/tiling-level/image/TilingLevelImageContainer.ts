@@ -19,7 +19,7 @@ import { TilingView } from "../../../tilings/TilingView.ts";
 import { TilingLevelImageParameters } from "./TilingLevelImageParameters.ts";
 import { TilingLevelImageUniqueParameters } from "./TilingLevelImageUniqueParameters.ts";
 import { Size } from "../../../../math/Size.ts";
-import { EyeHintButton } from "../../hint-button/EyeHintButton.ts";
+import { EyeHintButton } from "../../button/EyeHintButton.ts";
 
 /**
  * Класс контейнера изображения для сборки мозаики,
